@@ -64,8 +64,11 @@ class FindDoc:
 
     def process_choice(self, sentences, all_choices):
         words_choices = []
+        print(sentences)
         for sentence in sentences:
             sent = self.remove_stopwords(sentence)
+            print(sent)
+            print(self.segmentor.segment(sent))
             words_choices.extend(self.segmentor.segment(sent))
         words_all_choices = []
         for all_choice in all_choices:
@@ -93,6 +96,7 @@ class FindDoc:
             log.debug("seqno_now:" + str(seqno_now))
             log.debug("老大进行第一轮的处理，分类器筛选掉诊断不了的病")
             words = self.process_sentences([choice_now])
+            log.debug("老大分词结果:" +" ".join(words))
             if gender == "male":
                 pred, prob = self.male_classifier.predict(" ".join(words))
                 if prob[0] > 0.9:
