@@ -140,6 +140,7 @@ class FindDoc:
                     return "department", None, recommendation
                 else:
                     log.debug("进入后面的处理")
+            print(pred, prob)
             log.debug("老大处理结束，this disease can deal")
             log.debug("seqno_now:" + str(seqno_now))
             # 进入土豪的节奏
