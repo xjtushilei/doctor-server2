@@ -11,6 +11,7 @@ import dialogue
 
 sws = "[！|“|”|‘|’|…|′|｜|、|，|。|〈|〉:：|《|》|「|」|『|』|【|】|〔|〕|︿|！|＃|＄|％|＆|＇|（|）|＊|＋|－|,．||；|＜|＝|＞|？|＠|［|］|＿|｛|｜|｝|～|↑|→|≈|①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩|￥|Δ|Ψ|γ|μ|φ|!|\"|'|#|\$|%|&|\*|\+|,|\.|;|\?|\\\|@|\(|\)|\[|\]|\^|_|`|\||\{|\}|~|<|>|=]"
 
+
 class FindDoc:
     def __init__(self, model_path='./model/model-wiki-hdf-5k.bin', seg_model_path="model/cws.model",
                  dict_var_path="./model/dict_var.npy",
@@ -93,58 +94,59 @@ class FindDoc:
                 return "other", None, None
             log.debug("seqno_now:" + str(seqno_now))
             log.debug("老大进行第一轮的处理，分类器筛选掉诊断不了的病")
-            words = self.process_sentences([choice_now])
-            log.debug("老大分词结果:" +" ".join(words))
-            print(gender,age)
-            if gender == "male":
-                print("m")
-                pred, prob = self.male_classifier.predict(" ".join(words))
-                if prob[0] > 0.9:
-                    log.debug("分到科室：" + pred[0])
-                    recommendation = {
-                        "department":
-                            {
-                                "id": '174',
-                                'name': pred[0]
-                                ,"debug":"男科 和 男遗传"
-                            }
-                    }
-                    return "department", None, recommendation
-                    #男科 和 男遗传
+            if age >= 18:
+                words = self.process_sentences([choice_now])
+                log.debug("老大分词结果:" + " ".join(words))
+                print(gender, age)
+                if gender == "male":
+                    print("m")
+                    pred, prob = self.male_classifier.predict(" ".join(words))
+                    if prob[0] > 0.9:
+                        log.debug("分到科室：" + pred[0])
+                        recommendation = {
+                            "department":
+                                {
+                                    "id": '174',
+                                    'name': pred[0]
+                                    , "debug": "男科 和 男遗传"
+                                }
+                        }
+                        return "department", None, recommendation
+                        # 男科 和 男遗传
+                    else:
+                        log.debug("分到成人男性的全科医生")
+                        # 丽娟给医生
+                        recommendation = {
+                            "doctors": [
+                                {
+                                    "id": '20874',
+                                    'name': '成人男性的全科医生AAA'
+                                },
+                                {
+                                    "id": '20877',
+                                    'name': '成人男性的全科医生BBB'
+                                }
+                            ]
+                        }
+                        return "doctors", None, recommendation
                 else:
-                    log.debug("分到成人男性的全科医生")
-                    #丽娟给医生
-                    recommendation = {
-                        "doctors": [
-                            {
-                                "id": '20874',
-                                'name': '成人男性的全科医生AAA'
-                            },
-                            {
-                                "id": '20877',
-                                'name': '成人男性的全科医生BBB'
-                            }
-                        ]
-                    }
-                    return "doctors", None, recommendation
-            else:
-                print("f")
-                pred, prob = self.female_classifier.predict(" ".join(words))
-                if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
-                    #pass
-                    log.debug("分到科室：" + pred[0])
-                    recommendation = {
-                        "department":
-                            {
-                                "id": '174',
-                                'name': pred[0]
-                                , "debug": "分到科室:产科，女性遗传"
-                            }
-                    }
-                    return "department", None, recommendation
-                else:
-                    log.debug("进入后面的处理")
-            print(pred, prob)
+                    print("f")
+                    pred, prob = self.female_classifier.predict(" ".join(words))
+                    if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
+                        # pass
+                        log.debug("分到科室：" + pred[0])
+                        recommendation = {
+                            "department":
+                                {
+                                    "id": '174',
+                                    'name': pred[0]
+                                    , "debug": "分到科室:产科，女性遗传"
+                                }
+                        }
+                        return "department", None, recommendation
+                    else:
+                        log.debug("进入后面的处理")
+                print(pred, prob)
             log.debug("老大处理结束，this disease can deal")
             log.debug("seqno_now:" + str(seqno_now))
             # 进入土豪的节奏
