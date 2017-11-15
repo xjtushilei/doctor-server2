@@ -48,7 +48,8 @@ class FindDoc:
         self.p_model = PredModel(self.seg_model_path, self.model_path, self.dict_var_path)
         self.segmentor = self.p_model.segmentor
         self.l3sym_dict = dialogue.read_symptom_data(self.disease_symptom_file_dir)
-        self.male_classifier = fastText.load_model(self.male_classifier_path)
+        # self.male_classifier = fastText.load_model(self.male_classifier_path)
+        self.male_classifier = fastText.load_model("/tvm/mdata/jerryzchen/model/model-hdf-5k-ml.ftz")
         self.female_classifier = fastText.load_model(self.female_classifier_path)
 
     def remove_stopwords(self, line):
@@ -96,6 +97,7 @@ class FindDoc:
             log.debug("老大分词结果:" +" ".join(words))
             print(gender,age)
             if gender == "M":
+                print("m")
                 pred, prob = self.male_classifier.predict(" ".join(words))
                 if prob[0] > 0.9:
                     log.debug("分到科室：" + pred[0])
@@ -126,6 +128,7 @@ class FindDoc:
                     }
                     return "doctors", None, recommendation
             else:
+                print("f")
                 pred, prob = self.female_classifier.predict(" ".join(words))
                 if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
                     #pass
