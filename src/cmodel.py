@@ -65,8 +65,8 @@ class FindDoc:
     def process_choice(self, sentences, all_choices):
         words_choices = []
         for sentence in sentences:
-            sent = self.remove_stopwords(sentence).split(" ")
-            words_choices.extend(sent)
+            sent = self.remove_stopwords(sentence)
+            words_choices.extend(self.segmentor.segment(sent))
         words_all_choices = []
         for all_choice in all_choices:
             words_all_choices.extend(all_choice)
