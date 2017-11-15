@@ -9,7 +9,7 @@ from pmodel import PredModel
 
 import dialogue
 
-sws = "[！|“|”|‘|’|…|′|｜|、|，|。|〈|〉|《|》|「|」|『|』|【|】|〔|〕|︿|！|＃|＄|％|＆|＇|（|）|＊|＋|－|,．||；|＜|＝|＞|？|＠|［|］|＿|｛|｜|｝|～|↑|→|≈|①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩|￥|Δ|Ψ|γ|μ|φ|!|\"|'|#|\$|%|&|\*|\+|,|\.|;|\?|\\\|@|\(|\)|\[|\]|\^|_|`|\||\{|\}|~|<|>|=]"
+sws = "[！|“|”|‘|’|…|′|｜|、|，|。|〈|〉:：|《|》|「|」|『|』|【|】|〔|〕|︿|！|＃|＄|％|＆|＇|（|）|＊|＋|－|,．||；|＜|＝|＞|？|＠|［|］|＿|｛|｜|｝|～|↑|→|≈|①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩|￥|Δ|Ψ|γ|μ|φ|!|\"|'|#|\$|%|&|\*|\+|,|\.|;|\?|\\\|@|\(|\)|\[|\]|\^|_|`|\||\{|\}|~|<|>|=]"
 
 class FindDoc:
     def __init__(self, model_path='./model/model-wiki-hdf-5k.bin', seg_model_path="model/cws.model",
@@ -64,11 +64,12 @@ class FindDoc:
 
     def process_choice(self, sentences, all_choices):
         words_choices = []
-        print(sentences)
+        print(sentences,"1")
         for sentence in sentences:
+            print(sentence,"2")
             sent = self.remove_stopwords(sentence)
-            print(sent)
-            print(self.segmentor.segment(sent))
+            print(sent,"3")
+            print(self.segmentor.segment(sent),"4")
             words_choices.extend(self.segmentor.segment(sent))
         words_all_choices = []
         for all_choice in all_choices:
