@@ -96,7 +96,7 @@ class FindDoc:
             words = self.process_sentences([choice_now])
             log.debug("老大分词结果:" +" ".join(words))
             print(gender,age)
-            if gender == "M":
+            if gender == "male":
                 print("m")
                 pred, prob = self.male_classifier.predict(" ".join(words))
                 if prob[0] > 0.9:

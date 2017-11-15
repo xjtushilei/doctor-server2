@@ -122,6 +122,10 @@ def get_common_symptoms(age, gender, month=None):
     # gender = 'F'
     # month = 10
     # get_common_symptoms(age,gender,month)
+    if gender == "female":
+        gender = "F"
+    else:
+        gender = "M"
     if month is None:
         month = datetime.now().month
     with open(symptoms_distributions_file_dir, 'r') as fp:
@@ -153,10 +157,6 @@ def create_session(req):
     dob = patient["dob"]
     age = get_age_from_dob(dob)
     gender = patient["sex"]
-    if gender == "female":
-        gender = "F"
-    else:
-        gender = "M"
     symptoms = get_common_symptoms(age , gender)
     if len(symptoms) >= 5:
         symptoms = symptoms[:5]
