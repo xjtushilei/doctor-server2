@@ -94,6 +94,7 @@ class FindDoc:
             log.debug("老大进行第一轮的处理，分类器筛选掉诊断不了的病")
             words = self.process_sentences([choice_now])
             log.debug("老大分词结果:" +" ".join(words))
+            print(gender,age)
             if gender == "M":
                 pred, prob = self.male_classifier.predict(" ".join(words))
                 if prob[0] > 0.9:
