@@ -1,0 +1,11 @@
+click>=6.7
+fastTextpy>=0.0.1
+Flask>=0.12.2
+itsdangerous>=0.24
+Jinja2>=2.9.6
+MarkupSafe>=1.0
+numpy>=1.13.3
+pybind11>=2.2.1
+pyltp>=0.1.9.1
+Werkzeug>=0.12.2
+# gevent>=1.2.2
