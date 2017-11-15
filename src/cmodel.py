@@ -52,7 +52,7 @@ class FindDoc:
         self.female_classifier = fastText.load_model(self.female_classifier_path)
 
     def remove_stopwords(self, line):
-        re.sub(sws, " ", line)
+        return re.sub(sws, " ", line)
 
     def process_sentences(self, sentences):
         words = []
@@ -64,13 +64,9 @@ class FindDoc:
 
     def process_choice(self, sentences, all_choices):
         words_choices = []
-        print(sentences,"1")
         for sentence in sentences:
-            print(sentence,"2")
             sent = self.remove_stopwords(sentence)
-            print(sent,"3")
-            print(self.segmentor.segment(sent),"4")
-            words_choices.extend(self.segmentor.segment(sent))
+            words_choices.extend(self.split(sent))
         words_all_choices = []
         for all_choice in all_choices:
             words_all_choices.extend(all_choice)
