@@ -66,7 +66,7 @@ class FindDoc:
         words_choices = []
         for sentence in sentences:
             sent = self.remove_stopwords(sentence)
-            words_choices.extend(self.split(sent))
+            words_choices.extend(sent.split(" "))
         words_all_choices = []
         for all_choice in all_choices:
             words_all_choices.extend(all_choice)
