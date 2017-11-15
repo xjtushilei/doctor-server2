@@ -104,7 +104,7 @@ def get_age_from_dob(dob):
     today = datetime.today()
     diff = (today - birth)
     ageInDays = diff.days
-    return ageInDays
+    return ageInDays / 365.
 
 
 def create_question(qtype, seqno, query, choices):
@@ -157,7 +157,7 @@ def create_session(req):
         gender = "F"
     else:
         gender = "M"
-    symptoms = get_common_symptoms(age / 365., gender)
+    symptoms = get_common_symptoms(age , gender)
     if len(symptoms) >= 5:
         symptoms = symptoms[:5]
     question = create_question('multiple', 1, '您有哪些不舒服的症状？', symptoms)
