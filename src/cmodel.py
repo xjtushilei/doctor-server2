@@ -89,6 +89,7 @@ class FindDoc:
         symptoms, symptoms_no_chioce = self.process_choice([question["choice"] for question in session["questions"]],
                                                            [question["choices"] for question in session["questions"]])
         seqno_now = seqno
+        print(choice_now)
         if seqno_now == 1:
             # 当用户第一轮的输入为空时候，返回不可诊断
             if choice_now.strip() == "":
@@ -157,12 +158,13 @@ class FindDoc:
                 model=self.p_model,
                 age=age, gender=gender)
             log.info(diagnosis_disease_rate_dict)
-
+            input_list
             # 记住经纬的诊断结果
             session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
             log.debug(diagnosis_disease_rate_dict)
             # 王萌的推荐结果,让用户选择
-            result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce)
+            result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
+                                          choice_first=self.process_sentences([choice_now]))
 
             question = {
                 "type": "multiple",
@@ -172,7 +174,7 @@ class FindDoc:
             }
             log.debug(question)
             return "followup", question, None
-        elif seqno_now <= 3:
+        elif seqno_now <= 2:
             log.debug("seqno_now:" + str(seqno_now))
 
             log.debug("判断是否全部来自选择而没有人工输入？")

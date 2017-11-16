@@ -26,6 +26,7 @@ cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
              female_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-fm.ftz"
              )
 
+
 # cm = FindDoc()
 
 
@@ -126,6 +127,9 @@ def get_common_symptoms(age, gender, month=None):
         gender = "F"
     else:
         gender = "M"
+        # 疾病是男性，切性别大于18，则不进行推荐
+        if gender == "M" and age >= 18:
+            return []
     if month is None:
         month = datetime.now().month
     with open(symptoms_distributions_file_dir, 'r') as fp:
@@ -157,7 +161,7 @@ def create_session(req):
     dob = patient["dob"]
     age = get_age_from_dob(dob)
     gender = patient["sex"]
-    symptoms = get_common_symptoms(age , gender)
+    symptoms = get_common_symptoms(age, gender)
     if len(symptoms) >= 5:
         symptoms = symptoms[:5]
     question = create_question('multiple', 1, '您有哪些不舒服的症状？', symptoms)
