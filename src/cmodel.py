@@ -85,6 +85,7 @@ class FindDoc:
 
     def find_doctors(self, session, log, seqno, choice_now, age, gender):
         # 得到用户选择的症状和没有选择的症状
+        print(session)
         symptoms, symptoms_no_chioce = self.process_choice([question["choice"] for question in session["questions"]],
                                                            [question["choices"] for question in session["questions"]])
         seqno_now = seqno
