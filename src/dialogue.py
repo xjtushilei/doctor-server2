@@ -64,7 +64,7 @@ def calculate_p_sym_plus(rateList):
 
 
 def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_input_list=[],
-                max_recommend_sym_num=5, choice_history_words=[]):
+                max_recommend_sym_num=5, choice_history_words=[], seq=1):
     rate_matrix = {}
     # disease that we need from all disease
     l3sym_dict_we_need = []
@@ -88,24 +88,54 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
                     rate_matrix[s] = {"name": s, "rate": r, "rate_list": [], "rate_calculate": 0.0}
             l3sym_dict_we_need.append({"l3name": obj["l3name"],
                                        "all_sym_dic": obj["all_sym_dic"],
+                                       "top3": obj["top3"],
+                                       "top2": obj["top2"],
+                                       "top1": obj["top1"],
                                        "suffer_sym_dic": suffer_sym_dic,
                                        "rate": 0.0})
-    if normal_recommendation:
-        # 计算每一个症状的概率
-        for name_i in input_list:
-            for (sym_name_j, sym_obj) in rate_matrix.items():
-                sym_obj["rate_list"].append(calculate_p_sym(l3sym_dict_we_need, name_i, sym_name_j))
-        # 将上一步求出的n（症状的个数）个概率进行融合
-        for (sym_name_j, sym_obj) in rate_matrix.items():
-            sym_obj["rate_calculate"] = 1 - (calculate_p_sym_plus(sym_obj["rate_list"]) - 0.5) ** 2
-
+    result = {"normal_recommendation": normal_recommendation, "recommend_sym_list": [], "diagnosis_list": [],
+              "disease_rate_dict": disease_rate_dict}
+    # 如果第一轮，直接推荐5个疾病中的top1
+    if seq == 1:
+        for d_name in disease_rate_dict.keys():
+            if len(l3sym_dict[d_name]["top2"]) >= 1:
+                top2 = l3sym_dict[d_name]["top2"]
+                sym_key = list(top2.keys())[0]
+                sym_value = top2[sym_key]
+                result["recommend_sym_list"].append(
+                    {
+                        "name": sym_key,
+                        "rate": sym_value,
+                        "rate_calculate": sym_value
+                    })
     else:
-        # 如果没有得到正常的初始化，就根据疾病的概率进行排序
-        for (sym_name, sym_obj) in rate_matrix.items():
-            sym_obj["rate_calculate"] = sym_obj["rate"]
+        if normal_recommendation:
+            # 计算每一个症状的概率
+            for name_i in input_list:
+                for (sym_name_j, sym_obj) in rate_matrix.items():
+                    sym_obj["rate_list"].append(calculate_p_sym(l3sym_dict_we_need, name_i, sym_name_j))
+            # 将上一步求出的n（症状的个数）个概率进行融合
+            for (sym_name_j, sym_obj) in rate_matrix.items():
+                sym_obj["rate_calculate"] = 1 - (calculate_p_sym_plus(sym_obj["rate_list"]) - 0.5) ** 2
 
-    # 得到最值得推荐的症状的概率，之后直接取top - n就行了
-    rate_matrix = sorted(rate_matrix.values(), key=lambda d: d["rate_calculate"], reverse=True)
+        else:
+            # 如果没有得到正常的初始化，就根据疾病的概率进行排序
+            for (sym_name, sym_obj) in rate_matrix.items():
+                sym_obj["rate_calculate"] = sym_obj["rate"]
+
+        # 得到最值得推荐的症状的概率，之后直接取top - n就行了
+        rate_matrix = sorted(rate_matrix.values(), key=lambda d: d["rate_calculate"], reverse=True)
+        for sym in rate_matrix:
+            if len(result["recommend_sym_list"]) >= max_recommend_sym_num:
+                break
+            if sym["name"] in no_use_input_list:
+                continue
+            result["recommend_sym_list"].append(
+                {
+                    "name": sym["name"],
+                    "rate": sym["rate"],
+                    "rate_calculate": sym["rate_calculate"]
+                })
     # 计算每个疾病的概率
     # 公式是: 京伟给的该疾病的概率 *【(n个患有的症状对该疾病的贡献率的和)】
     for d in l3sym_dict_we_need:
@@ -123,22 +153,6 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
         d["rate"] = rate
     # 得到疾病概率的排序
     l3sym_dict_we_need = sorted(l3sym_dict_we_need, key=lambda d: d["rate"], reverse=True)
-    # 查看该病的概率和名字
-    # for x in l3sym_map_less:
-    #     print(x["rate"],x["l3name"])
-    result = {"normal_recommendation": normal_recommendation, "recommend_sym_list": [], "diagnosis_list": [],
-              "disease_rate_dict": disease_rate_dict}
-    for sym in rate_matrix:
-        if len(result["recommend_sym_list"]) >= max_recommend_sym_num:
-            break
-        if sym["name"] in no_use_input_list:
-            continue
-        result["recommend_sym_list"].append(
-            {
-                "name": sym["name"],
-                "rate": sym["rate"],
-                "rate_calculate": sym["rate_calculate"]
-            })
     for obj in l3sym_dict_we_need:
         result["diagnosis_list"].append(
             {"l3name": obj["l3name"],
@@ -175,7 +189,8 @@ def test_some_round_by_console():
     print("输入提示：回复数字编号，多个请用空格分割。最后按一个enter键确认！")
 
     for round in range(round_sum):
-        result = core_method(read_symptom_data(), disease_rate_dict, input_list, no_use_input_list, max_recommend_sym)
+        result = core_method(read_symptom_data(), disease_rate_dict, input_list, no_use_input_list, max_recommend_sym,
+                             seq=round + 1)
         print("-----------------" + "Round " + str(round + 1) + "--------------------------")
         for index, sym in enumerate(result["recommend_sym_list"]):
             print(index, ".", sym["name"])
@@ -210,5 +225,6 @@ def test_some_round_by_console():
     print("----------------------------------------------")
     disease_rate_dict, input_list = get_diagnosis_first(koushu + "," + ",".join(what_user_input), model, age, gender)
     print(disease_rate_dict)
+
 
 # test_some_round_by_console()

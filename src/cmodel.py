@@ -162,7 +162,7 @@ class FindDoc:
             # 王萌的推荐结果,让用户选择
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences(
-                                              [question["choice"] for question in session["questions"]]))
+                                              [question["choice"] for question in session["questions"]]),seq=1)
 
             question = {
                 "type": "multiple",
@@ -173,7 +173,7 @@ class FindDoc:
             }
             log.debug(question)
             return "followup", question, None
-        elif seqno_now <= 2:
+        elif seqno_now == 2:
             log.debug("seqno_now:" + str(seqno_now))
 
             log.debug("判断是否全部来自选择而没有人工输入？")
