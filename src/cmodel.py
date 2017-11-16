@@ -162,7 +162,7 @@ class FindDoc:
             # 王萌的推荐结果,让用户选择
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences(
-                                              [question["choice"] for question in session["questions"]]),seq=1)
+                                              [question["choice"] for question in session["questions"]]), seq=1)
 
             question = {
                 "type": "multiple",
@@ -196,7 +196,7 @@ class FindDoc:
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences(
-                                                  [question["choice"] for question in session["questions"]]))
+                                                  [question["choice"] for question in session["questions"]]), seq=2)
             else:
                 # 如果有了新的人工输入,则进入土豪的模型
                 log.info(",".join([question["choice"] for question in session["questions"]]))
