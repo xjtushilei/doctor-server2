@@ -64,7 +64,7 @@ def calculate_p_sym_plus(rateList):
 
 
 def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_input_list=[],
-                max_recommend_sym_num=5):
+                max_recommend_sym_num=5,choice_first=[]):
     rate_matrix = {}
     # disease that we need from all disease
     l3sym_dict_we_need = []
@@ -83,7 +83,8 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
                     normal_recommendation = True
             # 将该疾病的其他症状加入待计算列表里
             for (s, r) in obj["all_sym_dic"].items():
-                if s not in rate_matrix and s not in input_list:
+                # 这个症状不在待计算里，不在输入里，不在原始输入分词后的结果里
+                if s not in rate_matrix and s not in input_list and s not in choice_first:
                     rate_matrix[s] = {"name": s, "rate": r, "rate_list": [], "rate_calculate": 0.0}
             l3sym_dict_we_need.append({"l3name": obj["l3name"],
                                        "all_sym_dic": obj["all_sym_dic"],
@@ -105,17 +106,14 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
     # 得到最值得推荐的症状的概率，之后直接取top - n就行了
     rate_matrix = sorted(rate_matrix.values(), key=lambda d: d["rate_calculate"], reverse=True)
     # 计算每个疾病的概率
-    # 公式是: 京伟给的该疾病的概率 *【症状命中个数 + 系数M * (n个患有的症状对该疾病的贡献率的和)】
-    # 系数 M
-    M = 0.0
+    # 公式是: 京伟给的该疾病的概率 *【(n个患有的症状对该疾病的贡献率的和)】
     for d in l3sym_dict_we_need:
         rate = 0.0
         # n个患有的症状对该疾病的贡献率的和
         for (sym_name, sym_rate) in d["suffer_sym_dic"].items():
             rate += sym_rate
-        # 【症状命中个数 + 系数M * (n个患有的症状对该疾病的贡献率的和)】
-        rate = len(d["suffer_sym_dic"]) + M * rate
-        # 京伟给的该疾病的概率 *【症状命中个数 + 系数M * (n个患有的症状对该疾病的贡献率的和)】
+        # n个患有的症状对该疾病的贡献率的和
+        # 京伟给的该疾病的概率 *【n个患有的症状对该疾病的贡献率的和】
         if d["l3name"] in disease_rate_dict:
             rate = rate * disease_rate_dict[d["l3name"]][0]
         # 若京伟没有给概率，将该疾病设置为0
