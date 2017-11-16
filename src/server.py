@@ -18,8 +18,8 @@ CLIENT_API_DOCTORS = "/v1/doctors"
 
 symptoms_distributions_file_dir = '/tvm/mdata/jerryzchen/model/symptoms_distributions.json'
 # symptoms_distributions_file_dir='../model/symptoms_distributions.json'
-cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-wiki-hdf-5k.bin",
-             seg_model_path="/tvm/mdata/jerryzchen/model/cws-3.4.0.model",
+cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
+             seg_model_path="/tvm/mdata/jerryzchen/model/cws.model",
              dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy",
              disease_symptom_file_dir="/tvm/mdata/jerryzchen/model/disease-symptom3.data",
              male_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-ml.ftz",
