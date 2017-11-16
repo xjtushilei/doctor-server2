@@ -64,7 +64,7 @@ def calculate_p_sym_plus(rateList):
 
 
 def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_input_list=[],
-                max_recommend_sym_num=5,choice_first=[]):
+                max_recommend_sym_num=5, choice_history_words=[]):
     rate_matrix = {}
     # disease that we need from all disease
     l3sym_dict_we_need = []
@@ -84,7 +84,7 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
             # 将该疾病的其他症状加入待计算列表里
             for (s, r) in obj["all_sym_dic"].items():
                 # 这个症状不在待计算里，不在输入里，不在原始输入分词后的结果里
-                if s not in rate_matrix and s not in input_list and s not in choice_first:
+                if s not in rate_matrix and s not in input_list and s not in choice_history_words:
                     rate_matrix[s] = {"name": s, "rate": r, "rate_list": [], "rate_calculate": 0.0}
             l3sym_dict_we_need.append({"l3name": obj["l3name"],
                                        "all_sym_dic": obj["all_sym_dic"],
@@ -158,7 +158,7 @@ def test_some_round_by_console():
     model = PredModel()
     max_recommend_sym = 5
     what_user_input = []
-    koushu = "大便时太用力，肛门巨疼，拉不出来，肚子疼"
+    koushu = "头疼，咽痛，鼻塞，腿发软"
     age = 20
     gender = "m"
     # 得到京伟的诊断结果 和 初始输入

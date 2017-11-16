@@ -109,7 +109,6 @@ class FindDoc:
                                 {
                                     "id": '174',
                                     'name': pred[0]
-                                    , "debug": "男科 和 男遗传"
                                 }
                         }
                         return "department", None, recommendation
@@ -157,13 +156,13 @@ class FindDoc:
                 model=self.p_model,
                 age=age, gender=gender)
             log.info(diagnosis_disease_rate_dict)
-            input_list
+
             # 记住经纬的诊断结果
             session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
             log.debug(diagnosis_disease_rate_dict)
             # 王萌的推荐结果,让用户选择
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
-                                          choice_first=self.process_sentences([choice_now]))
+                                          choice_history_words=self.process_sentences([question["choice"] for question in session["questions"]]))
 
             question = {
                 "type": "multiple",
@@ -194,7 +193,9 @@ class FindDoc:
                 input_list = choice_now.split(",")
                 input_list.extend(symptoms)
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
-                                              symptoms_no_chioce)
+                                              symptoms_no_chioce,
+                                              choice_history_words=self.process_sentences(
+                                                  [question["choice"] for question in session["questions"]]))
             else:
                 # 如果有了新的人工输入,则进入土豪的模型
                 log.info(",".join([question["choice"] for question in session["questions"]]))
@@ -208,7 +209,9 @@ class FindDoc:
                 session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
                 log.debug(diagnosis_disease_rate_dict)
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
-                                              symptoms_no_chioce)
+                                              symptoms_no_chioce,
+                                              choice_history_words=self.process_sentences(
+                                                  [question["choice"] for question in session["questions"]]))
             question = {
                 "type": "multiple",
                 "seqno": seqno_now + 1,
@@ -224,7 +227,9 @@ class FindDoc:
             choice_now = [question["choice"] for question in session["questions"]][-1].strip()
             input_list = choice_now.split(",")
             input_list.extend(symptoms)
-            result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce)
+            result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
+                                          choice_history_words=self.process_sentences(
+                                              [question["choice"] for question in session["questions"]]))
             log.debug("王萌的疾病排序:")
             log.debug([d["l3name"] for d in result["diagnosis_list"]])
             log.info(",".join([question["choice"] for question in session["questions"]]))
