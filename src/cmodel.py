@@ -140,7 +140,6 @@ class FindDoc:
                                 {
                                     "id": '174',
                                     'name': pred[0]
-                                    , "debug": "分到科室:产科，女性遗传"
                                 }
                         }
                         return "department", None, recommendation
@@ -156,19 +155,21 @@ class FindDoc:
                 model=self.p_model,
                 age=age, gender=gender)
             log.info(diagnosis_disease_rate_dict)
-
+            print(diagnosis_disease_rate_dict)
             # 记住经纬的诊断结果
             session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
             log.debug(diagnosis_disease_rate_dict)
             # 王萌的推荐结果,让用户选择
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
-                                          choice_history_words=self.process_sentences([question["choice"] for question in session["questions"]]))
+                                          choice_history_words=self.process_sentences(
+                                              [question["choice"] for question in session["questions"]]))
 
             question = {
                 "type": "multiple",
                 "seqno": seqno_now + 1,
                 "query": "您有哪些不舒服的症状？",
-                "choices": [r["name"] for r in result["recommend_sym_list"]]
+                "choices": [r["name"] for r in result["recommend_sym_list"]],
+                "diagnosis_disease_rate_dict": diagnosis_disease_rate_dict
             }
             log.debug(question)
             return "followup", question, None
@@ -205,6 +206,7 @@ class FindDoc:
                     age=age,
                     gender=gender
                 )
+                print(diagnosis_disease_rate_dict, "又进入了jingwei的结果")
                 log.info(diagnosis_disease_rate_dict)
                 session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
                 log.debug(diagnosis_disease_rate_dict)
@@ -216,7 +218,8 @@ class FindDoc:
                 "type": "multiple",
                 "seqno": seqno_now + 1,
                 "query": "您有哪些不舒服的症状?",
-                "choices": [r["name"] for r in result["recommend_sym_list"]]
+                "choices": [r["name"] for r in result["recommend_sym_list"]],
+                "diagnosis_disease_rate_dict": diagnosis_disease_rate_dict
             }
             # 2~3轮仅仅推荐症状,最后一轮推荐doctor
             log.debug(question)

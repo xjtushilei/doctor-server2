@@ -83,8 +83,9 @@ class PredModel:
         diseases = self.dict[5]
         index = self.dict[6]
         mask_matrix = self.dict[7]
+        mask_vec = self.dict[8]
 
-        # mask_layer = self.Masking(mask_matrix,age,gender)
+        mask_layer = self.Masking(mask_matrix,age,gender)
 
 
         dim = self.wv_dim
@@ -116,8 +117,8 @@ class PredModel:
         input_vec = np.reshape(input_vec, [1, dim])
         symtom_dis = np.dot(input_vec, symp_wv.T)
         name_dis = np.dot(input_vec, disease_name_vec.T)[0]
-        #combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]*mask_layer
-        combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]
+        combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]*mask_layer*mask_vec[0]
+        #combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]
         val, pos = self.top_k(combined_dis, k_disease)
 
 

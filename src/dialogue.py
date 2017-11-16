@@ -100,6 +100,7 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
             sym_obj["rate_calculate"] = 1 - (calculate_p_sym_plus(sym_obj["rate_list"]) - 0.5) ** 2
 
     else:
+        # 如果没有得到正常的初始化，就根据疾病的概率进行排序
         for (sym_name, sym_obj) in rate_matrix.items():
             sym_obj["rate_calculate"] = sym_obj["rate"]
 
@@ -158,9 +159,9 @@ def test_some_round_by_console():
     model = PredModel()
     max_recommend_sym = 5
     what_user_input = []
-    koushu = "头疼，咽痛，鼻塞，腿发软"
-    age = 20
-    gender = "m"
+    koushu = "原发性闭经卵巢早衰，最近半年一直看不到卵泡"
+    age = 50
+    gender = "female"
     # 得到京伟的诊断结果 和 初始输入
     disease_rate_dict, input_list = get_diagnosis_first(koushu, model, age, gender)
     print(disease_rate_dict.keys())
