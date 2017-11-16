@@ -2,13 +2,14 @@ import fastText
 import numpy as np
 import collections
 from pyltp import Segmentor
+from gensim.models import word2vec
 import re
 
 class PredModel:
     #def __init__(self, seg_model_path="./model/cws.model", w2v_model_path="./model/model-wiki-hdf-5k.bin", dict_var_path="./val/dict_var.npy"):
     #def __init__(self, seg_model_path="./model/cws.model", w2v_model_path="./model/word2vec.model", dict_var_path="./val/dict_var.npy"):
 
-    def __init__(self, seg_model_path="./model/cws.model", w2v_model_path="./model/model-wiki-hdf-5k.bin", dict_var_path="./model/dict_var.npy"):
+    def __init__(self, seg_model_path="./model/cws.model", w2v_model_path="./model/model-webqa-hdf-2c.bin", dict_var_path="./model/dict_var.npy"):
         self.segmentor = Segmentor()
         self.segmentor.load(seg_model_path)
         self.ft = fastText.load_model(w2v_model_path)
@@ -83,7 +84,7 @@ class PredModel:
         index = self.dict[6]
         mask_matrix = self.dict[7]
 
-        mask_layer = self.Masking(mask_matrix,age,gender)
+        # mask_layer = self.Masking(mask_matrix,age,gender)
 
 
         dim = self.wv_dim
@@ -100,9 +101,9 @@ class PredModel:
                 #wv = self.ft[word]
                 chunk_wv.append(wv)
 
-                if word in ['不','不是','没有','没','无']:
-                    chunk_wv = []
-                    break
+                # if word in ['不','不是','没有','没','无']:
+                #     chunk_wv = []
+                #     break
 
             if len(chunk_wv) > 0:
                 sent_vec.append(self.unitvec(np.sum(chunk_wv, axis=0)))
@@ -115,7 +116,8 @@ class PredModel:
         input_vec = np.reshape(input_vec, [1, dim])
         symtom_dis = np.dot(input_vec, symp_wv.T)
         name_dis = np.dot(input_vec, disease_name_vec.T)[0]
-        combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]*mask_layer
+        #combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]*mask_layer
+        combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]
         val, pos = self.top_k(combined_dis, k_disease)
 
 
