@@ -229,7 +229,7 @@ class FindDoc:
             input_list.extend(symptoms)
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences(
-                                              [question["choice"] for question in session["questions"]]))
+                                              [question["choice"] for question in session["questions"]]),seq=3)
             log.debug("王萌的疾病排序:")
             log.debug([d["l3name"] for d in result["diagnosis_list"]])
             log.info(",".join([question["choice"] for question in session["questions"]]))

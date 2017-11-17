@@ -103,7 +103,8 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
                 if len(l3sym_dict[d_name]["top2"]) >= 1:
                     top2 = l3sym_dict[d_name]["top2"]
                     sym_key = list(top2.keys())[0]
-                    if sym_key in recommend_set:
+                    # input_list 是京伟的识别结果，choice_history_words是原始输入的分词结果
+                    if sym_key in recommend_set or sym_key in input_list or sym_key in choice_history_words:
                         continue
                     sym_value = top2[sym_key]
                     recommend_set.add(sym_key)
@@ -182,12 +183,13 @@ def test_some_round_by_console():
     model = PredModel()
     max_recommend_sym = 5
     what_user_input = []
-    koushu = "原发性闭经卵巢早衰，最近半年一直看不到卵泡"
+    koushu = "孩子突然腹泻，肚子疼，可能伴有呕吐，发烧，恶心"
+    # koushu = "原发性闭经卵巢早衰，最近半年一直看不到卵泡"
     age = 50
     gender = "female"
     # 得到京伟的诊断结果 和 初始输入
     disease_rate_dict, input_list = get_diagnosis_first(koushu, model, age, gender)
-    print(disease_rate_dict.keys())
+    print(disease_rate_dict)
     print(input_list)
     # 病人没有采用的垃圾症状（第0轮初始时候是没有的）
     no_use_input_list = []
