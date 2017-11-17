@@ -237,4 +237,4 @@ def test_some_round_by_console():
     disease_rate_dict, input_list = get_diagnosis_first(koushu + "," + ",".join(what_user_input), model, age, gender)
     print(disease_rate_dict)
 
-test_some_round_by_console()
+# test_some_round_by_console()
