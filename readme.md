@@ -1,3 +1,5 @@
+# 2017年11月18日01:09:47之后，暂时没有使用，还是用原来的python server.py
+
 # Gunicorn + gevent 搭配使用说明
 
 gevent 的使用已经在 `gun.py` 中配置好了,并启用了 `gevent.monkey.patch_all()`
