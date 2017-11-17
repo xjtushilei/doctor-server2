@@ -239,23 +239,24 @@ def find_doctors(req):
     return res
 
 
-# 按照天数来记录日志，第一天不会有单独的文件。
-file_handler = TimedRotatingFileHandler(
-    "log/logging_day.log", 'M', 2, 0)
-# 日志格式
-logging_format = logging.Formatter(
-    '%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)s : %(message)s')
-file_handler.setFormatter(logging_format)
-app.logger.addHandler(file_handler)
-# 设置日志级别
-app.logger.setLevel(logging.INFO)
 
-# 统计加载模型时间
-starttime = datetime.now()
-cm.load()
-endtime = datetime.now()
-app.logger.info("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒")
-app.logger.info("finished loading models.\n start server...")
 
 if __name__ == '__main__':
-    app.run(debug=False, host="0.0.0.0", port=6000, threaded=True)
+    # 按照天数来记录日志，第一天不会有单独的文件。
+    file_handler = TimedRotatingFileHandler(
+        "log/logging_day.log", 'M', 2, 0)
+    # 日志格式
+    logging_format = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)s : %(message)s')
+    file_handler.setFormatter(logging_format)
+    app.logger.addHandler(file_handler)
+    # 设置日志级别
+    app.logger.setLevel(logging.INFO)
+
+    # 统计加载模型时间
+    starttime = datetime.now()
+    cm.load()
+    endtime = datetime.now()
+    app.logger.info("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒")
+    app.logger.info("finished loading models.\n start server...")
+    app.run(debug=False, host="0.0.0.0", port=6000, threaded=True,processes=4)

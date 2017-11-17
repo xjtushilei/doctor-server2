@@ -110,7 +110,7 @@ class PredModel:
                 sent_vec.append(self.unitvec(np.sum(chunk_wv, axis=0)))
 
         if len(sent_vec) == 0:
-            print("something is wrong")
+            print("something is wrong len(sent_vec) == 0")
             assert(False)
 
         input_vec = self.unitvec(np.sum(sent_vec, axis=0))

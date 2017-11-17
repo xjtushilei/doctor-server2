@@ -85,15 +85,15 @@ class FindDoc:
     def classify(self, sentences):
         words = self.process_sentences(sentences)
         # print(" ".join(words))
-        print(self.model.predict(" ".join(words), 2))
+        # print(self.model.predict(" ".join(words), 2))
 
     def find_doctors(self, session, log, seqno, choice_now, age, gender):
         # 得到用户选择的症状和没有选择的症状
-        print(session)
+        # print(session)
         symptoms, symptoms_no_chioce = self.process_choice([question["choice"] for question in session["questions"]],
                                                            [question["choices"] for question in session["questions"]])
         seqno_now = seqno
-        print(choice_now)
+        # print(choice_now)
         if seqno_now == 1:
             # 当用户第一轮的输入为空时候，返回不可诊断
             if choice_now.strip() == "":
@@ -103,7 +103,7 @@ class FindDoc:
             if age >= 18:
                 words = self.process_sentences([choice_now])
                 log.debug("老大分词结果:" + " ".join(words))
-                print(gender, age)
+                # print(gender, age)
                 if gender == "male":
                     pred, prob = self.male_classifier.predict(" ".join(words))
                     if prob[0] > 0.9:
@@ -148,7 +148,7 @@ class FindDoc:
                         return "department", None, recommendation
                     else:
                         log.debug("进入后面的处理")
-                print(pred, prob)
+                # print(pred, prob)
             log.debug("老大处理结束，this disease can deal")
             log.debug("seqno_now:" + str(seqno_now))
             # 进入土豪的节奏
