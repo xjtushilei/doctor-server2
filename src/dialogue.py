@@ -97,17 +97,26 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
               "disease_rate_dict": disease_rate_dict}
     # 如果第一轮，直接推荐5个疾病中的top1
     if seq == 1:
-        for d_name in disease_rate_dict.keys():
-            if len(l3sym_dict[d_name]["top2"]) >= 1:
-                top2 = l3sym_dict[d_name]["top2"]
-                sym_key = list(top2.keys())[0]
-                sym_value = top2[sym_key]
-                result["recommend_sym_list"].append(
-                    {
-                        "name": sym_key,
-                        "rate": sym_value,
-                        "rate_calculate": sym_value
-                    })
+        recommend_set = set()
+        for i in range(5):
+            for d_name in disease_rate_dict.keys():
+                if len(l3sym_dict[d_name]["top2"]) >= 1:
+                    top2 = l3sym_dict[d_name]["top2"]
+                    sym_key = list(top2.keys())[0]
+                    if sym_key in recommend_set:
+                        continue
+                    sym_value = top2[sym_key]
+                    recommend_set.add(sym_key)
+                    result["recommend_sym_list"].append(
+                        {
+                            "name": sym_key,
+                            "rate": sym_value,
+                            "rate_calculate": sym_value
+                        })
+                    if len(result["recommend_sym_list"]) >= len(disease_rate_dict):
+                        break
+            if len(result["recommend_sym_list"]) >= len(disease_rate_dict):
+                break
     else:
         if normal_recommendation:
             # 计算每一个症状的概率
@@ -225,6 +234,5 @@ def test_some_round_by_console():
     print("----------------------------------------------")
     disease_rate_dict, input_list = get_diagnosis_first(koushu + "," + ",".join(what_user_input), model, age, gender)
     print(disease_rate_dict)
-
 
 # test_some_round_by_console()
