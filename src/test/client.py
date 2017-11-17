@@ -19,6 +19,7 @@ client_request_body = {
     },
     "wechatOpenId":wechatOpenId
 }
+print(client_request_body)
 res = requests.post('http://docfinder.sparta.html5.qq.com/v1/sessions?clientId=mobimedical&orgId=org',
                     json=client_request_body).json()
 print(res)

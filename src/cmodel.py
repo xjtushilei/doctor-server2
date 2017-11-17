@@ -3,8 +3,7 @@ import random
 import fastText
 import os.path
 import re
-from pprint import pprint
-from pyltp import Segmentor
+
 from pmodel import PredModel
 
 import dialogue
@@ -79,7 +78,7 @@ class FindDoc:
 
     def classify(self, sentences):
         words = self.process_sentences(sentences)
-        print(" ".join(words))
+        # print(" ".join(words))
         print(self.model.predict(" ".join(words), 2))
 
     def find_doctors(self, session, log, seqno, choice_now, age, gender):
@@ -100,7 +99,6 @@ class FindDoc:
                 log.debug("老大分词结果:" + " ".join(words))
                 print(gender, age)
                 if gender == "male":
-                    print("m")
                     pred, prob = self.male_classifier.predict(" ".join(words))
                     if prob[0] > 0.9:
                         log.debug("分到科室：" + pred[0])
@@ -130,7 +128,6 @@ class FindDoc:
                         }
                         return "doctors", None, recommendation
                 else:
-                    print("f")
                     pred, prob = self.female_classifier.predict(" ".join(words))
                     if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
                         # pass
@@ -155,7 +152,7 @@ class FindDoc:
                 model=self.p_model,
                 age=age, gender=gender)
             log.info(diagnosis_disease_rate_dict)
-            print(diagnosis_disease_rate_dict)
+            # print(diagnosis_disease_rate_dict)
             # 记住经纬的诊断结果
             session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
             log.debug(diagnosis_disease_rate_dict)
@@ -206,7 +203,7 @@ class FindDoc:
                     age=age,
                     gender=gender
                 )
-                print(diagnosis_disease_rate_dict, "又进入了jingwei的结果")
+                # print(diagnosis_disease_rate_dict, "又进入了jingwei的结果")
                 log.info(diagnosis_disease_rate_dict)
                 session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
                 log.debug(diagnosis_disease_rate_dict)
@@ -280,14 +277,6 @@ class FindDoc:
                 "seqno": seqno_now + 1,
                 "query": "您有哪些不舒服的症状？",
                 "choices": ['拉肚子', '头部不舒服', '感冒']
-            }
-            return "followup", question, None
-        elif seqno_now == 3:
-            question = {
-                "type": "multiple",
-                "seqno": seqno_now + 1,
-                "query": "您有哪些不舒服的症状？",
-                "choices": ['怀孕', '呕吐', '眼睛红肿']
             }
             return "followup", question, None
         else:
