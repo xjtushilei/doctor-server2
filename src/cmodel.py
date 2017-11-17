@@ -15,8 +15,13 @@ class FindDoc:
     def __init__(self, model_path='./model/model-wiki-hdf-5k.bin', seg_model_path="model/cws.model",
                  dict_var_path="./model/dict_var.npy",
                  disease_symptom_file_dir="./model/disease-symptom3.data",
+                 all_symptom_count_file_path="./model/all-symptom-count.data",
                  male_classifier_path="./model/model-hdf-5k-ml.ftz",
                  female_classifier_path="./model/model-hdf-5k-fm.ftz"):
+        if os.path.isfile(all_symptom_count_file_path):
+            self.all_symptom_count_file_path = all_symptom_count_file_path
+        else:
+            raise RuntimeError("cannot find model file: " + all_symptom_count_file_path)
         if os.path.isfile(model_path):
             self.model_path = model_path
         else:
@@ -47,7 +52,8 @@ class FindDoc:
     def load(self):
         self.p_model = PredModel(self.seg_model_path, self.model_path, self.dict_var_path)
         self.segmentor = self.p_model.segmentor
-        self.l3sym_dict = dialogue.read_symptom_data(self.disease_symptom_file_dir)
+        self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
+                                                                         self.all_symptom_count_file_path)
         self.male_classifier = fastText.load_model(self.male_classifier_path)
         self.female_classifier = fastText.load_model(self.female_classifier_path)
 
@@ -159,7 +165,8 @@ class FindDoc:
             # 王萌的推荐结果,让用户选择
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences(
-                                              [question["choice"] for question in session["questions"]]), seq=1)
+                                              [question["choice"] for question in session["questions"]]), seq=1,
+                                          all_sym_count=self.all_sym_count)
 
             question = {
                 "type": "multiple",
@@ -193,7 +200,8 @@ class FindDoc:
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences(
-                                                  [question["choice"] for question in session["questions"]]), seq=2)
+                                                  [question["choice"] for question in session["questions"]]), seq=2,
+                                              all_sym_count=self.all_sym_count)
             else:
                 # 如果有了新的人工输入,则进入土豪的模型
                 log.info(",".join([question["choice"] for question in session["questions"]]))
@@ -210,7 +218,8 @@ class FindDoc:
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences(
-                                                  [question["choice"] for question in session["questions"]]))
+                                                  [question["choice"] for question in session["questions"]]), seq=2,
+                                              all_sym_count=self.all_sym_count)
             question = {
                 "type": "multiple",
                 "seqno": seqno_now + 1,
@@ -229,7 +238,8 @@ class FindDoc:
             input_list.extend(symptoms)
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences(
-                                              [question["choice"] for question in session["questions"]]),seq=3)
+                                              [question["choice"] for question in session["questions"]]), seq=3,
+                                          all_sym_count=self.all_sym_count)
             log.debug("王萌的疾病排序:")
             log.debug([d["l3name"] for d in result["diagnosis_list"]])
             log.info(",".join([question["choice"] for question in session["questions"]]))

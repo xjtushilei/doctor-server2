@@ -3,13 +3,15 @@ import json
 from pmodel import PredModel
 
 
-def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data'):
+def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
+                      all_symptom_count_file_path="./model/all-symptom-count.data"):
     """
-    disease and 症状
-    :return: level3的dict
+    1.disease and 症状   2.还有所有症状的排序
+    :return: 1.disease and 症状   2.还有所有症状的排序
     """
-    with open(disease_symptom_file_dir, encoding="utf-8") as file:
-        return json.load(file)
+    with open(disease_symptom_file_dir, encoding="utf-8") as file1, open(all_symptom_count_file_path,
+                                                                         encoding="utf-8") as file2:
+        return json.load(file1), json.load(file2)
 
 
 def get_diagnosis_first(input, model, age=20, gender="m"):
@@ -64,7 +66,7 @@ def calculate_p_sym_plus(rateList):
 
 
 def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_input_list=[],
-                max_recommend_sym_num=5, choice_history_words=[], seq=1):
+                max_recommend_sym_num=5, choice_history_words=[], seq=2, all_sym_count={}):
     rate_matrix = {}
     # disease that we need from all disease
     l3sym_dict_we_need = []
@@ -97,28 +99,32 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
               "disease_rate_dict": disease_rate_dict}
     # 如果第一轮，直接推荐5个疾病中的top1
     if seq == 1:
-
+        # recommend_set用来去重，避免推荐的症状中出现重复
         recommend_set = set()
         for i in range(5):
             for d_name in disease_rate_dict.keys():
-                if len(l3sym_dict[d_name]["top2"]) >= i+1:
+                if len(l3sym_dict[d_name]["top2"]) >= i + 1:
                     top2 = l3sym_dict[d_name]["top2"]
                     sym_key = list(top2.keys())[i]
                     # input_list 是京伟的识别结果，choice_history_words是原始输入的分词结果
                     if sym_key in recommend_set or sym_key in input_list or sym_key in choice_history_words:
                         continue
-                    sym_value = top2[sym_key]
                     recommend_set.add(sym_key)
+                    # 给增加的症状添加概率
+                    if sym_key in all_sym_count:
+                        sym_value = all_sym_count[sym_key]
+                    else:
+                        sym_value = 0
                     result["recommend_sym_list"].append(
                         {
                             "name": sym_key,
-                            "rate": sym_value,
-                            "rate_calculate": sym_value
+                            "rate": sym_value
                         })
                     if len(result["recommend_sym_list"]) >= len(disease_rate_dict):
                         break
             if len(result["recommend_sym_list"]) >= len(disease_rate_dict):
                 break
+        result["recommend_sym_list"].sort(key=lambda s: s["rate"], reverse=True)
     else:
         if normal_recommendation:
             # 计算每一个症状的概率
@@ -175,6 +181,7 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
     return result
 
 
+# 下面的程序没有使用
 def test_some_round_by_console():
     """
     通过3~4轮对话，来测试模型
@@ -184,8 +191,8 @@ def test_some_round_by_console():
     model = PredModel()
     max_recommend_sym = 5
     what_user_input = []
-    koushu = "孩子突然腹泻，肚子疼，可能伴有呕吐，发烧，恶心"
-    # koushu = "原发性闭经卵巢早衰，最近半年一直看不到卵泡"
+    # koushu = "孩子突然腹泻，肚子疼，可能伴有呕吐，发烧，恶心"
+    koushu = "原发性闭经卵巢早衰，最近半年一直看不到卵泡"
     age = 50
     gender = "female"
     # 得到京伟的诊断结果 和 初始输入
@@ -195,18 +202,18 @@ def test_some_round_by_console():
     # 病人没有采用的垃圾症状（第0轮初始时候是没有的）
     no_use_input_list = []
     # 总轮数（不包括初始化轮）
-
+    l3sym_dict,all_sym_count=read_symptom_data()
     # 第0轮结果
     print("输入提示：回复数字编号，多个请用空格分割。最后按一个enter键确认！")
 
-    for round in [1,2]:
-        result = core_method(read_symptom_data(), disease_rate_dict, input_list, no_use_input_list, max_recommend_sym,
-                             seq=round )
-        print("-----------------" + "Round " + str(round ) + "--------------------------")
+    for round in [1, 2]:
+        result = core_method(l3sym_dict, disease_rate_dict, input_list, no_use_input_list, max_recommend_sym,
+                             seq=round,all_sym_count=all_sym_count)
+        print("-----------------" + "Round " + str(round) + "--------------------------")
         for index, sym in enumerate(result["recommend_sym_list"]):
             print(index, ".", sym["name"])
         print(len(result["recommend_sym_list"]), ".", "以上都没有")
-        print("-----------------" + "Round " + str(round ) + "--------------------------")
+        print("-----------------" + "Round " + str(round) + "--------------------------")
         user_input = input("请选择以上几个症状您是否患有？\n")
         user_input_list = [int(num) for num in user_input.strip().split(" ")]
         for index, sym in enumerate(result["recommend_sym_list"]):
@@ -218,14 +225,14 @@ def test_some_round_by_console():
         user_input = input("do you have another symtoms? write by yourself!\nif you don't have ,press enter!\n")
         if len(user_input) == 0:
             print("into wangmneg")
-            result = core_method(read_symptom_data(), result["disease_rate_dict"], input_list, no_use_input_list,
-                                 max_recommend_sym)
+            result = core_method(l3sym_dict, result["disease_rate_dict"], input_list, no_use_input_list,
+                                 max_recommend_sym,all_sym_count=all_sym_count)
         else:
             print("into jingwei")
             disease_rate_dict, input_list = get_diagnosis_first(koushu + "," + ",".join(what_user_input), model, age,
                                                                 gender)
-            result = core_method(read_symptom_data(), result["disease_rate_dict"], input_list, no_use_input_list,
-                                 max_recommend_sym)
+            result = core_method(l3sym_dict, result["disease_rate_dict"], input_list, no_use_input_list,
+                                 max_recommend_sym,all_sym_count=all_sym_count)
     # 打印最后的诊断结果
     print("----------------------------------------------")
     for index, d in enumerate(result["diagnosis_list"]):
