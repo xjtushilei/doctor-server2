@@ -97,12 +97,13 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
               "disease_rate_dict": disease_rate_dict}
     # 如果第一轮，直接推荐5个疾病中的top1
     if seq == 1:
+
         recommend_set = set()
         for i in range(5):
             for d_name in disease_rate_dict.keys():
-                if len(l3sym_dict[d_name]["top2"]) >= 1:
+                if len(l3sym_dict[d_name]["top2"]) >= i+1:
                     top2 = l3sym_dict[d_name]["top2"]
-                    sym_key = list(top2.keys())[0]
+                    sym_key = list(top2.keys())[i]
                     # input_list 是京伟的识别结果，choice_history_words是原始输入的分词结果
                     if sym_key in recommend_set or sym_key in input_list or sym_key in choice_history_words:
                         continue
@@ -194,19 +195,18 @@ def test_some_round_by_console():
     # 病人没有采用的垃圾症状（第0轮初始时候是没有的）
     no_use_input_list = []
     # 总轮数（不包括初始化轮）
-    round_sum = 3
 
     # 第0轮结果
     print("输入提示：回复数字编号，多个请用空格分割。最后按一个enter键确认！")
 
-    for round in range(round_sum):
+    for round in [1,2]:
         result = core_method(read_symptom_data(), disease_rate_dict, input_list, no_use_input_list, max_recommend_sym,
-                             seq=round + 1)
-        print("-----------------" + "Round " + str(round + 1) + "--------------------------")
+                             seq=round )
+        print("-----------------" + "Round " + str(round ) + "--------------------------")
         for index, sym in enumerate(result["recommend_sym_list"]):
             print(index, ".", sym["name"])
         print(len(result["recommend_sym_list"]), ".", "以上都没有")
-        print("-----------------" + "Round " + str(round + 1) + "--------------------------")
+        print("-----------------" + "Round " + str(round ) + "--------------------------")
         user_input = input("请选择以上几个症状您是否患有？\n")
         user_input_list = [int(num) for num in user_input.strip().split(" ")]
         for index, sym in enumerate(result["recommend_sym_list"]):
@@ -237,4 +237,4 @@ def test_some_round_by_console():
     disease_rate_dict, input_list = get_diagnosis_first(koushu + "," + ",".join(what_user_input), model, age, gender)
     print(disease_rate_dict)
 
-# test_some_round_by_console()
+test_some_round_by_console()
