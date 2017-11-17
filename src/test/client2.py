@@ -77,7 +77,7 @@ def get_doctors():
 
     create_session = {
         "sessionId": "12345",
-        "requestUrl": "/v1/doctors?clientId=mobimedical&orgId=abc&sessionId=12345&seqno=2&query=你有哪些不舒服的症状&choice=眼前发黑,",
+        "requestUrl": "/v1/doctors?clientId=mobimedical&orgId=abc&sessionId=weichat1icdmqq23123mmq&seqno=2&query=你有哪些不舒服的症状&choice=眼前发黑,",
         "requestBody": json.dumps(client_request_body),
         "sessionData": json.dumps(session)
     }
