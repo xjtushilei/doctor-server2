@@ -4,15 +4,21 @@ import json
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import numpy as np
 from flask import Flask
 from flask import request
-
 from cmodel import FindDoc
+import logging.config
+
+logging.config.fileConfig("logger.conf")
+# 通用日志
+log = logging.getLogger("info")
+# 记录我们检测到的error，比如url错误或者orgid不对等
+log_error = logging.getLogger("error")
+# 记录程序中位置的错误，比如jignwei的模型突然出现不可预知的except，就捕获
+log_unkonw_error = logging.getLogger("unknown_error")
 
 app = Flask(__name__)
-
 CLIENT_API_SESSIONS = "/v1/sessions"
 CLIENT_API_DOCTORS = "/v1/doctors"
 
@@ -26,6 +32,8 @@ cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
              male_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-ml.ftz",
              female_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-fm.ftz"
              )
+
+
 # cm = FindDoc()
 
 
@@ -39,16 +47,18 @@ def index():
 @app.route('/v1/engine', methods=['POST'])
 def do():
     req = request.get_json()
-    app.logger.info(req)
+    log.info(req)
     if req is None:
         res = upstream_error("错误的请求: 无法解析JSON")
-        app.logger.error(res)
-        return json.dumps(res), 400
+        res = json.dumps(res)
+        log_error.error(res)
+        return res, 400
 
     isOk, res = request_sanity_check(req)
     if not isOk:
-        app.logger.error(res)
-        return json.dumps(res), 400
+        res = json.dumps(res)
+        log_error.error(res)
+        return res, 400
 
     requestUrl = req["requestUrl"]
     url = urlparse(requestUrl)
@@ -60,8 +70,9 @@ def do():
         res = find_doctors(req)
     else:
         res = client_error(req, 404, " 错误的路径: " + url.path)
-    app.logger.info(res)
-    return json.dumps(res), 200
+    res = json.dumps(res)
+    log_error.error(res)
+    return res, 200
 
 
 def request_sanity_check(req):
@@ -211,7 +222,7 @@ def find_doctors(req):
     sex = session["patient"]["sex"]
     # 不包含key=mmq的话，则不进行展示我们的成果
     if "icdmqq" in sessionId:
-        status, question, recommendation = cm.find_doctors(session, app.logger, seqno, choice, age, sex)
+        status, question, recommendation = cm.find_doctors(session, log, seqno, choice, age, sex)
     else:
         status, question, recommendation = cm.find_doctors_test(seqno)
     if status == "followup":
@@ -235,28 +246,14 @@ def find_doctors(req):
         }
     session["questions"].append(question)
     res = create_client_response(200, sessionId, userRes, session)
-    app.logger.info(session)
     return res
 
 
-
-
 if __name__ == '__main__':
-    # 按照天数来记录日志，第一天不会有单独的文件。
-    file_handler = TimedRotatingFileHandler(
-        "log/logging_day.log", 'M', 2, 0)
-    # 日志格式
-    logging_format = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)s : %(message)s')
-    file_handler.setFormatter(logging_format)
-    app.logger.addHandler(file_handler)
-    # 设置日志级别
-    app.logger.setLevel(logging.INFO)
-
     # 统计加载模型时间
     starttime = datetime.now()
     cm.load()
     endtime = datetime.now()
-    app.logger.info("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒")
-    app.logger.info("finished loading models.\n start server...")
+    log.info("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒")
+    log.info("finished loading models.\n start server...")
     app.run(debug=False, host="0.0.0.0", port=6000, threaded=True)
