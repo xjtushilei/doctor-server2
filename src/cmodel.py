@@ -121,7 +121,7 @@ class FindDoc:
                                     'name': pred[0]
                                 }
                         }
-                        log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
+                        log.debug(all_log)
                         return "department", None, recommendation
                         # 男科 和 男遗传
                     else:
@@ -139,7 +139,7 @@ class FindDoc:
                                 }
                             ]
                         }
-                        log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
+                        log.debug(all_log)
                         return "doctors", None, recommendation
                 else:
                     pred, prob = self.female_classifier.predict(" ".join(words))
@@ -154,7 +154,7 @@ class FindDoc:
                                     'name': pred[0]
                                 }
                         }
-                        log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
+                        log.debug(all_log)
                         return "department", None, recommendation
                     else:
                         all_log["info"].append("女性大于18，且没有分到专科，进入后面的处理")
@@ -185,7 +185,7 @@ class FindDoc:
                 "choices": [r["name"] for r in result["recommend_sym_list"]],
                 "all_log": all_log
             }
-            log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
+            log.debug(all_log)
             return "followup", question, None
         elif seqno_now == 2:
 
@@ -243,7 +243,7 @@ class FindDoc:
                 "all_log": all_log
             }
             # 2仅仅推荐症状,最后一轮推荐doctor
-            log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
+            log.debug(all_log)
             return "followup", question, None
         # 最后一轮会计算疾病的概率，并推荐医生（目前有两种策略，之后会进行对比评测）
         else:
@@ -282,7 +282,7 @@ class FindDoc:
                     }
                 ]
             }
-            log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
+            log.debug(all_log)
             return "doctors", None, recommendation
 
     def find_doctors_test(self, seqno):
