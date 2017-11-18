@@ -254,6 +254,6 @@ if __name__ == '__main__':
     starttime = datetime.now()
     cm.load()
     endtime = datetime.now()
-    log.info("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒")
-    log.info("finished loading models.\n start server...")
+    log.info("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒"+"\n finished loading models.\n start server...")
+    print("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒"+"\n finished loading models.\n start server...")
     app.run(debug=False, host="0.0.0.0", port=6000, threaded=True)
