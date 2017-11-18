@@ -121,7 +121,6 @@ class FindDoc:
                                     'name': pred[0]
                                 }
                         }
-                        all_log["recommendation"]=recommendation
                         log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
                         return "department", None, recommendation
                         # 男科 和 男遗传
@@ -140,7 +139,6 @@ class FindDoc:
                                 }
                             ]
                         }
-                        all_log["recommendation"]=recommendation
                         log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
                         return "doctors", None, recommendation
                 else:
@@ -156,7 +154,6 @@ class FindDoc:
                                     'name': pred[0]
                                 }
                         }
-                        all_log["recommendation"]=recommendation
                         log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
                         return "department", None, recommendation
                     else:
@@ -168,8 +165,8 @@ class FindDoc:
                 input=",".join([question["choice"] for question in session["questions"]]),
                 model=self.p_model,
                 age=age, gender=gender)
-            all_log["jingwei识别疾病"] = diagnosis_disease_rate_dict
-            all_log["jingwei识别症状"] = input_list
+            all_log["jingwei识别疾病："] = diagnosis_disease_rate_dict
+            all_log["jingwei识别症状："] = input_list
             # 记住经纬的诊断结果
             session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
             # 王萌的推荐结果,让用户选择
@@ -188,7 +185,6 @@ class FindDoc:
                 "choices": [r["name"] for r in result["recommend_sym_list"]],
                 "all_log": all_log
             }
-            all_log["question"] = question
             log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
             return "followup", question, None
         elif seqno_now == 2:
@@ -247,7 +243,6 @@ class FindDoc:
                 "all_log": all_log
             }
             # 2仅仅推荐症状,最后一轮推荐doctor
-            all_log["question"] = question
             log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
             return "followup", question, None
         # 最后一轮会计算疾病的概率，并推荐医生（目前有两种策略，之后会进行对比评测）
@@ -287,7 +282,6 @@ class FindDoc:
                     }
                 ]
             }
-            all_log["recommendation"] = recommendation
             log.debug(json.dumps(all_log, ensure_ascii=False, indent=2))
             return "doctors", None, recommendation
 
