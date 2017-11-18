@@ -110,7 +110,7 @@ class FindDoc:
                 all_log["info"].append("老大分词结果:" + " ".join(words))
                 if gender == "male":
                     pred, prob = self.male_classifier.predict(" ".join(words))
-                    all_log["info"].append("老大-male-pred:" + +str(pred))
+                    all_log["info"].append("老大-male-pred:" + str(pred))
                     all_log["info"].append("老大-male-prob:" + str(prob))
                     if prob[0] > 0.9:
                         all_log["info"].append("分到科室：" + pred[0])
@@ -143,7 +143,7 @@ class FindDoc:
                         return "doctors", None, recommendation
                 else:
                     pred, prob = self.female_classifier.predict(" ".join(words))
-                    all_log["info"].append("老大-female-pred:" + +str(pred))
+                    all_log["info"].append("老大-female-pred:" + str(pred))
                     all_log["info"].append("老大-female-prob:" + str(prob))
                     if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
                         all_log["info"].append("分到科室:" + str(pred[0]))
