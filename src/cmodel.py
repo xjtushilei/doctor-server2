@@ -18,7 +18,9 @@ class FindDoc:
                  disease_symptom_file_dir="./model/disease-symptom3.data",
                  all_symptom_count_file_path="./model/all-symptom-count.data",
                  male_classifier_path="./model/model-hdf-5k-ml.ftz",
-                 female_classifier_path="./model/model-hdf-5k-fm.ftz"):
+                 female_classifier_path="./model/model-hdf-5k-fm.ftz",
+                 doctors_distributions_path="./model/doctors_distributions.json",
+                 doctors_id_path="./model/doctors_id.txt"):
         if os.path.isfile(all_symptom_count_file_path):
             self.all_symptom_count_file_path = all_symptom_count_file_path
         else:
@@ -49,6 +51,14 @@ class FindDoc:
             self.female_classifier_path = female_classifier_path
         else:
             raise RuntimeError("cannot find model file: " + female_classifier_path)
+        if os.path.isfile(doctors_distributions_path):
+            self.doctors_distributions_path = doctors_distributions_path
+        else:
+            raise RuntimeError("cannot find model file: " + doctors_distributions_path)
+        if os.path.isfile(doctors_id_path):
+            self.doctors_id_path = doctors_id_path
+        else:
+            raise RuntimeError("cannot find model file: " + doctors_id_path)
 
     def load(self):
         self.p_model = PredModel(self.seg_model_path, self.model_path, self.dict_var_path)
@@ -58,9 +68,37 @@ class FindDoc:
         self.male_classifier = fastText.load_model(self.male_classifier_path)
         self.female_classifier = fastText.load_model(self.female_classifier_path)
 
+        # 读丽娟给的doctor两个字典存到内存
+        with open(self.doctors_distributions_path, 'r') as fp:
+            self.symptoms_rankings = json.load(fp)
+        self.doctors_id_map = {}
+        with open(self.doctors_id_path, 'r') as fp:
+            for line in fp:
+                item = line.strip().split('|')
+                self.doctors_id_map[item[0]] = item[1]
+
+    # 丽娟的获取医生信息
+    def get_common_doctors(self, codes, probs):
+        # input: icd10 code: list; probs: list
+        # get_common_doctors(['D39', 'L01'],[0.5, 0.5], path)
+        rankings = {}
+        for i, code in enumerate(codes):
+            if code in self.symptoms_rankings:
+                for name, prob in self.symptoms_rankings[code]:
+                    if code in rankings:
+                        rankings[name] += probs[i] * prob
+                    else:
+                        rankings[name] = probs[i] * prob
+            else:
+                continue
+        rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
+        return [{"name": name[0], "id": self.doctors_id_map[name[0]]} for name in rankings[0:5]]
+
+    # 去掉停用词，并用空格替换
     def remove_stopwords(self, line):
         return re.sub(sws, " ", line)
 
+    # 老大用的分词函数
     def process_sentences(self, sentences):
         words = []
         for sentence in sentences:
@@ -69,6 +107,7 @@ class FindDoc:
                 words.append(word)
         return words
 
+    # 得到用户历史所有选择的症状列表，和用户历史没有选择的症状列表
     def process_choice(self, sentences, all_choices):
         words_choices = []
         for sentence in sentences:
@@ -83,10 +122,11 @@ class FindDoc:
                 words_no_choices.append(choice)
         return words_choices, words_no_choices
 
+    # 该函数没有使用，仅仅是老大自己测试时候使用的
     def classify(self, sentences):
         words = self.process_sentences(sentences)
-        # print(" ".join(words))
-        # print(self.model.predict(" ".join(words), 2))
+        print(" ".join(words))
+        print(self.male_classifier.predict(" ".join(words), 2))
 
     def find_doctors(self, session, log, seqno, choice_now, age, gender):
         all_log = {"info": []}
@@ -266,20 +306,18 @@ class FindDoc:
             )
             all_log["jingwei最终识别疾病"] = diagnosis_disease_rate_dict
             all_log["jingwei最终识别症状（没有使用）"] = input_list
+            # 疾病的icd10id和概率
+            codes = []
+            probs = []
+            for v in diagnosis_disease_rate_dict.values():
+                codes.append(v[1])
+                probs.append(v[0])
+
             recommendation = {
                 "all_log": all_log,
                 "jingwei": diagnosis_disease_rate_dict,
                 "wangmeng": [d["l3name"] for d in result["diagnosis_list"]],
-                "doctors": [
-                    {
-                        "id": '20874',
-                        'name': '周利娟'
-                    },
-                    {
-                        "id": '20877',
-                        'name': '李婷婷'
-                    }
-                ]
+                "doctors": self.get_common_doctors(codes=codes, probs=probs)
             }
             log.debug(all_log)
             return "doctors", None, recommendation
