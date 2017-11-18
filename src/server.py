@@ -22,19 +22,19 @@ app = Flask(__name__)
 CLIENT_API_SESSIONS = "/v1/sessions"
 CLIENT_API_DOCTORS = "/v1/doctors"
 
-symptoms_distributions_file_dir = '/tvm/mdata/jerryzchen/model/symptoms_distributions.json'
-# symptoms_distributions_file_dir='./model/symptoms_distributions.json'
-cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
-             seg_model_path="/tvm/mdata/jerryzchen/model/cws.model",
-             dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy",
-             all_symptom_count_file_path="/tvm/mdata/jerryzchen/model/all-symptom-count.data",
-             disease_symptom_file_dir="/tvm/mdata/jerryzchen/model/disease-symptom3.data",
-             male_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-ml.ftz",
-             female_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-fm.ftz"
-             )
-
-
-# cm = FindDoc()
+# symptoms_distributions_file_dir = '/tvm/mdata/jerryzchen/model/symptoms_distributions.json'
+symptoms_distributions_file_dir='./model/symptoms_distributions.json'
+# cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
+#              seg_model_path="/tvm/mdata/jerryzchen/model/cws.model",
+#              dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy",
+#              all_symptom_count_file_path="/tvm/mdata/jerryzchen/model/all-symptom-count.data",
+#              disease_symptom_file_dir="/tvm/mdata/jerryzchen/model/disease-symptom3.data",
+#              male_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-ml.ftz",
+#              female_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-fm.ftz"
+#              )
+#
+#
+cm = FindDoc()
 
 
 ## heartbeat handler
@@ -221,6 +221,7 @@ def find_doctors(req):
     age = get_age_from_dob(dob)
     sex = session["patient"]["sex"]
     # 不包含key=mmq的话，则不进行展示我们的成果
+
     if "icdmqq" in sessionId:
         status, question, recommendation = cm.find_doctors(session, log, seqno, choice, age, sex)
     else:

@@ -91,7 +91,6 @@ class FindDoc:
     def find_doctors(self, session, log, seqno, choice_now, age, gender):
         all_log = {"info": []}
         # 得到用户选择的症状和没有选择的症状
-        all_log["session"] = session
         all_log["choice_now"] = choice_now
         all_log["seqno"] = seqno
         all_log["age"] = age

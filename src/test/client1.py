@@ -19,19 +19,19 @@ def create_session():
         "patient": {
             "name": "韩梅梅",
             "dob": "2010-01-01",
-            "sex": "male",
+            "sex": "female",
             "cardNo": "abc123"
             },
         "wechatOpenId": "weichat1icdmqq23123mmq"
     }
 
     session = {
-        "sessionId": "weichat1icdmqq23123mmq"
+        "sessionId": "org_weichat1icdmqq23123mmq"
     }
 
     create_session_req = {
         "sessionId": "weichat1icdmqq23123mmq",
-        "requestUrl": "/v1/sessions?clientId=mobimedical&orgId=abc",
+        "requestUrl": "/v1/sessions?clientId=mobimedical&orgId=org",
         "requestBody": json.dumps(client_request_body),
         "sessionData": json.dumps(session)
     }
@@ -49,7 +49,7 @@ def get_doctors():
     }
 
     session = {
-        "sessionId": "123456",
+        "sessionId": "org_weichat1icdmqq23123mmq",
         "api_version": "v1",
         "patient":{
             "name": "韩梅梅",
@@ -69,8 +69,8 @@ def get_doctors():
     }
 
     create_session = {
-        "sessionId": "12345",
-        "requestUrl": "/v1/doctors?clientId=mobimedical&orgId=abc&sessionId=weichat1icdmqq23123mmq&seqno=1&query=你有哪些不舒服的症状&choice=疲乏,我今天拉肚子腹泻",
+        "sessionId": "org_weichat1icdmqq23123mmq",
+        "requestUrl": "/v1/doctors?clientId=mobimedical&orgId=org&sessionId=org_weichat1icdmqq23123mmq&seqno=1&query=你有哪些不舒服的症状&choice=疲乏,我今天拉肚子腹泻",
         # "requestUrl": "/v1/sessions?clientId=mobimedical&orgId=abc&sessionId=12345",
         "requestBody": json.dumps(client_request_body),
         "sessionData": json.dumps(session)
