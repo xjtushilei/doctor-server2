@@ -5,39 +5,13 @@ import random
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 import numpy as np
+import yaml
 from flask import Flask
 from flask import request
 from cmodel import FindDoc
 import logging.config
 
-logging.config.fileConfig("logger.conf")
-# 通用日志
-log_info = logging.getLogger("myinfo")
-# 记录我们检测到的error，比如url错误或者orgid不对等
-log_error = logging.getLogger("error")
-# 记录程序中位置的错误，比如jignwei的模型突然出现不可预知的except，就捕获
-log_unkonw_error = logging.getLogger("unknown_error")
-
 app = Flask(__name__)
-CLIENT_API_SESSIONS = "/v1/sessions"
-CLIENT_API_DOCTORS = "/v1/doctors"
-log_level = "DEBUG"
-
-symptoms_distributions_file_dir = '/tvm/mdata/jerryzchen/model/symptoms_distributions.json'
-# symptoms_distributions_file_dir = './model/symptoms_distributions.json'
-cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
-             seg_model_path="/tvm/mdata/jerryzchen/model/cws-3.4.0.model",
-             dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy",
-             all_symptom_count_file_path="/tvm/mdata/jerryzchen/model/all-symptom-count.data",
-             disease_symptom_file_dir="/tvm/mdata/jerryzchen/model/disease-symptom3.data",
-             male_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-ml.ftz",
-             female_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-fm.ftz",
-             doctors_distributions_path="/tvm/mdata/jerryzchen/model/doctors_distributions.json",
-             doctors_id_path="/tvm/mdata/jerryzchen/model/doctors_id.txt"
-             )
-
-
-# cm = FindDoc()
 
 
 ## heartbeat handler
@@ -57,7 +31,7 @@ def test():
 def unknow_error(error):
     """"处理所有未处理的异常"""
     log_unkonw_error.exception(error)
-    return error, 500
+    return "内部错误", 500
 
 
 ##main handler
@@ -199,7 +173,7 @@ def create_session(req):
     symptoms = get_common_symptoms(age, gender)
     if len(symptoms) >= 5:
         symptoms = symptoms[:5]
-    question = create_question('multiple', 1, '您有哪些不舒服的症状？', symptoms)
+    question = create_question('multiple', 1, '请问您哪里不舒服？', symptoms)
     userRes = {
         'sessionId': sessionId,
         'greeting': '欢迎使用智能分诊助手，帮您找到合适医生。',
@@ -269,14 +243,46 @@ def find_doctors(req):
         userRes = {
             'sessionId': sessionId,
             'status': 'other',
-            "other": "不在华西二院的诊疗范围"
+            "other": "非常抱歉，暂不能为您找到合适的医生."
         }
     session["questions"].append(question)
     res = create_client_response(200, sessionId, userRes, session)
     return res
 
 
+def load_config(yaml_path="app-config.yaml"):
+    with open(yaml_path) as config_file:
+        return yaml.load(config_file)
+
+
 if __name__ == '__main__':
+    config = load_config("app-config.yaml")
+
+    CLIENT_API_SESSIONS = config["api"]["CLIENT_API_SESSIONS"]
+    CLIENT_API_DOCTORS = config["api"]["CLIENT_API_DOCTORS"]
+
+    logging.config.fileConfig(config["log"]["log_config_path"])
+    # 通用日志
+    log_info = logging.getLogger("myinfo")
+    # 记录我们检测到的error，比如url错误或者orgid不对等
+    log_error = logging.getLogger("error")
+    # 记录程序中位置的错误，比如jignwei的模型突然出现不可预知的except，就捕获
+    log_unkonw_error = logging.getLogger("unknown_error")
+    log_level = "DEBUG"
+
+    symptoms_distributions_file_dir = config["model"]["symptoms_distributions_file_dir"]
+    # symptoms_distributions_file_dir = './model/symptoms_distributions.json'
+    cm = FindDoc(model_path=config["model"]["model_path"],
+                 seg_model_path=config["model"]["seg_model_path"],
+                 dict_var_path=config["model"]["dict_var_path"],
+                 all_symptom_count_file_path=config["model"]["all_symptom_count_file_path"],
+                 disease_symptom_file_dir=config["model"]["disease_symptom_file_dir"],
+                 male_classifier_path=config["model"]["male_classifier_path"],
+                 female_classifier_path=config["model"]["female_classifier_path"],
+                 doctors_distributions_path=config["model"]["doctors_distributions_path"],
+                 doctors_id_path=config["model"]["doctors_id_path"],
+                 )
+
     # 统计加载模型时间
     starttime = datetime.now()
     cm.load()
@@ -285,4 +291,6 @@ if __name__ == '__main__':
     log_info.info(
         "模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\n finished loading models.\n server started .")
     print("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\n finished loading models.\n server started .")
-    app.run(debug=False, host="0.0.0.0", port=6000, threaded=True)
+
+    app.run(debug=config["app"]["debug"], host=config["app"]["host"], port=config["app"]["port"],
+            threaded=config["app"]["threaded"])
