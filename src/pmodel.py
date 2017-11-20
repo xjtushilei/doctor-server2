@@ -68,7 +68,7 @@ class PredModel:
 
         else:
 
-            if gender in ['F','f','Female','femal','女','女性','女孩']:
+            if gender in ['F','f','Female','female','女','女性','女孩']:
 
                 mask_layer[np.where(mask_matrix[0]==0)] = 0
 
