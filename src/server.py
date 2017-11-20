@@ -3,7 +3,6 @@
 import json
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
-import logging
 import numpy as np
 from flask import Flask
 from flask import request
@@ -11,8 +10,9 @@ from cmodel import FindDoc
 import logging.config
 
 logging.config.fileConfig("logger.conf")
+logging.basicConfig(level=logging.DEBUG)
 # 通用日志
-log = logging.getLogger("info")
+log_info = logging.getLogger("myinfo")
 # 记录我们检测到的error，比如url错误或者orgid不对等
 log_error = logging.getLogger("error")
 # 记录程序中位置的错误，比如jignwei的模型突然出现不可预知的except，就捕获
@@ -21,9 +21,10 @@ log_unkonw_error = logging.getLogger("unknown_error")
 app = Flask(__name__)
 CLIENT_API_SESSIONS = "/v1/sessions"
 CLIENT_API_DOCTORS = "/v1/doctors"
+log_level = "DEBUG"
 
 symptoms_distributions_file_dir = '/tvm/mdata/jerryzchen/model/symptoms_distributions.json'
-# symptoms_distributions_file_dir='./model/symptoms_distributions.json'
+# symptoms_distributions_file_dir = './model/symptoms_distributions.json'
 cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
              seg_model_path="/tvm/mdata/jerryzchen/model/cws.model",
              dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy",
@@ -48,17 +49,18 @@ def index():
 ##main handler
 @app.route('/v1/engine', methods=['POST'])
 def do():
+    log_info.setLevel(log_level)
     req = request.get_json()
-    log.info(req)
+    log_info.info(req)
     if req is None:
         res = upstream_error("错误的请求: 无法解析JSON")
-        res = json.dumps(res)
+        res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
         return res, 400
 
     isOk, res = request_sanity_check(req)
     if not isOk:
-        res = json.dumps(res)
+        res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
         return res, 400
 
@@ -66,14 +68,21 @@ def do():
     url = urlparse(requestUrl)
     if not url_params_check(url):
         res = client_error(req, 401, "未授权用户")
+        res = json.dumps(res, ensure_ascii=False)
+        log_error.error(res)
     elif url.path == CLIENT_API_SESSIONS:
         res = create_session(req)
+        res = json.dumps(res, ensure_ascii=False)
+        log_info.info(res)
     elif url.path == CLIENT_API_DOCTORS:
         res = find_doctors(req)
+        res = json.dumps(res, ensure_ascii=False)
+        log_info.info(res)
     else:
         res = client_error(req, 404, " 错误的路径: " + url.path)
-    res = json.dumps(res)
-    log_error.error(res)
+        res = json.dumps(res, ensure_ascii=False)
+        log_error.error(res)
+
     return res, 200
 
 
@@ -159,9 +168,9 @@ def create_client_response(code, sessionId, userRes, session):
         'sessionId': sessionId,
         'toUserResponse': {
             'code': code,
-            'content': json.dumps(userRes)
+            'content': json.dumps(userRes, ensure_ascii=False)
         },
-        'sessionDataUpdate': json.dumps(session)
+        'sessionDataUpdate': json.dumps(session, ensure_ascii=False)
     }
 
 
@@ -225,7 +234,7 @@ def find_doctors(req):
     # 不包含key=mmq的话，则不进行展示我们的成果
 
     if "icdmqq" in sessionId:
-        status, question, recommendation = cm.find_doctors(session, log, seqno, choice, age, sex)
+        status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex)
     else:
         status, question, recommendation = cm.find_doctors_test(seqno)
     if status == "followup":
@@ -257,6 +266,7 @@ if __name__ == '__main__':
     starttime = datetime.now()
     cm.load()
     endtime = datetime.now()
-    log.info("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒"+"\n finished loading models.\n server started")
-    print("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒"+"\n finished loading models.\n server started .")
+    log_info.setLevel(log_level)
+    log_info.info("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\n finished loading models.\n server started .")
+    print("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\n finished loading models.\n server started .")
     app.run(debug=False, host="0.0.0.0", port=6000, threaded=True)
