@@ -24,7 +24,7 @@ def get_diagnosis_first(input, model, age=20, gender="m"):
     K_Top_symp = 5
 
     diseases, icd10, val, symp_out, Coeff_sim_out = model.predict(input, age, gender, K_Top_dis, K_Top_symp)
-    if diseases == None:
+    if diseases is None:
         return None, None
     nvs = zip(symp_out, Coeff_sim_out)
     symp_list = [symp for symp, value in nvs]

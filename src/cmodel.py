@@ -207,7 +207,7 @@ class FindDoc:
                 input=",".join([question["choice"] for question in session["questions"]]),
                 model=self.p_model,
                 age=age, gender=gender)
-            if diagnosis_disease_rate_dict == None:
+            if diagnosis_disease_rate_dict is None:
                 log.debug(all_log)
                 return "other", None, None
             all_log["jingwei识别疾病："] = diagnosis_disease_rate_dict
