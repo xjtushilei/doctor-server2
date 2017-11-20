@@ -29,8 +29,6 @@ cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
              dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy",
              all_symptom_count_file_path="/tvm/mdata/jerryzchen/model/all-symptom-count.data",
              disease_symptom_file_dir="/tvm/mdata/jerryzchen/model/disease-symptom3.data",
-             male_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-ml.ftz",
-             female_classifier_path="/tvm/mdata/jerryzchen/model/model-hdf-5k-fm.ftz",
              doctors_distributions_path="/tvm/mdata/jerryzchen/model/doctors_distributions.json",
              doctors_id_path="/tvm/mdata/jerryzchen/model/doctors_id.txt"
              )
