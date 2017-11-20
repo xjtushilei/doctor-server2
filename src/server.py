@@ -24,7 +24,7 @@ log_level = "DEBUG"
 
 symptoms_distributions_file_dir = '/tvm/mdata/jerryzchen/model/symptoms_distributions.json'
 # symptoms_distributions_file_dir = './model/symptoms_distributions.json'
-cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-wiki-hdf-5k.bin",
+cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
              seg_model_path="/tvm/mdata/jerryzchen/model/cws-3.4.0.model",
              dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy",
              all_symptom_count_file_path="/tvm/mdata/jerryzchen/model/all-symptom-count.data",

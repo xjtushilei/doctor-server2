@@ -151,7 +151,7 @@ class FindDoc:
                 all_log["info"].append("当用户第一轮的输入为空时候，返回不可诊断")
                 return "other", None, None
             if age >= 18:
-                all_log["info"].append("年龄小于18岁")
+                all_log["info"].append("年龄大于18岁")
                 words = self.process_sentences([choice_now])
                 all_log["info"].append("老大分词结果:" + " ".join(words))
                 if gender == "male":
