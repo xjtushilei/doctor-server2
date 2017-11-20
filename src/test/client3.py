@@ -28,11 +28,11 @@ def create_session():
     }
 
     session = {
-        "sessionId": "123456"
+        "sessionId": "weichat1icdmqq23123mmq"
     }
 
     create_session_req = {
-        "sessionId": "12345",
+        "sessionId": "weichat1icdmqq23123mmq",
         "requestUrl": "/v1/sessions?clientId=mobimedical&orgId=abc",
         "requestBody": json.dumps(client_request_body),
         "sessionData": json.dumps(session)
@@ -52,7 +52,7 @@ def get_doctors():
     }
 
     session = {
-        "sessionId": "123456",
+        "sessionId": "weichat1icdmqq23123mmq",
         "api_version": "v1",
         "patient": {
             "name": "韩梅梅",
@@ -88,7 +88,7 @@ def get_doctors():
 
     create_session = {
         "sessionId": "12345",
-        "requestUrl": "/v1/doctors?clientId=mobimedical&orgId=abc&sessionId=12345&seqno=3&query=你有哪些不舒服的症状&choice=咽部异物感",
+        "requestUrl": "/v1/doctors?clientId=mobimedical&orgId=abc&sessionId=weichat1icdmqq23123mmq&seqno=3&query=你有哪些不舒服的症状&choice=咽部异物感",
         "requestBody": json.dumps(client_request_body),
         "sessionData": json.dumps(session)
     }

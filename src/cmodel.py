@@ -1,6 +1,8 @@
 import json
 import random
 
+import pandas as pd
+
 import fastText
 import os.path
 import re
@@ -72,16 +74,15 @@ class FindDoc:
         with open(self.doctors_distributions_path, 'r') as fp:
             self.symptoms_rankings = json.load(fp)
         self.doctors_id_map = {}
-        with open(self.doctors_id_path, 'r') as fp:
-            for line in fp:
-                item = line.strip().split('|')
-                self.doctors_id_map[item[0]] = item[1]
+        doctors_id_txt = pd.read_csv(self.doctors_id_path, sep='\t')
+        self.doctors_id_map = dict(zip(doctors_id_txt['names'], doctors_id_txt['name_id']))
+
 
     # 丽娟的获取医生信息
     def get_common_doctors(self, codes, probs):
         # input: icd10 code: list; probs: list
         # get_common_doctors(['D39', 'L01'],[0.5, 0.5], path)
-        rankings = {}
+        rankings = dict()
         for i, code in enumerate(codes):
             if code in self.symptoms_rankings:
                 for name, prob in self.symptoms_rankings[code]:
@@ -92,7 +93,13 @@ class FindDoc:
             else:
                 continue
         rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
-        return [{"name": name[0], "id": self.doctors_id_map[name[0]]} for name in rankings[0:5]]
+        results = []
+        for name in rankings[0:10]:
+            if name[0] in self.doctors_id_map.keys():
+                results.append({"name": name[0], "id": self.doctors_id_map[name[0]]})
+            else:
+                continue
+        return results
 
     # 去掉停用词，并用空格替换
     def remove_stopwords(self, line):
