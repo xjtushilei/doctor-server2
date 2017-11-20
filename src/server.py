@@ -250,18 +250,19 @@ def find_doctors(req):
     return res
 
 
+# 获取配置文件
 def load_config(yaml_path="app-config.yaml"):
     with open(yaml_path) as config_file:
         return yaml.load(config_file)
 
 
 if __name__ == '__main__':
-    config = load_config("app-config.yaml")
+    config = load_config("./conf/app-config.yaml")
 
     CLIENT_API_SESSIONS = config["api"]["CLIENT_API_SESSIONS"]
     CLIENT_API_DOCTORS = config["api"]["CLIENT_API_DOCTORS"]
 
-    logging.config.fileConfig(config["log"]["log_config_path"])
+    logging.config.fileConfig("./conf/logger.conf")
     # 通用日志
     log_info = logging.getLogger("myinfo")
     # 记录我们检测到的error，比如url错误或者orgid不对等
@@ -289,8 +290,10 @@ if __name__ == '__main__':
     endtime = datetime.now()
     log_info.setLevel(log_level)
     log_info.info(
-        "模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\n finished loading models.\n server started .")
-    print("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\n finished loading models.\n server started .")
+        "模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + " finished loading models. server started .")
+    print("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\nfinished loading models.\n server started .")
 
-    app.run(debug=config["app"]["debug"], host=config["app"]["host"], port=config["app"]["port"],
+    app.run(debug=config["app"]["debug"],
+            host=config["app"]["host"],
+            port=config["app"]["port"],
             threaded=config["app"]["threaded"])
