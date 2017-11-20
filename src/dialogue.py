@@ -109,7 +109,7 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
                     top2 = l3sym_dict[d_name]["top2"]
                     sym_key = list(top2.keys())[i]
                     # input_list 是京伟的识别结果，choice_history_words是原始输入的分词结果
-                    if sym_key in recommend_set or sym_key in input_list or sym_key in choice_history_words:
+                    if sym_key in recommend_set or sym_key in input_list or sym_key in choice_history_words or sym_key in no_use_input_list:
                         continue
                     recommend_set.add(sym_key)
                     # 给增加的症状添加概率
@@ -184,6 +184,7 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
 
 
 # 下面的程序没有使用
+# 2017年11月20日14:18:06后没有需求，暂时没有更新此处的代码。目前是在web上进行测试
 def test_some_round_by_console():
     """
     通过3~4轮对话，来测试模型

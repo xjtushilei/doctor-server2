@@ -53,14 +53,14 @@ def get_doctors():
         "api_version": "v1",
         "patient":{
             "name": "韩梅梅",
-            "dob": "2010-01-01",
+            "dob": "1976-03-09",
             "sex": "female",
             "cardNo": "abc123"
         },
         "wechatOpenId": "weichat1icdmqq23123mmq",
         "last_timestamp": 12345,
         "questions": [
-            {'choices': ['发热', '咳嗽', '疲乏', '流鼻涕', '发绀'],
+            {'choices': ['白带增多', '咳嗽', '疲乏', '流鼻涕', '发绀'],
              'query': '你有哪些不舒服的症状',
              'seqno': 1,
              'type': 'multiple'
@@ -70,7 +70,7 @@ def get_doctors():
 
     create_session = {
         "sessionId": "org_weichat1icdmqq23123mmq",
-        "requestUrl": "/v1/doctors?clientId=mobimedical&orgId=org&sessionId=org_weichat1icdmqq23123mmq&seqno=1&query=你有哪些不舒服的症状&choice=疲乏,我今天拉肚子腹泻",
+        "requestUrl": "/v1/doctors?clientId=mobimedical&orgId=org&sessionId=org_weichat1icdmqq23123mmq&seqno=1&query=你有哪些不舒服的症状&choice=阴道分泌物增多",
         # "requestUrl": "/v1/sessions?clientId=mobimedical&orgId=abc&sessionId=12345",
         "requestBody": json.dumps(client_request_body),
         "sessionData": json.dumps(session)
