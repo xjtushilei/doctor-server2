@@ -1,6 +1,7 @@
 # -*-coding:utf-8 -*-
 
 import json
+import random
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 import numpy as np
@@ -43,6 +44,20 @@ cm = FindDoc(model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
 @app.route('/')
 def index():
     return "OK", 200
+
+
+@app.route("/test/", methods=['Get'])
+def test():
+    if random.randint(1, 10) > 5:
+        1 / 0
+    return "内部错误测试api"
+
+
+@app.errorhandler(Exception)
+def unknow_error(error):
+    """"处理所有未处理的异常"""
+    log_unkonw_error.exception(error)
+    return error, 500
 
 
 ##main handler
@@ -202,11 +217,12 @@ def update_session(session, seqno, choice):
     questions = session["questions"]
     updatedQuestions = []
     for question in questions:
-        if question["seqno"] < seqno:
-            updatedQuestions.append(question)
-        elif question["seqno"] == seqno:
-            question["choice"] = choice
-            updatedQuestions.append(question)
+        if "seqno" in question:
+            if question["seqno"] < seqno:
+                updatedQuestions.append(question)
+            elif question["seqno"] == seqno:
+                question["choice"] = choice
+                updatedQuestions.append(question)
     session["questions"] = updatedQuestions
     return session
 
@@ -230,12 +246,12 @@ def find_doctors(req):
     dob = session["patient"]["dob"]
     age = get_age_from_dob(dob)
     sex = session["patient"]["sex"]
-    # 不包含key=mmq的话，则不进行展示我们的成果
 
-    if "icdmqq" in sessionId:
-        status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex)
-    else:
-        status, question, recommendation = cm.find_doctors_test(seqno)
+    # 不包含icdmqq的话，则不进行展示我们的成果
+    # if "icdmqq" in sessionId:
+    status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex)
+    # else:
+    #     status, question, recommendation = cm.find_doctors_test(seqno)
     if status == "followup":
         userRes = {
             'sessionId': sessionId,
@@ -266,6 +282,7 @@ if __name__ == '__main__':
     cm.load()
     endtime = datetime.now()
     log_info.setLevel(log_level)
-    log_info.info("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\n finished loading models.\n server started .")
+    log_info.info(
+        "模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\n finished loading models.\n server started .")
     print("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\n finished loading models.\n server started .")
     app.run(debug=False, host="0.0.0.0", port=6000, threaded=True)
