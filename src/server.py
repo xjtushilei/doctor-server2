@@ -10,7 +10,6 @@ from cmodel import FindDoc
 import logging.config
 
 logging.config.fileConfig("logger.conf")
-logging.basicConfig(level=logging.DEBUG)
 # 通用日志
 log_info = logging.getLogger("myinfo")
 # 记录我们检测到的error，比如url错误或者orgid不对等
