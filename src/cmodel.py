@@ -159,7 +159,7 @@ class FindDoc:
                                     "id": '174',
                                     'name': pred[0]
                                 }
-                            ,"all_log": all_log
+                            , "all_log": all_log
                         }
                         log.debug(all_log)
                         return "department", None, recommendation
@@ -178,7 +178,7 @@ class FindDoc:
                                     'name': '成人男性的全科医生BBB'
                                 }
                             ]
-                            ,"all_log": all_log
+                            , "all_log": all_log
                         }
                         log.debug(all_log)
                         return "doctors", None, recommendation
@@ -194,7 +194,7 @@ class FindDoc:
                                     "id": '174',
                                     'name': pred[0]
                                 }
-                            ,"all_log": all_log
+                            , "all_log": all_log
                         }
                         log.debug(all_log)
                         return "department", None, recommendation
@@ -207,6 +207,9 @@ class FindDoc:
                 input=",".join([question["choice"] for question in session["questions"]]),
                 model=self.p_model,
                 age=age, gender=gender)
+            if diagnosis_disease_rate_dict == None:
+                log.debug(all_log)
+                return "other", None, None
             all_log["jingwei识别疾病："] = diagnosis_disease_rate_dict
             all_log["jingwei识别症状："] = input_list
             # 记住经纬的诊断结果

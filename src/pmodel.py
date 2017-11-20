@@ -2,7 +2,6 @@ import fastText
 import numpy as np
 import collections
 from pyltp import Segmentor
-from gensim.models import word2vec
 import re
 
 class PredModel:
@@ -136,10 +135,10 @@ class PredModel:
 
 
         if len(sent_vec) == 0:
-
-            print(input)
-            print('没有找到匹配的疾病，请具体描述您的症状')
-            assert(False)
+            #
+            # print(input)
+            # print('没有找到匹配的疾病，请具体描述您的症状')
+            return None, None, None, None, None
 
 
 

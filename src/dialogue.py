@@ -24,6 +24,8 @@ def get_diagnosis_first(input, model, age=20, gender="m"):
     K_Top_symp = 5
 
     diseases, icd10, val, symp_out, Coeff_sim_out = model.predict(input, age, gender, K_Top_dis, K_Top_symp)
+    if diseases == None:
+        return None, None
     nvs = zip(symp_out, Coeff_sim_out)
     symp_list = [symp for symp, value in nvs]
     disease_rate_dict = {}
@@ -202,13 +204,13 @@ def test_some_round_by_console():
     # 病人没有采用的垃圾症状（第0轮初始时候是没有的）
     no_use_input_list = []
     # 总轮数（不包括初始化轮）
-    l3sym_dict,all_sym_count=read_symptom_data()
+    l3sym_dict, all_sym_count = read_symptom_data()
     # 第0轮结果
     print("输入提示：回复数字编号，多个请用空格分割。最后按一个enter键确认！")
 
     for round in [1, 2]:
         result = core_method(l3sym_dict, disease_rate_dict, input_list, no_use_input_list, max_recommend_sym,
-                             seq=round,all_sym_count=all_sym_count)
+                             seq=round, all_sym_count=all_sym_count)
         print("-----------------" + "Round " + str(round) + "--------------------------")
         for index, sym in enumerate(result["recommend_sym_list"]):
             print(index, ".", sym["name"])
@@ -226,13 +228,13 @@ def test_some_round_by_console():
         if len(user_input) == 0:
             print("into wangmneg")
             result = core_method(l3sym_dict, result["disease_rate_dict"], input_list, no_use_input_list,
-                                 max_recommend_sym,all_sym_count=all_sym_count)
+                                 max_recommend_sym, all_sym_count=all_sym_count)
         else:
             print("into jingwei")
             disease_rate_dict, input_list = get_diagnosis_first(koushu + "," + ",".join(what_user_input), model, age,
                                                                 gender)
             result = core_method(l3sym_dict, result["disease_rate_dict"], input_list, no_use_input_list,
-                                 max_recommend_sym,all_sym_count=all_sym_count)
+                                 max_recommend_sym, all_sym_count=all_sym_count)
     # 打印最后的诊断结果
     print("----------------------------------------------")
     for index, d in enumerate(result["diagnosis_list"]):
