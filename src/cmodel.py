@@ -3,6 +3,7 @@ import random
 
 import pandas as pd
 
+import fastText
 import os.path
 import re
 
@@ -18,6 +19,8 @@ class FindDoc:
                  dict_var_path="./model/dict_var.npy",
                  disease_symptom_file_dir="./model/disease-symptom3.data",
                  all_symptom_count_file_path="./model/all-symptom-count.data",
+                 male_classifier_path="./model/model-hdf-5k-ml.ftz",
+                 female_classifier_path="./model/model-hdf-5k-fm.ftz",
                  doctors_distributions_path="./model/doctors_distributions.json",
                  doctors_id_path="./model/doctors_id.txt"):
         if os.path.isfile(all_symptom_count_file_path):
@@ -41,6 +44,15 @@ class FindDoc:
             self.disease_symptom_file_dir = disease_symptom_file_dir
         else:
             raise RuntimeError("cannot find model file: " + disease_symptom_file_dir)
+
+        if os.path.isfile(male_classifier_path):
+            self.male_classifier_path = male_classifier_path
+        else:
+            raise RuntimeError("cannot find model file: " + male_classifier_path)
+        if os.path.isfile(female_classifier_path):
+            self.female_classifier_path = female_classifier_path
+        else:
+            raise RuntimeError("cannot find model file: " + female_classifier_path)
         if os.path.isfile(doctors_distributions_path):
             self.doctors_distributions_path = doctors_distributions_path
         else:
@@ -55,6 +67,8 @@ class FindDoc:
         self.segmentor = self.p_model.segmentor
         self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
                                                                          self.all_symptom_count_file_path)
+        self.male_classifier = fastText.load_model(self.male_classifier_path)
+        self.female_classifier = fastText.load_model(self.female_classifier_path)
 
         # 读丽娟给的doctor两个字典存到内存
         with open(self.doctors_distributions_path, 'r') as fp:
@@ -115,6 +129,11 @@ class FindDoc:
                 words_no_choices.append(choice)
         return words_choices, words_no_choices
 
+    # 该函数没有使用，仅仅是老大自己测试时候使用的
+    def classify(self, sentences):
+        words = self.process_sentences(sentences)
+        print(" ".join(words))
+        print(self.male_classifier.predict(" ".join(words), 2))
 
     def find_doctors(self, session, log, seqno, choice_now, age, gender):
         all_log = {"info": []}
@@ -131,6 +150,65 @@ class FindDoc:
             if choice_now.strip() == "":
                 all_log["info"].append("当用户第一轮的输入为空时候，返回不可诊断")
                 return "other", None, None
+            if age >= 18:
+                all_log["info"].append("年龄大于18岁")
+                words = self.process_sentences([choice_now])
+                all_log["info"].append("老大分词结果:" + " ".join(words))
+                if gender == "male":
+                    pred, prob = self.male_classifier.predict(" ".join(words))
+                    all_log["info"].append("老大-male-pred:" + str(pred))
+                    all_log["info"].append("老大-male-prob:" + str(prob))
+                    if prob[0] > 0.9:
+                        all_log["info"].append("分到科室：" + pred[0])
+                        recommendation = {
+                            "department":
+                                {
+                                    "id": '174',
+                                    'name': pred[0]
+                                }
+                            , "all_log": all_log
+                        }
+                        log.debug(all_log)
+                        return "department", None, recommendation
+                        # 男科 和 男遗传
+                    else:
+                        all_log["info"].append("'男科和男遗传'分到成人男性的全科医生")
+                        # 丽娟给医生
+                        recommendation = {
+                            "doctors": [
+                                {
+                                    "id": '20874',
+                                    'name': '成人男性的全科医生AAA'
+                                },
+                                {
+                                    "id": '20877',
+                                    'name': '成人男性的全科医生BBB'
+                                }
+                            ]
+                            , "all_log": all_log
+                        }
+                        log.debug(all_log)
+                        return "doctors", None, recommendation
+                else:
+                    pred, prob = self.female_classifier.predict(" ".join(words))
+                    all_log["info"].append("老大-female-pred:" + str(pred))
+                    all_log["info"].append("老大-female-prob:" + str(prob))
+                    if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
+                        all_log["info"].append("分到科室:" + str(pred[0]))
+                        recommendation = {
+                            "department":
+                                {
+                                    "id": '174',
+                                    'name': pred[0]
+                                }
+                            , "all_log": all_log
+                        }
+                        log.debug(all_log)
+                        return "department", None, recommendation
+                    else:
+                        all_log["info"].append("女性大于18，且没有分到专科，进入后面的处理")
+                        # print(pred, prob)
+            all_log["info"].append("老大处理结束,进入jingwei的节奏")
             # 进入土豪的节奏
             diagnosis_disease_rate_dict, input_list = dialogue.get_diagnosis_first(
                 input=",".join([question["choice"] for question in session["questions"]]),
