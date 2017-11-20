@@ -159,6 +159,7 @@ class FindDoc:
                                     "id": '174',
                                     'name': pred[0]
                                 }
+                            ,"all_log": all_log
                         }
                         log.debug(all_log)
                         return "department", None, recommendation
@@ -177,6 +178,7 @@ class FindDoc:
                                     'name': '成人男性的全科医生BBB'
                                 }
                             ]
+                            ,"all_log": all_log
                         }
                         log.debug(all_log)
                         return "doctors", None, recommendation
@@ -192,6 +194,7 @@ class FindDoc:
                                     "id": '174',
                                     'name': pred[0]
                                 }
+                            ,"all_log": all_log
                         }
                         log.debug(all_log)
                         return "department", None, recommendation
