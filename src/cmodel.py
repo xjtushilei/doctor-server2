@@ -210,6 +210,7 @@ class FindDoc:
                 #             all_log["info"].append("女性大于18，且没有分到专科，进入后面的处理")
                 # print(pred, prob)
             dis_out = ['遗传咨询', '男科', '产科']
+            dis_out_id = ['6', '5', '8']
             Label, prob_max = self.p_model.pre_predict(choice_now.strip(), age, gender)
             if Label != 3:
                 all_log["info"].append("jingwei分到科室的阈值:" + str(prob_max))
@@ -217,7 +218,8 @@ class FindDoc:
                 recommendation = {
                     "department":
                         {
-                            'name': dis_out[Label]
+                            'name': dis_out[Label],
+                            'id': dis_out_id[Label]
                         }
                 }
                 if debug:
