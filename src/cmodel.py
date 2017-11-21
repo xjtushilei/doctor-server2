@@ -384,9 +384,9 @@ class FindDoc:
             codes = []
             probs = []
             # 最后采用谁的排序，0.6之下用经纬的，0.6之上用wangmeng的
-            if session["probs"] <= -1:
+            if session["probs"] >= 0.6:
                 for d in result["diagnosis_list"]:
-                    codes.append(d["l3name"])
+                    codes.append(d["l3code"])
                     probs.append(d["rate"])
             else:
 

@@ -95,6 +95,7 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
                 if s not in rate_matrix and s not in input_list and s not in choice_history_words:
                     rate_matrix[s] = {"name": s, "rate": r, "rate_list": [], "rate_calculate": 0.0}
             l3sym_dict_we_need.append({"l3name": obj["l3name"],
+                                       "l3code":obj["l3code"],
                                        "all_sym_dic": obj["all_sym_dic"],
                                        "top3": obj["top3"],
                                        "top2": obj["top2"],
@@ -179,6 +180,7 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
     for obj in l3sym_dict_we_need:
         result["diagnosis_list"].append(
             {"l3name": obj["l3name"],
+             "l3code": obj["l3code"],
              "rate": obj["rate"],
              "suffer_sym_dic": obj["suffer_sym_dic"],
              "suffer_sym_num": len(obj["suffer_sym_dic"])
