@@ -221,7 +221,7 @@ class FindDoc:
             question = {
                 "type": "multiple",
                 "seqno": seqno_now + 1,
-                "query": "请问您哪里不舒服？",
+                "query": "您还有哪些不适的症状？",
                 "choices": [r["name"] for r in result["recommend_sym_list"]],
             }
             if debug:
