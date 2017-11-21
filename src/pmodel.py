@@ -2,6 +2,7 @@ import fastText
 import numpy as np
 import collections
 from pyltp import Segmentor
+from gensim.models import word2vec
 import re
 
 class PredModel:
@@ -74,6 +75,104 @@ class PredModel:
 
         return mask_layer
 
+    def pre_predict(self,input,age,gender):
+        Dis_class = self.dict[9]
+        dim = self.wv_dim
+        sent_vec = []
+        word_bag=[]
+        word_vec_bag=[]
+        for chunk in self.split_into_chunks(input):
+            chunk = chunk.strip()
+            if len(chunk) == 0:
+                continue
+            words = self.segment(chunk)
+            chunk_wv = []
+            word_bag_tmp =[]
+            for word in words:
+                wv = self.ft.get_word_vector(word)
+                #wv = self.ft[word]
+                chunk_wv.append(wv)
+                word_bag_tmp.append(word)
+
+                # if word in ['不','不是','没有','没','无']:
+                #     chunk_wv = []
+                #     break
+
+            if len(chunk_wv) > 0:
+
+                #sent_vec.append(self.unitvec(np.sum(chunk_wv, axis=0)))
+
+                chunk_matrix = np.reshape(chunk_wv,[len(chunk_wv),dim])
+                chunk_sim = np.dot(chunk_matrix,Dis_class.T)
+                chunk_std = np.std(chunk_sim,axis = 1)
+
+                for jj in range(len(chunk_std)):
+                    if chunk_std[len(chunk_std)-1-jj]<self.th_word_mask:
+
+
+                        del word_bag_tmp[len(chunk_std)-1-jj]
+                        del chunk_wv[len(chunk_std)-1-jj]
+                if len(word_bag_tmp) > 0:
+                    word_bag.append(word_bag_tmp)
+                    word_vec_bag.append(chunk_wv)
+                    sent_vec.append(self.unitvec(np.sum(chunk_wv, axis=0)))
+
+
+
+
+
+        if len(sent_vec) == 0:
+            Label = 3
+            prob_max=0
+            return Label,prob_max
+
+            # print(input)
+            # print('没有找到匹配的疾病，请具体描述您的症状')
+            # assert(False)
+
+        input_vec = self.unitvec(np.sum(sent_vec, axis=0))
+        input_vec = np.reshape(input_vec, [1, dim])
+        if age<19:
+            Label = 3 #进入后面的判断
+
+        else:
+
+            if gender in ['M','m','male','Male','男','男性','男孩']:
+                pre_sim = np.dot(input_vec,Dis_class[0:2].T)
+                prob_max = np.max(pre_sim[0])
+                x_max = np.where(pre_sim[0] == prob_max)[0][0]
+
+                if x_max==0:
+
+                    Label = 0 #遗传咨询
+
+                else:
+                    Label = 1 #男科
+
+            elif gender in ['F','f','Female','female','女','女性','女孩']:
+
+                pre_sim = np.dot(input_vec,Dis_class.T)[0]
+                pre_sim[1]= 0
+                prob_max = np.max(pre_sim)
+                x_max = np.where(pre_sim == prob_max)[0][0]
+
+                if x_max==0:
+
+                    Label = 0 #遗传咨询
+
+                elif x_max==2:
+
+                    Label = 2 #产科
+                else:
+                    Label = 3
+
+        return Label,prob_max
+
+
+
+
+
+
 
     def predict(self, input,age,gender,k_disease ,k_symptom):
         seg_bag = self.dict[0]   #
@@ -135,16 +234,14 @@ class PredModel:
 
 
         if len(sent_vec) == 0:
-            #
-            # print(input)
-            # print('没有找到匹配的疾病，请具体描述您的症状')
-            return None, None, None, None, None
 
+            print(input)
+            print('没有找到匹配的疾病，请具体描述您的症状')
+            assert(False)
+            #return None
 
-
-        # for ii in range(len(word_vec_bag)):
-        #
-        #
+        #Dis_vec_HX = self.unitvec(np.sum(symp_wv,axis =0))
+        #Dis_vec_all = np.reshape(Dis_mask_vec.append(Dis_vec_HX),[4,dim])
 
         input_vec = self.unitvec(np.sum(sent_vec, axis=0))
         input_vec = np.reshape(input_vec, [1, dim])
@@ -152,9 +249,10 @@ class PredModel:
         name_dis = np.dot(input_vec, disease_name_vec.T)[0]
         combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]*mask_layer*mask_vec[0]
         #combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]
-        val, pos = self.top_k(combined_dis, k_disease)
+        val, pos = self.top_k(combined_dis, k_disease*2)
 
-    
+
+
         # coeff_mask = np.zeros([1,len(pos)])
         # coeff_mask[0][pos[0:10]] = 1
         # neg_plane =  np.sum(symp_wv[pos[len(pos)-50:len(pos)]],axis =0)
@@ -227,4 +325,4 @@ class PredModel:
         symp_out_fin = np.array(symp_out_fin)[pos_simp]
 
 
-        return np.array(diseases)[pos], np.array(index)[pos],val,symp_out_fin, val_simp
+        return np.array(diseases)[pos], np.array(index)[pos],val,symp_out_fin, val_simp,word_bag

@@ -154,48 +154,64 @@ class FindDoc:
             if choice_now.strip() == "":
                 all_log["info"].append("当用户第一轮的输入为空时候，返回不可诊断")
                 return "other", None, None
-            if age >= 18:
-                all_log["info"].append("年龄大于18岁")
-                words = self.process_sentences([choice_now])
-                all_log["info"].append("老大分词结果:" + " ".join(words))
-                if gender == "male":
-                    pred, prob = self.male_classifier.predict(" ".join(words))
-                    all_log["info"].append("老大-male-pred:" + str(pred))
-                    all_log["info"].append("老大-male-prob:" + str(prob))
-                    if prob[0] > 0.9:
-                        all_log["info"].append("分到科室：" + pred[0])
-                        recommendation = {
-                            "department":
-                                {
-                                    # "id": '174',
-                                    'name': "男科"
-                                }
-                        }
-                        if debug:
-                            recommendation["all_log"] = all_log
-                        log.debug(all_log)
-                        return "department", None, recommendation
-                else:
-                    # __label__闲聊
-                    pred, prob = self.female_classifier.predict(" ".join(words))
-                    all_log["info"].append("老大-female-pred:" + str(pred))
-                    all_log["info"].append("老大-female-prob:" + str(prob))
-                    if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
-                        d_name = pred[0].replace("__label__", "")
-                        all_log["info"].append("分到科室:" + str(pred[0]))
-                        recommendation = {
-                            "department":
-                                {
-                                    'name': d_name
-                                }
-                        }
-                        if debug:
-                            recommendation["all_log"] = all_log
-                        log.debug(all_log)
-                        return "department", None, recommendation
-                    else:
-                        all_log["info"].append("女性大于18，且没有分到专科，进入后面的处理")
+            # if age >= 18:
+            #     all_log["info"].append("年龄大于18岁")
+            #     words = self.process_sentences([choice_now])
+            #     all_log["info"].append("老大分词结果:" + " ".join(words))
+            #     if gender == "male":
+            #         pred, prob = self.male_classifier.predict(" ".join(words))
+            #         all_log["info"].append("老大-male-pred:" + str(pred))
+            #         all_log["info"].append("老大-male-prob:" + str(prob))
+            #         if prob[0] > 0.9:
+            #             all_log["info"].append("分到科室：" + pred[0])
+            #             recommendation = {
+            #                 "department":
+            #                     {
+            #                         # "id": '174',
+            #                         'name': "男科"
+            #                     }
+            #             }
+            #             if debug:
+            #                 recommendation["all_log"] = all_log
+            #             log.debug(all_log)
+            #             return "department", None, recommendation
+            #     else:
+            #         # __label__闲聊
+            #         pred, prob = self.female_classifier.predict(" ".join(words))
+            #         all_log["info"].append("老大-female-pred:" + str(pred))
+            #         all_log["info"].append("老大-female-prob:" + str(prob))
+            #         if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
+            #             d_name = pred[0].replace("__label__", "")
+            #             all_log["info"].append("分到科室:" + str(pred[0]))
+            #             recommendation = {
+            #                 "department":
+            #                     {
+            #                         'name': d_name
+            #                     }
+            #             }
+            #             if debug:
+            #                 recommendation["all_log"] = all_log
+            #             log.debug(all_log)
+            #             return "department", None, recommendation
+            #         else:
+            #             all_log["info"].append("女性大于18，且没有分到专科，进入后面的处理")
                         # print(pred, prob)
+            dis_out = ['遗传咨询', '男科', '产科']
+            Label, prob_max=self.p_model.pre_predict(choice_now.strip(),age,gender)
+            if Label != 3:
+                all_log["info"].append("jingwei分到科室的阈值:" + str(prob_max))
+                all_log["info"].append("jingwei分到科室:" + dis_out[Label])
+                recommendation = {
+                    "department":
+                        {
+                            'name': dis_out[Label]
+                        }
+                }
+                if debug:
+                    recommendation["all_log"] = all_log
+                log.debug(all_log)
+                return "department", None, recommendation
+
             all_log["info"].append("老大处理结束,进入jingwei的节奏")
             # 进入土豪的节奏
             diagnosis_disease_rate_dict, input_list = dialogue.get_diagnosis_first(
