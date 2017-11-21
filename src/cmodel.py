@@ -205,6 +205,22 @@ class FindDoc:
             if diagnosis_disease_rate_dict is None:
                 log.debug(all_log)
                 return "other", None, None
+            # 阈值大于0.8，退出
+            codes = []
+            probs = []
+            for v in diagnosis_disease_rate_dict.values():
+                codes.append(v[1])
+                probs.append(v[0])
+            if probs[0] >=0.8:
+                recommendation = {
+                    "doctors": self.get_common_doctors(codes=codes, probs=probs)
+                }
+                if debug:
+                    recommendation["all_log"] = all_log
+                    recommendation["jingwei"] = diagnosis_disease_rate_dict
+                log.debug(all_log)
+                return "doctors", None, recommendation
+
             all_log["jingwei识别疾病："] = diagnosis_disease_rate_dict
             all_log["jingwei识别症状："] = input_list
             # 记住经纬的诊断结果
@@ -266,6 +282,22 @@ class FindDoc:
                     age=age,
                     gender=gender
                 )
+                # 阈值大于0.8，退出
+                codes = []
+                probs = []
+                for v in diagnosis_disease_rate_dict.values():
+                    codes.append(v[1])
+                    probs.append(v[0])
+                if probs[0] >= 0.8:
+                    recommendation = {
+                        "doctors": self.get_common_doctors(codes=codes, probs=probs)
+                    }
+                    if debug:
+                        recommendation["all_log"] = all_log
+                        recommendation["jingwei"] = diagnosis_disease_rate_dict
+                    log.debug(all_log)
+                    return "doctors", None, recommendation
+
                 all_log["jingwei识别疾病"] = diagnosis_disease_rate_dict
                 all_log["jingwei识别症状"] = input_list
                 session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
