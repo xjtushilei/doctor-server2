@@ -236,6 +236,7 @@ def find_doctors(req):
             'status': status,
             'question': question
         }
+        session["questions"].append(question)
     elif status == "doctors" or status == "department":
         userRes = {
             'sessionId': sessionId,
@@ -249,7 +250,6 @@ def find_doctors(req):
             'status': 'other',
             "other": "非常抱歉，暂不能为您找到合适的医生."
         }
-    session["questions"].append(question)
     res = create_client_response(200, sessionId, userRes, session)
     return res
 

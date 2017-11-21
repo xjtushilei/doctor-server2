@@ -99,3 +99,15 @@ create_session_req = {
 res = post(create_session_req)
 session = res["sessionDataUpdate"]
 print(4, res["toUserResponse"]["content"])
+
+user_input = "阴道不规则出血"
+# user_input = input("请问您哪里不舒服？")
+create_session_req = {
+    "sessionId": "org_" + wechatid,
+    "requestUrl": "/v1/doctors?clientId=mobimedical&de_bug=true&orgId=org&sessionId=" + "org_" + wechatid + "&seqno=2&query=您有什么不舒服的？&choice=" + user_input,
+    "requestBody": json.dumps(client_request_body),
+    "sessionData": session
+}
+res = post(create_session_req)
+session = res["sessionDataUpdate"]
+print(3, res["toUserResponse"]["content"])

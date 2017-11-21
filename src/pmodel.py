@@ -236,10 +236,11 @@ class PredModel:
 
         if len(sent_vec) == 0:
 
-            print(input)
-            print('没有找到匹配的疾病，请具体描述您的症状')
-            assert(False)
+            # print(input)
+            # print('没有找到匹配的疾病，请具体描述您的症状')
+            # assert(False)
             #return None
+            return None, None, None, None, None
 
         #Dis_vec_HX = self.unitvec(np.sum(symp_wv,axis =0))
         #Dis_vec_all = np.reshape(Dis_mask_vec.append(Dis_vec_HX),[4,dim])
