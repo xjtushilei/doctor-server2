@@ -77,7 +77,6 @@ class FindDoc:
         doctors_id_txt = pd.read_csv(self.doctors_id_path, sep='\t')
         self.doctors_id_map = dict(zip(doctors_id_txt['names'], doctors_id_txt['name_id']))
 
-
     # 丽娟的获取医生信息
     def get_common_doctors(self, codes, probs):
         # input: icd10 code: list; probs: list
@@ -135,7 +134,7 @@ class FindDoc:
         print(" ".join(words))
         print(self.male_classifier.predict(" ".join(words), 2))
 
-    def find_doctors(self, session, log, seqno, choice_now, age, gender):
+    def find_doctors(self, session, log, seqno, choice_now, age, gender, debug=False):
         all_log = {"info": []}
         # 得到用户选择的症状和没有选择的症状
         all_log["choice_now"] = choice_now
@@ -163,46 +162,30 @@ class FindDoc:
                         recommendation = {
                             "department":
                                 {
-                                    "id": '174',
-                                    'name': pred[0]
+                                    # "id": '174',
+                                    'name': "男科"
                                 }
-                            , "all_log": all_log
                         }
+                        if debug:
+                            recommendation["all_log"] = all_log
                         log.debug(all_log)
                         return "department", None, recommendation
-                        # 男科 和 男遗传
-                    else:
-                        all_log["info"].append("'男科和男遗传'分到成人男性的全科医生")
-                        # 丽娟给医生
-                        recommendation = {
-                            "doctors": [
-                                {
-                                    "id": '20874',
-                                    'name': '成人男性的全科医生AAA'
-                                },
-                                {
-                                    "id": '20877',
-                                    'name': '成人男性的全科医生BBB'
-                                }
-                            ]
-                            , "all_log": all_log
-                        }
-                        log.debug(all_log)
-                        return "doctors", None, recommendation
                 else:
+                    # __label__闲聊
                     pred, prob = self.female_classifier.predict(" ".join(words))
                     all_log["info"].append("老大-female-pred:" + str(pred))
                     all_log["info"].append("老大-female-prob:" + str(prob))
                     if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
+                        pred[0] = pred[0].replace("__label__", "")
                         all_log["info"].append("分到科室:" + str(pred[0]))
                         recommendation = {
                             "department":
                                 {
-                                    "id": '174',
                                     'name': pred[0]
                                 }
-                            , "all_log": all_log
                         }
+                        if debug:
+                            recommendation["all_log"] = all_log
                         log.debug(all_log)
                         return "department", None, recommendation
                     else:
@@ -235,8 +218,9 @@ class FindDoc:
                 "seqno": seqno_now + 1,
                 "query": "请问您哪里不舒服？",
                 "choices": [r["name"] for r in result["recommend_sym_list"]],
-                "all_log": all_log
             }
+            if debug:
+                question["all_log"] = all_log
             log.debug(all_log)
             return "followup", question, None
         elif seqno_now == 2:
@@ -291,9 +275,10 @@ class FindDoc:
                 "type": "multiple",
                 "seqno": seqno_now + 1,
                 "query": "您还有哪些不适的症状？",
-                "choices": [r["name"] for r in result["recommend_sym_list"]],
-                "all_log": all_log
+                "choices": [r["name"] for r in result["recommend_sym_list"]]
             }
+            if debug:
+                question["all_log"] = all_log
             # 2仅仅推荐症状,最后一轮推荐doctor
             log.debug(all_log)
             return "followup", question, None
@@ -327,57 +312,11 @@ class FindDoc:
                 probs.append(v[0])
 
             recommendation = {
-                "all_log": all_log,
                 "jingwei": diagnosis_disease_rate_dict,
                 "wangmeng": [d["l3name"] for d in result["diagnosis_list"]],
                 "doctors": self.get_common_doctors(codes=codes, probs=probs)
             }
+            if debug:
+                recommendation["all_log"] = all_log
             log.debug(all_log)
             return "doctors", None, recommendation
-
-    def find_doctors_test(self, seqno):
-        seqno_now = seqno
-        if seqno_now == 1:
-
-            question = {
-                "type": "multiple",
-                "seqno": seqno_now + 1,
-                "query": "您有哪些不舒服的症状？",
-                "choices": ['拉肚子', '头部不舒服', '感冒']
-            }
-            return "followup", question, None
-        elif seqno_now == 2:
-            question = {
-                "type": "multiple",
-                "seqno": seqno_now + 1,
-                "query": "您有哪些不舒服的症状？",
-                "choices": ['拉肚子', '头部不舒服', '感冒']
-            }
-            return "followup", question, None
-        else:
-            a = random.randint(1, 3)
-            if a == 1:
-                recommendation = {
-                    "doctors": [
-                        {
-                            "id": '20874',
-                            'name': '周利娟'
-                        },
-                        {
-                            "id": '20877',
-                            'name': '李婷婷'
-                        }
-                    ]
-                }
-                return "doctors", None, recommendation
-            elif a == 2:
-                recommendation = {
-                    "department":
-                        {
-                            "id": '174',
-                            'name': '产科'
-                        }
-                }
-                return "department", None, recommendation
-            elif a == 3:
-                return "other", None, None

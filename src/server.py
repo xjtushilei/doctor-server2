@@ -216,16 +216,16 @@ def find_doctors(req):
         choice = " "
     else:
         choice = params["choice"][0]
+    # 是否在测试页面展示debug信息
+    if "debug" in params:
+        debug=True
+    else:
+        debug=False
     session = update_session(session, seqno, choice)
     dob = session["patient"]["dob"]
     age = get_age_from_dob(dob)
     sex = session["patient"]["sex"]
-
-    # 不包含icdmqq的话，则不进行展示我们的成果
-    # if "icdmqq" in sessionId:
-    status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex)
-    # else:
-    #     status, question, recommendation = cm.find_doctors_test(seqno)
+    status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex ,debug)
     if status == "followup":
         userRes = {
             'sessionId': sessionId,
