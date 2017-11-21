@@ -212,8 +212,7 @@ class FindDoc:
                 log.debug(all_log)
                 return "department", None, recommendation
 
-            all_log["info"].append("老大处理结束,进入jingwei的节奏")
-            # 进入土豪的节奏
+            # 进入jingwei的节奏
             diagnosis_disease_rate_dict, input_list = dialogue.get_diagnosis_first(
                 input=",".join([question["choice"] for question in session["questions"]]),
                 model=self.p_model,
@@ -227,6 +226,7 @@ class FindDoc:
             for v in diagnosis_disease_rate_dict.values():
                 codes.append(v[1])
                 probs.append(v[0])
+            session["probs"] = probs[0]
             if probs[0] >=0.8:
                 recommendation = {
                     "doctors": self.get_common_doctors(codes=codes, probs=probs)
@@ -313,6 +313,8 @@ class FindDoc:
                         recommendation["jingwei"] = diagnosis_disease_rate_dict
                     log.debug(all_log)
                     return "doctors", None, recommendation
+                session["probs"] = probs[0]
+
 
                 all_log["jingwei识别疾病"] = diagnosis_disease_rate_dict
                 all_log["jingwei识别症状"] = input_list
@@ -340,13 +342,16 @@ class FindDoc:
             diagnosis_disease_rate_dict = session["diagnosis_disease_rate_dict"]
             input_list = choice_now.split(",")
             input_list.extend(symptoms)
+            all_log["jingwei阈值"]=session["probs"]
             all_log["jingwei上一轮识别疾病"] = diagnosis_disease_rate_dict
             all_log["wangmeng input_list"] = input_list
             all_log["历史chioce分词:"] = self.process_sentences([question["choice"] for question in session["questions"]])
+
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
-                                          choice_history_words=self.process_sentences(
-                                              [question["choice"] for question in session["questions"]]), seq=3,
-                                          all_sym_count=self.all_sym_count)
+                                      choice_history_words=self.process_sentences(
+                                          [question["choice"] for question in session["questions"]]), seq=3,
+                                      all_sym_count=self.all_sym_count)
+
             all_log["王萌疾病排序"] = [d for d in result["diagnosis_list"]]
             all_log["jingwei最后一轮输入"] = ",".join([question["choice"] for question in session["questions"]])
             diagnosis_disease_rate_dict, input_list = dialogue.get_diagnosis_first(
@@ -357,12 +362,20 @@ class FindDoc:
             )
             all_log["jingwei最终识别疾病"] = diagnosis_disease_rate_dict
             all_log["jingwei最终识别症状（没有使用）"] = input_list
+
             # 疾病的icd10id和概率
             codes = []
             probs = []
-            for v in diagnosis_disease_rate_dict.values():
-                codes.append(v[1])
-                probs.append(v[0])
+            # 最后采用谁的排序，0.6之下用经纬的，0.6之上用wangmeng的
+            if session["probs"] >= 0.6:
+                for d in result["diagnosis_list"]:
+                    codes.append(d["l3name"])
+                    probs.append(d["rate"])
+            else:
+
+                for v in diagnosis_disease_rate_dict.values():
+                    codes.append(v[1])
+                    probs.append(v[0])
 
             recommendation = {
                 "doctors": self.get_common_doctors(codes=codes, probs=probs)
