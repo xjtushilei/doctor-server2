@@ -69,6 +69,10 @@ def calculate_p_sym_plus(rateList):
 
 def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_input_list=[],
                 max_recommend_sym_num=5, choice_history_words=[], seq=2, all_sym_count={}):
+
+    # print(input_list,no_use_input_list,choice_history_words)
+
+
     rate_matrix = {}
     # disease that we need from all disease
     l3sym_dict_we_need = []
