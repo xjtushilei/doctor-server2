@@ -263,11 +263,13 @@ class FindDoc:
                                               [question["choice"] for question in session["questions"]]), seq=1,
                                           all_sym_count=self.all_sym_count)
             all_log["王萌推介结果"] = result
+            choices=[r["name"] for r in result["recommend_sym_list"]]
+            choices.append("以上都没有")
             question = {
                 "type": "multiple",
                 "seqno": seqno_now + 1,
                 "query": "您还有哪些不适的症状？",
-                "choices": [r["name"] for r in result["recommend_sym_list"]].append("以上都没有")
+                "choices":choices
             }
             if debug:
                 question["all_log"] = all_log
@@ -338,11 +340,13 @@ class FindDoc:
                                                   [question["choice"] for question in session["questions"]]), seq=2,
                                               all_sym_count=self.all_sym_count)
                 all_log["王萌推介结果"] = result
+            choices = [r["name"] for r in result["recommend_sym_list"]]
+            choices.append("以上都没有")
             question = {
                 "type": "multiple",
                 "seqno": seqno_now + 1,
                 "query": "您还有哪些不适的症状？",
-                "choices": [r["name"] for r in result["recommend_sym_list"]].append("以上都没有")
+                "choices": choices
             }
             if debug:
                 question["all_log"] = all_log
@@ -380,7 +384,7 @@ class FindDoc:
             codes = []
             probs = []
             # 最后采用谁的排序，0.6之下用经纬的，0.6之上用wangmeng的
-            if session["probs"] >= 0.6:
+            if session["probs"] <= -1:
                 for d in result["diagnosis_list"]:
                     codes.append(d["l3name"])
                     probs.append(d["rate"])
@@ -389,7 +393,8 @@ class FindDoc:
                 for v in diagnosis_disease_rate_dict.values():
                     codes.append(v[1])
                     probs.append(v[0])
-
+            all_log["codes"]=codes
+            all_log["probs"]=probs
             recommendation = {
                 "doctors": self.get_common_doctors(codes=codes, probs=probs)
             }
