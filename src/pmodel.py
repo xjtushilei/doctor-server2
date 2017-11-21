@@ -76,6 +76,7 @@ class PredModel:
         return mask_layer
 
     def pre_predict(self,input,age,gender):
+        prob_max=0
         Dis_class = self.dict[9]
         dim = self.wv_dim
         sent_vec = []
