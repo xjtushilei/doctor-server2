@@ -325,4 +325,4 @@ class PredModel:
         symp_out_fin = np.array(symp_out_fin)[pos_simp]
 
 
-        return np.array(diseases)[pos], np.array(index)[pos],val,symp_out_fin, val_simp,word_bag
+        return np.array(diseases)[pos], np.array(index)[pos],val,symp_out_fin, val_simp
