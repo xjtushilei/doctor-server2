@@ -181,12 +181,12 @@ class FindDoc:
                     all_log["info"].append("老大-female-pred:" + str(pred))
                     all_log["info"].append("老大-female-prob:" + str(prob))
                     if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
-                        pred[0] = pred[0].replace("__label__", "")
+                        d_name = pred[0].replace("__label__", "")
                         all_log["info"].append("分到科室:" + str(pred[0]))
                         recommendation = {
                             "department":
                                 {
-                                    'name': pred[0]
+                                    'name': d_name
                                 }
                         }
                         if debug:

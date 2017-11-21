@@ -1,66 +1,88 @@
 # -*-coding:utf-8 -*-
+import hashlib
+import json
+from pprint import pprint
 
 import requests
+import time
 
-wechatOpenId="weichat1icdmqq23123mmq"
-def doctor(data):
-    url = 'http://docfinder.sparta.html5.qq.com/v1/doctors?' + data
-    print(url)
-    res = requests.get(url)
+
+def get_response(res):
+    toUserResponse = res["toUserResponse"]
+    print(toUserResponse)
+    content = json.loads(toUserResponse["content"])
+    pprint(content)
+
+
+def create_md5():  # 通过MD5的方式创建
+    m = hashlib.md5()
+    m.update(bytes(str(time.time()), encoding='utf-8'))
+    return m.hexdigest()
+
+
+def post(data, url='http://127.0.0.1:6000/v1/engine'):
+    res = requests.post(url, json=data)
     return res.json()
 
 
+wechatid = create_md5()
 client_request_body = {
     "patient": {
         "name": "J",
-        "dob": "1990-03-09",
-        "sex": "famale",
+        "dob": "1993-03-09",
+        "sex": "female",
         "cardNo": "abc1231"
     },
-    "wechatOpenId":wechatOpenId
+    "wechatOpenId": wechatid
 }
-print(client_request_body)
-res = requests.post('http://docfinder.sparta.html5.qq.com/v1/sessions?clientId=mobimedical&orgId=org',
-                    json=client_request_body).json()
-print(res)
-print(res["question"]["query"])
-print("--------------  口述环节(根据年龄和性别推荐常见的病，同时可以自己输入自己的) -------------------")
-print(",".join(res["question"]["choices"]))
-print("--------------  口述环节(根据年龄和性别推荐常见的病，同时可以自己输入自己的) -------------------")
-user_input = input("请输入:")
 
-data = "clientId=mobimedical&orgId=org&sessionId=org_"+wechatOpenId+"&seqno=1&query=您有哪些不舒服的症状？&choice=" + user_input
-res = doctor(data)
-print(res)
-print(res["question"]["query"])
-print("------------ Round 1 ---------------------")
-print(",".join(res["question"]["choices"]))
-print("------------ Round 1 ---------------------")
-user_input = input("请输入:")
+session = {
+    "sessionId": "org_" + wechatid,
+}
 
-data = "clientId=mobimedical&orgId=org&sessionId=org_"+wechatOpenId+"&seqno=2&query=您有哪些不舒服的症状？&choice=" + user_input
-res = doctor(data)
-print(res)
-print(res["question"]["query"])
-print("------------ Round 2 ---------------------")
-print(",".join(res["question"]["choices"]))
-print("------------ Round 2 ---------------------")
-user_input = input("请输入:")
+create_session_req = {
+    "sessionId": "org_" + wechatid,
+    "requestUrl": "/v1/sessions?clientId=mobimedical&orgId=org",
+    "requestBody": json.dumps(client_request_body),
+    "sessionData": json.dumps(session)
+}
+res = post(create_session_req)
+# print(res)
+session = res["sessionDataUpdate"]
+print(1, res["toUserResponse"]["content"])
+user_input = "头疼"
+# user_input = input("请问您哪里不舒服？")
 
-data = "clientId=mobimedical&orgId=org&sessionId=org_"+wechatOpenId+"&seqno=3&query=您有哪些不舒服的症状？&choice=" + user_input
-res = doctor(data)
-print(res["question"]["query"])
-print("------------ Round 3 ---------------------")
-print(",".join(res["question"]["choices"]))
-print("------------ Round 3 ---------------------")
-user_input = input("请输入:")
-print("------------ 结果 ---------------------")
-data = "clientId=mobimedical&orgId=org&sessionId=org_"+wechatOpenId+"&seqno=4&query=您有哪些不舒服的症状？&choice=" + user_input
-res = doctor(data)
-print(res)
-print("----------------------------最后一轮根据症状数量和权重进行排序的结果：--------------------")
-for x in res["recommendation"]["wangmeng"]:
-    print(x)
-print("----------------------------最后一轮再经过京伟的模型的结果：--------------------")
-for x, y in res["recommendation"]["jingwei"].items():
-    print(x, y)
+create_session_req = {
+    "sessionId": "org_" + wechatid,
+    "requestUrl": "/v1/doctors?clientId=mobimedical&de_bug=true&orgId=org&sessionId=" + "org_" + wechatid + "&seqno=1&query=您有什么不舒服的？&choice=" + user_input,
+    "requestBody": json.dumps(client_request_body),
+    "sessionData": session
+}
+res = post(create_session_req)
+session = res["sessionDataUpdate"]
+print(2, res["toUserResponse"]["content"])
+
+user_input = "阴道不规则出血"
+# user_input = input("请问您哪里不舒服？")
+create_session_req = {
+    "sessionId": "org_" + wechatid,
+    "requestUrl": "/v1/doctors?clientId=mobimedical&de_bug=true&orgId=org&sessionId=" + "org_" + wechatid + "&seqno=2&query=您有什么不舒服的？&choice=" + user_input,
+    "requestBody": json.dumps(client_request_body),
+    "sessionData": session
+}
+res = post(create_session_req)
+session = res["sessionDataUpdate"]
+print(3, res["toUserResponse"]["content"])
+
+user_input = "阴道不规则出血"
+# user_input = input("请问您哪里不舒服？")
+create_session_req = {
+    "sessionId": "org_" + wechatid,
+    "requestUrl": "/v1/doctors?clientId=mobimedical&de_bug=true&orgId=org&sessionId=" + "org_" + wechatid + "&seqno=3&query=您有什么不舒服的？&choice=" + user_input,
+    "requestBody": json.dumps(client_request_body),
+    "sessionData": session
+}
+res = post(create_session_req)
+session = res["sessionDataUpdate"]
+print(4, res["toUserResponse"]["content"])
