@@ -312,11 +312,12 @@ class FindDoc:
                 probs.append(v[0])
 
             recommendation = {
-                "jingwei": diagnosis_disease_rate_dict,
-                "wangmeng": [d["l3name"] for d in result["diagnosis_list"]],
                 "doctors": self.get_common_doctors(codes=codes, probs=probs)
             }
             if debug:
                 recommendation["all_log"] = all_log
+                recommendation["jingwei"]=diagnosis_disease_rate_dict
+                recommendation["wangmeng"]=[d["l3name"] for d in result["diagnosis_list"]]
+
             log.debug(all_log)
             return "doctors", None, recommendation
