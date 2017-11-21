@@ -250,7 +250,7 @@ class PredModel:
         name_dis = np.dot(input_vec, disease_name_vec.T)[0]
         combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]*mask_layer*mask_vec[0]
         #combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]
-        val, pos = self.top_k(combined_dis, k_disease*2)
+        val, pos = self.top_k(combined_dis, k_disease)
 
 
 
