@@ -193,11 +193,12 @@ def update_session(session, seqno, choice):
     # print(questions)
     updatedQuestions = []
     for question in questions:
-        if question["seqno"] < seqno:
-            updatedQuestions.append(question)
-        elif question["seqno"] == seqno:
-            question["choice"] = choice
-            updatedQuestions.append(question)
+        if "seqno" in question:
+            if question["seqno"] < seqno:
+                updatedQuestions.append(question)
+            elif question["seqno"] == seqno:
+                question["choice"] = choice
+                updatedQuestions.append(question)
     session["questions"] = updatedQuestions
     # print(session["questions"])
 
