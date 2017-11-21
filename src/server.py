@@ -138,7 +138,7 @@ def get_common_symptoms(age, gender, month=None):
         gender = "M"
         # 疾病是男性，切性别大于18，则不进行推荐
         if gender == "M" and age >= 18:
-            return []
+            return ["男性不育", "性功能障碍", "排尿异常", "阴囊肿胀", "包皮龟头肿痛"]
     if month is None:
         month = datetime.now().month
     with open(symptoms_distributions_file_dir, 'r') as fp:
@@ -218,14 +218,14 @@ def find_doctors(req):
         choice = params["choice"][0]
     # 是否在测试页面展示debug信息
     if "debug" in params:
-        debug=True
+        debug = True
     else:
-        debug=False
+        debug = False
     session = update_session(session, seqno, choice)
     dob = session["patient"]["dob"]
     age = get_age_from_dob(dob)
     sex = session["patient"]["sex"]
-    status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex ,debug)
+    status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex, debug)
     if status == "followup":
         userRes = {
             'sessionId': sessionId,
