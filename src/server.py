@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 import numpy as np
+import sys
 import yaml
 from flask import Flask
 from flask import request
@@ -218,14 +219,14 @@ def find_doctors(req):
         choice = params["choice"][0]
     # 是否在测试页面展示debug信息
     if "debug" in params:
-        debug=True
+        debug = True
     else:
-        debug=False
+        debug = False
     session = update_session(session, seqno, choice)
     dob = session["patient"]["dob"]
     age = get_age_from_dob(dob)
     sex = session["patient"]["sex"]
-    status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex ,debug)
+    status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex, debug)
     if status == "followup":
         userRes = {
             'sessionId': sessionId,
@@ -257,7 +258,12 @@ def load_config(yaml_path="app-config.yaml"):
 
 
 if __name__ == '__main__':
-    config = load_config("./conf/app-config.yaml")
+
+    if len(sys.argv) == 2:
+        config_path = sys.argv[1]
+    else:
+        config_path = "./conf/app-config.yaml"
+    config = load_config(config_path)
 
     CLIENT_API_SESSIONS = config["api"]["CLIENT_API_SESSIONS"]
     CLIENT_API_DOCTORS = config["api"]["CLIENT_API_DOCTORS"]

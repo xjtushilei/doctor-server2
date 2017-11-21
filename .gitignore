@@ -1,7 +1,10 @@
 .idea/
 model/
 log/
-
+*.conf
+*.yaml
+!conf/app-config.yaml
+!conf/logger.conf
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
 # Byte-compiled / optimized / DLL files
@@ -37,7 +40,10 @@ MANIFEST
 *.manifest
 *.spec
 
-# Installer logs
+# Installer logsimport sys
+
+for arg in sys.argv:
+    print arg
 pip-log.txt
 pip-delete-this-directory.txt
 
