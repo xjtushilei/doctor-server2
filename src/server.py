@@ -139,7 +139,7 @@ def get_common_symptoms(age, gender, month=None):
         gender = "M"
         # 疾病是男性，切性别大于18，则不进行推荐
         if gender == "M" and age >= 18:
-            return []
+            return ["男性不育", "性功能障碍", "排尿异常", "阴囊肿胀", "包皮龟头肿痛"]
     if month is None:
         month = datetime.now().month
     with open(symptoms_distributions_file_dir, 'r') as fp:
