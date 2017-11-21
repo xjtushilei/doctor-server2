@@ -75,8 +75,13 @@ class FindDoc:
             self.symptoms_rankings = json.load(fp)
         self.doctors_id_map = {}
         doctors_id_txt = pd.read_csv(self.doctors_id_path, sep='\t')
-        self.doctors_id_map = dict(zip(doctors_id_txt['names'], doctors_id_txt['name_id']))
-
+        doctor_id_temp = zip(doctors_id_txt['names'], doctors_id_txt['name_id'], doctors_id_txt['label'])
+        for line in doctor_id_temp:
+            self.doctors_id_map[line[0]] = {
+                "name": line[0],
+                "id": line[1],
+                "label": line[2]
+            }
     # 丽娟的获取医生信息
     def get_common_doctors(self, codes, probs):
         # input: icd10 code: list; probs: list
@@ -95,7 +100,7 @@ class FindDoc:
         results = []
         for name in rankings[0:10]:
             if name[0] in self.doctors_id_map.keys():
-                results.append({"name": name[0], "id": self.doctors_id_map[name[0]]})
+                results.append(self.doctors_id_map[name[0]])
             else:
                 continue
         return results
