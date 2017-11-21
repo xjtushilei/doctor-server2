@@ -227,15 +227,15 @@ class FindDoc:
                 codes.append(v[1])
                 probs.append(v[0])
             session["probs"] = probs[0]
-            if probs[0] >=0.8:
-                recommendation = {
-                    "doctors": self.get_common_doctors(codes=codes, probs=probs)
-                }
-                if debug:
-                    recommendation["all_log"] = all_log
-                    recommendation["jingwei"] = diagnosis_disease_rate_dict
-                log.debug(all_log)
-                return "doctors", None, recommendation
+            # if probs[0] >=0.8:
+            #     recommendation = {
+            #         "doctors": self.get_common_doctors(codes=codes, probs=probs)
+            #     }
+            #     if debug:
+            #         recommendation["all_log"] = all_log
+            #         recommendation["jingwei"] = diagnosis_disease_rate_dict
+            #     log.debug(all_log)
+            #     return "doctors", None, recommendation
 
             all_log["jingwei识别疾病："] = diagnosis_disease_rate_dict
             all_log["jingwei识别症状："] = input_list
