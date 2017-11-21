@@ -190,14 +190,17 @@ def create_session(req):
 
 def update_session(session, seqno, choice):
     questions = session["questions"]
+    # print(questions)
     updatedQuestions = []
     for question in questions:
-        if question["seqno"] != seqno:
+        if question["seqno"] < seqno:
             updatedQuestions.append(question)
         elif question["seqno"] == seqno:
             question["choice"] = choice
             updatedQuestions.append(question)
     session["questions"] = updatedQuestions
+    # print(session["questions"])
+
     return session
 
 
