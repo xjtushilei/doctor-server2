@@ -1,7 +1,5 @@
 import json
 
-from pmodel import PredModel
-
 
 def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
                       all_symptom_count_file_path="./model/all-symptom-count.data"):
@@ -14,7 +12,7 @@ def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
         return json.load(file1), json.load(file2)
 
 
-def get_diagnosis_first(input, model, age=20, gender="m"):
+def get_diagnosis_first(input, model, age, gender):
     """
     接受京伟的数据
     :return: 两个东西(1.疾病的名字和概率的dict；2.京伟给出的症状列表，之后作为我们的输入)
@@ -69,10 +67,8 @@ def calculate_p_sym_plus(rateList):
 
 def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_input_list=[],
                 max_recommend_sym_num=5, choice_history_words=[], seq=2, all_sym_count={}):
-
     # print(input_list,no_use_input_list,choice_history_words)
-
-
+    # 症状的排序,只返回5个
     rate_matrix = {}
     # disease that we need from all disease
     l3sym_dict_we_need = []
@@ -95,7 +91,7 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
                 if s not in rate_matrix and s not in input_list and s not in choice_history_words:
                     rate_matrix[s] = {"name": s, "rate": r, "rate_list": [], "rate_calculate": 0.0}
             l3sym_dict_we_need.append({"l3name": obj["l3name"],
-                                       "l3code":obj["l3code"],
+                                       "l3code": obj["l3code"],
                                        "all_sym_dic": obj["all_sym_dic"],
                                        "top3": obj["top3"],
                                        "top2": obj["top2"],
@@ -132,6 +128,7 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
             if len(result["recommend_sym_list"]) >= len(disease_rate_dict):
                 break
         result["recommend_sym_list"].sort(key=lambda s: s["rate"], reverse=True)
+    # 其他轮,则计算概率模型进行排序
     else:
         if normal_recommendation:
             # 计算每一个症状的概率
@@ -160,97 +157,4 @@ def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_inpu
                     "rate": sym["rate"],
                     "rate_calculate": sym["rate_calculate"]
                 })
-    # 计算每个疾病的概率
-    # 公式是: 京伟给的该疾病的概率 *【(n个患有的症状对该疾病的贡献率的和)】
-    for d in l3sym_dict_we_need:
-        rate = 0.0
-        # n个患有的症状对该疾病的贡献率的和
-        for (sym_name, sym_rate) in d["suffer_sym_dic"].items():
-            rate += sym_rate
-        # n个患有的症状对该疾病的贡献率的和
-        # 京伟给的该疾病的概率 *【n个患有的症状对该疾病的贡献率的和】
-        if d["l3name"] in disease_rate_dict:
-            rate = rate * disease_rate_dict[d["l3name"]][0]
-        # 若京伟没有给概率，将该疾病设置为0
-        else:
-            rate = rate * 0
-        d["rate"] = rate
-    # 得到疾病概率的排序
-    l3sym_dict_we_need = sorted(l3sym_dict_we_need, key=lambda d: d["rate"], reverse=True)
-    for obj in l3sym_dict_we_need:
-        result["diagnosis_list"].append(
-            {"l3name": obj["l3name"],
-             "l3code": obj["l3code"],
-             "rate": obj["rate"],
-             "suffer_sym_dic": obj["suffer_sym_dic"],
-             "suffer_sym_num": len(obj["suffer_sym_dic"])
-             }
-        )
     return result
-
-
-# 下面的程序没有使用
-# 2017年11月20日14:18:06后没有需求，暂时没有更新此处的代码。目前是在web上进行测试
-def test_some_round_by_console():
-    """
-    通过3~4轮对话，来测试模型
-    :return: None
-    """
-    # 每一轮最多推荐几个症状
-    model = PredModel()
-    max_recommend_sym = 5
-    what_user_input = []
-    # koushu = "孩子突然腹泻，肚子疼，可能伴有呕吐，发烧，恶心"
-    koushu = "原发性闭经卵巢早衰，最近半年一直看不到卵泡"
-    age = 50
-    gender = "female"
-    # 得到京伟的诊断结果 和 初始输入
-    disease_rate_dict, input_list = get_diagnosis_first(koushu, model, age, gender)
-    print(disease_rate_dict)
-    print(input_list)
-    # 病人没有采用的垃圾症状（第0轮初始时候是没有的）
-    no_use_input_list = []
-    # 总轮数（不包括初始化轮）
-    l3sym_dict, all_sym_count = read_symptom_data()
-    # 第0轮结果
-    print("输入提示：回复数字编号，多个请用空格分割。最后按一个enter键确认！")
-
-    for round in [1, 2]:
-        result = core_method(l3sym_dict, disease_rate_dict, input_list, no_use_input_list, max_recommend_sym,
-                             seq=round, all_sym_count=all_sym_count)
-        print("-----------------" + "Round " + str(round) + "--------------------------")
-        for index, sym in enumerate(result["recommend_sym_list"]):
-            print(index, ".", sym["name"])
-        print(len(result["recommend_sym_list"]), ".", "以上都没有")
-        print("-----------------" + "Round " + str(round) + "--------------------------")
-        user_input = input("请选择以上几个症状您是否患有？\n")
-        user_input_list = [int(num) for num in user_input.strip().split(" ")]
-        for index, sym in enumerate(result["recommend_sym_list"]):
-            if index in user_input_list:
-                input_list.append(sym["name"])
-                what_user_input.append(sym["name"])
-            else:
-                no_use_input_list.append(sym["name"])
-        user_input = input("do you have another symtoms? write by yourself!\nif you don't have ,press enter!\n")
-        if len(user_input) == 0:
-            print("into wangmneg")
-            result = core_method(l3sym_dict, result["disease_rate_dict"], input_list, no_use_input_list,
-                                 max_recommend_sym, all_sym_count=all_sym_count)
-        else:
-            print("into jingwei")
-            disease_rate_dict, input_list = get_diagnosis_first(koushu + "," + ",".join(what_user_input), model, age,
-                                                                gender)
-            result = core_method(l3sym_dict, result["disease_rate_dict"], input_list, no_use_input_list,
-                                 max_recommend_sym, all_sym_count=all_sym_count)
-    # 打印最后的诊断结果
-    print("----------------------------------------------")
-    for index, d in enumerate(result["diagnosis_list"]):
-        print(index, " : ", d["l3name"], d["rate"], "遭受症状个数:" + str(d["suffer_sym_num"]))
-        print(d["suffer_sym_dic"])
-    print("----------------------------------------------")
-    print("user_input", what_user_input)
-    print("----------------------------------------------")
-    disease_rate_dict, input_list = get_diagnosis_first(koushu + "," + ",".join(what_user_input), model, age, gender)
-    print(disease_rate_dict)
-
-# test_some_round_by_console()

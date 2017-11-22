@@ -9,18 +9,20 @@ import sys
 import yaml
 from flask import Flask
 from flask import request
-from cmodel import FindDoc
+from .cmodel import FindDoc
 import logging.config
+import os
 
 app = Flask(__name__)
 
 
-## heartbeat handler
+# heartbeat handler
 @app.route('/')
 def index():
     return "OK", 200
 
 
+# 内部测试错误api
 @app.route("/test/", methods=['Get'])
 def test():
     if random.randint(1, 10) > 5:
@@ -35,7 +37,7 @@ def unknow_error(error):
     return "内部错误", 500
 
 
-##main handler
+# main handler
 @app.route('/v1/engine', methods=['POST'])
 def do():
     log_info.setLevel(log_level)
@@ -127,6 +129,7 @@ def create_question(qtype, seqno, query, choices):
     }
 
 
+# 丽娟的首轮推荐症状
 def get_common_symptoms(age, gender, month=None):
     # input: age: int, age>0; gender: {'F','M'}; month:int, [1,..12]
     # age = 12
@@ -174,10 +177,10 @@ def create_session(req):
     symptoms = get_common_symptoms(age, gender)
     if len(symptoms) >= 5:
         symptoms = symptoms[:5]
-    question = create_question('multiple', 1, '请问患者哪里不舒服?', symptoms)
+    question = create_question('multiple', 1, GREETING_PROMPT, symptoms)
     userRes = {
         'sessionId': sessionId,
-        'greeting': '智能分诊助手帮您找到合适医生',
+        'greeting': NO_1_PROMPT,
         'question': question
     }
     session = load_session(req)
@@ -262,17 +265,26 @@ def load_config(yaml_path="app_config.yaml"):
 
 if __name__ == '__main__':
 
+    # 创建session的打招呼用语
+    GREETING_PROMPT = "请问患者哪里不舒服?"
+    # 第1轮的提问文案
+    NO_1_PROMPT = '智能分诊助手帮您找到合适医生'
+
+    # 获取命令行参数
     if len(sys.argv) == 3:
         config_path = sys.argv[1]
         log_config_path = sys.argv[2]
     else:
+        if not os.path.exists("log/"):
+            os.makedirs("log/")
         config_path = "./conf/app_config.yaml"
         log_config_path = "./conf/logger.conf"
+    # 获取yaml配置文件
     config = load_config(config_path)
 
     CLIENT_API_SESSIONS = config["api"]["CLIENT_API_SESSIONS"]
     CLIENT_API_DOCTORS = config["api"]["CLIENT_API_DOCTORS"]
-
+    # 获取log配置文件
     logging.config.fileConfig(log_config_path)
     # 通用日志
     log_info = logging.getLogger("myinfo")
@@ -282,15 +294,14 @@ if __name__ == '__main__':
     log_unkonw_error = logging.getLogger("unknown_error")
     log_level = "DEBUG"
 
+    # 丽娟第一轮推荐症状
     symptoms_distributions_file_dir = config["model"]["symptoms_distributions_file_dir"]
-    # symptoms_distributions_file_dir = './model/symptoms_distributions.json'
+    # 配置核心模型
     cm = FindDoc(model_path=config["model"]["model_path"],
                  seg_model_path=config["model"]["seg_model_path"],
                  dict_var_path=config["model"]["dict_var_path"],
                  all_symptom_count_file_path=config["model"]["all_symptom_count_file_path"],
                  disease_symptom_file_dir=config["model"]["disease_symptom_file_dir"],
-                 male_classifier_path=config["model"]["male_classifier_path"],
-                 female_classifier_path=config["model"]["female_classifier_path"],
                  doctors_distributions_path=config["model"]["doctors_distributions_path"],
                  doctors_id_path=config["model"]["doctors_id_path"],
                  )
@@ -303,7 +314,7 @@ if __name__ == '__main__':
     log_info.info(
         "模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + " finished loading models. server started .")
     print("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\nfinished loading models.\n server started .")
-
+    # flask 启动
     app.run(debug=config["app"]["debug"],
             host=config["app"]["host"],
             port=config["app"]["port"],

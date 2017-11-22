@@ -1,26 +1,26 @@
 import json
-import random
-
-import pandas as pd
-
-import fastText
 import os.path
 import re
 
-from pmodel import PredModel
+from . import dialogue
+import pandas as pd
 
-import dialogue
+from .pmodel import PredModel
 
 sws = "[！|“|”|‘|’|…|′|｜|、|，|。|〈|〉:：|《|》|「|」|『|』|【|】|〔|〕|︿|！|＃|＄|％|＆|＇|（|）|＊|＋|－|,．||；|＜|＝|＞|？|＠|［|］|＿|｛|｜|｝|～|↑|→|≈|①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩|￥|Δ|Ψ|γ|μ|φ|!|\"|'|#|\$|%|&|\*|\+|,|\.|;|\?|\\\|@|\(|\)|\[|\]|\^|_|`|\||\{|\}|~|<|>|=]"
 
+# 不继续进行询问诊断的阈值,直接返回诊断结果
+NO_CONTINUE = 0.85
+# 第2轮的提问文案
+NO_2_PROMPT="患者还有其他不适症状吗?"
+# 第3轮的提问文案
+NO_3_PROMPT="患者还有其他不适症状吗?"
 
 class FindDoc:
     def __init__(self, model_path='./model/model-wiki-hdf-5k.bin', seg_model_path="model/cws.model",
                  dict_var_path="./model/dict_var.npy",
                  disease_symptom_file_dir="./model/disease-symptom3.data",
                  all_symptom_count_file_path="./model/all-symptom-count.data",
-                 male_classifier_path="./model/model-hdf-5k-ml.ftz",
-                 female_classifier_path="./model/model-hdf-5k-fm.ftz",
                  doctors_distributions_path="./model/doctors_distributions.json",
                  doctors_id_path="./model/doctors_id.txt"):
         if os.path.isfile(all_symptom_count_file_path):
@@ -45,14 +45,6 @@ class FindDoc:
         else:
             raise RuntimeError("cannot find model file: " + disease_symptom_file_dir)
 
-        if os.path.isfile(male_classifier_path):
-            self.male_classifier_path = male_classifier_path
-        else:
-            raise RuntimeError("cannot find model file: " + male_classifier_path)
-        if os.path.isfile(female_classifier_path):
-            self.female_classifier_path = female_classifier_path
-        else:
-            raise RuntimeError("cannot find model file: " + female_classifier_path)
         if os.path.isfile(doctors_distributions_path):
             self.doctors_distributions_path = doctors_distributions_path
         else:
@@ -67,8 +59,6 @@ class FindDoc:
         self.segmentor = self.p_model.segmentor
         self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
                                                                          self.all_symptom_count_file_path)
-        # self.male_classifier = fastText.load_model(self.male_classifier_path)
-        # self.female_classifier = fastText.load_model(self.female_classifier_path)
 
         # 读丽娟给的doctor两个字典存到内存
         with open(self.doctors_distributions_path, 'r') as fp:
@@ -119,7 +109,7 @@ class FindDoc:
                 words.append(word)
         return words
 
-    # shilei用的分词函数,包括分词和标点分词的结果
+    # shilei用的分词函数,包括老大的分词和使用标点分词的结果
     def process_sentences_sl(self, sentences):
         words = []
         for sentence in sentences:
@@ -130,7 +120,7 @@ class FindDoc:
             words.extend(sent.split(" "))
         return words
 
-    # 得到用户历史所有选择的症状列表，和用户历史没有选择的症状列表
+    # 得到用户历史所有已经选择的症状，和用户历史没有选择的症状列表
     def process_choice(self, sentences, all_choices):
         words_choices = []
         for sentence in sentences:
@@ -145,12 +135,7 @@ class FindDoc:
                 words_no_choices.append(choice)
         return words_choices, words_no_choices
 
-    # 该函数没有使用，仅仅是老大自己测试时候使用的
-    # def classify(self, sentences):
-    #     words = self.process_sentences(sentences)
-    #     print(" ".join(words))
-    #     print(self.male_classifier.predict(" ".join(words), 2))
-
+    # 在session中设置log，这样方便在response前记录日志
     def update_session_log(self, session, all_log, log):
         if "all_log" not in session:
             session["all_log"] = [all_log]
@@ -159,70 +144,31 @@ class FindDoc:
             temp_all_log.append(all_log)
             session["all_log"] = temp_all_log
 
+    # 核心模型、主要的逻辑实现
     def find_doctors(self, session, log, seqno, choice_now, age, gender, debug=False):
-        choice_now = choice_now.replace("以上都没有", "")
+        # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
+        choice_now = choice_now.replace("以上都没有", " ")
         all_log = {"info": []}
         # 得到用户选择的症状和没有选择的症状
         all_log["choice_now"] = choice_now
         all_log["seqno"] = seqno
         all_log["age"] = age
         all_log["gender"] = gender
+        # 用户历史的选择和历史的没选择
         symptoms, symptoms_no_chioce = self.process_choice([question["choice"] for question in session["questions"]],
                                                            [question["choices"] for question in session["questions"]])
-        seqno_now = seqno
-        if seqno_now == 1:
+        if seqno == 1:
             # 当用户第一轮的输入为空时候，返回不可诊断
             if choice_now.strip() == "":
                 all_log["info"].append("当用户第一轮的输入为空时候，返回不可诊断")
                 self.update_session_log(session, all_log, log)
                 return "other", None, None
-                # if age >= 18:
-                #     all_log["info"].append("年龄大于18岁")
-                #     words = self.process_sentences([choice_now])
-                #     all_log["info"].append("老大分词结果:" + " ".join(words))
-                #     if gender == "male":
-                #         pred, prob = self.male_classifier.predict(" ".join(words))
-                #         all_log["info"].append("老大-male-pred:" + str(pred))
-                #         all_log["info"].append("老大-male-prob:" + str(prob))
-                #         if prob[0] > 0.9:
-                #             all_log["info"].append("分到科室：" + pred[0])
-                #             recommendation = {
-                #                 "department":
-                #                     {
-                #                         # "id": '174',
-                #                         'name': "男科"
-                #                     }
-                #             }
-                #             if debug:
-                #                 recommendation["all_log"] = all_log
-                #             log.debug(all_log)
-                #             return "department", None, recommendation
-                #     else:
-                #         # __label__闲聊
-                #         pred, prob = self.female_classifier.predict(" ".join(words))
-                #         all_log["info"].append("老大-female-pred:" + str(pred))
-                #         all_log["info"].append("老大-female-prob:" + str(prob))
-                #         if prob[0] > 0.9 and pred[0] in ["__label__产科", "__label__女遗传"]:
-                #             d_name = pred[0].replace("__label__", "")
-                #             all_log["info"].append("分到科室:" + str(pred[0]))
-                #             recommendation = {
-                #                 "department":
-                #                     {
-                #                         'name': d_name
-                #                     }
-                #             }
-                #             if debug:
-                #                 recommendation["all_log"] = all_log
-                #             log.debug(all_log)
-                #             return "department", None, recommendation
-                #         else:
-                #             all_log["info"].append("女性大于18，且没有分到专科，进入后面的处理")
-                # print(pred, prob)
+            # jingwei的代码，进来先判断3种科室，不在目标科室则继续,有则返回
             dis_out = ['遗传咨询', '男科', '产科', "无科室[程序继续往下走]"]
             dis_out_id = ['6', '5', '8']
             Label, prob_max = self.p_model.pre_predict(choice_now.strip(), age, gender)
-            all_log["info"].append("jingwei  pre_predict的计算值:" + str(prob_max))
-            all_log["info"].append("jingwei  pre_predict分到科室:" + dis_out[Label])
+            all_log["jingwei  pre_predict的计算值"] = str(prob_max)
+            all_log["jingwei  pre_predict分到科室"] = dis_out[Label]
             if Label != 3:
                 recommendation = {
                     "department":
@@ -236,22 +182,27 @@ class FindDoc:
                 self.update_session_log(session, all_log, log)
                 return "department", None, recommendation
 
-            # 进入jingwei的节奏
+            # 进入jingwei的正常判断
+
+            # 诊断得到的疾病;识别到的症状
             diagnosis_disease_rate_dict, input_list = dialogue.get_diagnosis_first(
                 input=",".join([question["choice"] for question in session["questions"]]),
                 model=self.p_model,
                 age=age, gender=gender)
+
+            # 如果jingwei返回了空,则表示输入的东西无意义,直接返回
             if diagnosis_disease_rate_dict is None:
                 self.update_session_log(session, all_log, log)
                 return "other", None, None
-            # 阈值大于0.8，退出
+
+            # 丽娟的输入
             codes = []
             probs = []
             for v in diagnosis_disease_rate_dict.values():
                 codes.append(v[1])
                 probs.append(v[0])
-            session["probs"] = probs[0]
-            if probs[0] >= 0.88:
+            # 如果阈值大于 NO_CONTINUE ,则直接返回诊断结果,不进行下一轮
+            if probs[0] >= NO_CONTINUE:
                 recommendation = {
                     "doctors": self.get_common_doctors(codes=codes, probs=probs)
                 }
@@ -261,53 +212,61 @@ class FindDoc:
                 self.update_session_log(session, all_log, log)
                 return "doctors", None, recommendation
 
+            # 记住jingwei的诊断结果,wangmeng下一轮使用
+            session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
+
             all_log["jingwei识别疾病："] = diagnosis_disease_rate_dict
             all_log["jingwei识别症状："] = input_list
-            # 记住经纬的诊断结果
-            session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
-            # 王萌的推荐结果,让用户选择
-            all_log["symptoms_推荐结果，用户没有选择的历史纪录:"] = symptoms_no_chioce
-            all_log["symptoms_chioce分词:"] = self.process_sentences_sl(
+            all_log["本轮为止,用户没有选择的所有症状"] = symptoms_no_chioce
+            all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
                 [question["choice"] for question in session["questions"]])
+
+            # wangmeng推荐算法
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences_sl(
                                               [question["choice"] for question in session["questions"]]), seq=1,
                                           all_sym_count=self.all_sym_count)
-            all_log["王萌推介结果"] = result
+            all_log["wangmeng症状推荐算法结果"] = result
+
+            # 从结果中筛选出所有可以选择的症状,并增加"以上都没有"选项
             choices = [r["name"] for r in result["recommend_sym_list"]]
             choices.append("以上都没有")
+
             question = {
                 "type": "multiple",
-                "seqno": seqno_now + 1,
-                "query": "患者还有其他不适症状吗?",
+                "seqno": seqno + 1,
+                "query": NO_2_PROMPT,
                 "choices": choices
             }
             if debug:
                 question["all_log"] = all_log
             self.update_session_log(session, all_log, log)
             return "followup", question, None
-        elif seqno_now == 2:
+        elif seqno == 2:
 
-            # 用户所有的输入全部来自选择，没有自己人工输入？
+            # 和上一轮的选择列表进行对比,判断用户本轮所有的输入是否全部来自选择，没有自己人工输入？
             choices_last = [question["choices"] for question in session["questions"]][-1]
             input_flag = True
             for choice in choice_now.split(","):
                 if choice.strip() not in choices_last and choice.strip() != "":
                     input_flag = False
                     break
-            all_log["info"].append("choices_last:" + str(choices_last))
-            all_log["info"].append("choice_now:" + str(choice_now))
-            all_log["info"].append("判断是否全部来自选择而没有人工输入:" + str(input_flag))
+            all_log["info"].append("上一轮待选择:" + str(choices_last))
+            all_log["info"].append("本轮选择:" + str(choice_now))
+            all_log["info"].append("和上一轮的选择列表进行对比,判断用户本轮所有的输入是否全部来自选择，没有自己人工输入:" + str(input_flag))
 
             # 如果全部来自选择，则不经过土豪模型，而是取本次的结果和之前的症状，进输入王meng的模型
             if input_flag:
-                all_log["info"].append("进入wangmeng")
+                all_log["info"].append("没有进入jingwei,进入wangmeng逻辑,直接推荐症状")
+
+                # 获取到上一轮记录在session中jingwei识别出的疾病列表,避免重复访问jingwei模型
                 diagnosis_disease_rate_dict = session["diagnosis_disease_rate_dict"]
                 input_list = choice_now.split(",")
                 input_list.extend(symptoms)
                 all_log["jingwei上一轮识别疾病"] = diagnosis_disease_rate_dict
-                all_log["wangmeng input_list"] = input_list
-                all_log["历史chioce分词:"] = self.process_sentences_sl(
+                all_log["wangmeng推荐模型的输入"] = input_list
+                all_log["本轮为止,用户没有选择的所有症状"] = symptoms_no_chioce
+                all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
                     [question["choice"] for question in session["questions"]])
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
@@ -315,22 +274,22 @@ class FindDoc:
                                                   [question["choice"] for question in session["questions"]]), seq=2,
                                               all_sym_count=self.all_sym_count)
             else:
-                all_log["info"].append("进入jingwei")
-                # 如果有了新的人工输入,则进入土豪的模型
-                all_log["jingwei输入"] = ",".join([question["choice"] for question in session["questions"]])
+                # 如果有了新的用户输入(不是从列表里选择的),则进入jingwei的模型
+                all_log["info"].append("用户输入了新的描述,进入jingwei模型")
+                all_log["jingwei模型输入"] = ",".join([question["choice"] for question in session["questions"]])
                 diagnosis_disease_rate_dict, input_list = dialogue.get_diagnosis_first(
                     input=",".join([question["choice"] for question in session["questions"]]),
                     model=self.p_model,
                     age=age,
                     gender=gender
                 )
-                # 阈值大于0.8，退出
+                # 如果阈值大于 NO_CONTINUE ,则直接返回诊断结果,不进行下一轮
                 codes = []
                 probs = []
                 for v in diagnosis_disease_rate_dict.values():
                     codes.append(v[1])
                     probs.append(v[0])
-                if probs[0] >= 0.88:
+                if probs[0] >= NO_CONTINUE:
                     recommendation = {
                         "doctors": self.get_common_doctors(codes=codes, probs=probs)
                     }
@@ -343,44 +302,33 @@ class FindDoc:
 
                 all_log["jingwei识别疾病"] = diagnosis_disease_rate_dict
                 all_log["jingwei识别症状"] = input_list
+                # jingwei识别的疾病记录到session中
                 session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
-
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences_sl(
                                                   [question["choice"] for question in session["questions"]]), seq=2,
                                               all_sym_count=self.all_sym_count)
-                all_log["王萌推介结果"] = result
+                all_log["wangmeng症状推荐算法结果"] = result
+
+            # 从结果中筛选出所有可以选择的症状,并增加"以上都没有"选项
             choices = [r["name"] for r in result["recommend_sym_list"]]
             choices.append("以上都没有")
+
             question = {
                 "type": "multiple",
-                "seqno": seqno_now + 1,
+                "seqno": seqno + 1,
                 "query": "患者还有其他不适症状吗?",
                 "choices": choices
             }
             if debug:
                 question["all_log"] = all_log
-            # 2仅仅推荐症状,最后一轮推荐doctor
             self.update_session_log(session, all_log, log)
             return "followup", question, None
-        # 最后一轮会计算疾病的概率，并推荐医生（目前有两种策略，之后会进行对比评测）
-        else:
-            diagnosis_disease_rate_dict = session["diagnosis_disease_rate_dict"]
-            input_list = choice_now.split(",")
-            input_list.extend(symptoms)
-            all_log["jingwei阈值"] = session["probs"]
-            all_log["jingwei上一轮识别疾病"] = diagnosis_disease_rate_dict
-            all_log["wangmeng input_list"] = input_list
-            all_log["历史chioce分词:"] = self.process_sentences_sl(
-                [question["choice"] for question in session["questions"]])
+        # 最后一轮会给出诊断结果
+        elif seqno == 3:
 
-            result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
-                                          choice_history_words=self.process_sentences_sl(
-                                              [question["choice"] for question in session["questions"]]), seq=3,
-                                          all_sym_count=self.all_sym_count)
-
-            all_log["王萌疾病排序"] = [d for d in result["diagnosis_list"]]
+            # 将历史所有记录进入jingwei的模型
             all_log["jingwei最后一轮输入"] = ",".join([question["choice"] for question in session["questions"]])
             diagnosis_disease_rate_dict, input_list = dialogue.get_diagnosis_first(
                 input=",".join([question["choice"] for question in session["questions"]]),
@@ -388,32 +336,22 @@ class FindDoc:
                 age=age,
                 gender=gender
             )
-            session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
-            all_log["jingwei最终识别疾病"] = diagnosis_disease_rate_dict
+            all_log["jingwei最终识别疾病,给丽娟进行获取医生"] = diagnosis_disease_rate_dict
             all_log["jingwei最终识别症状（没有使用）"] = input_list
 
             # 疾病的icd10id和概率
             codes = []
             probs = []
-            # 最后采用谁的排序，0.6之下用经纬的，0.6之上用wangmeng的
-            if session["probs"] >= 0.6:
-                for d in result["diagnosis_list"]:
-                    codes.append(d["l3code"])
-                    probs.append(d["rate"])
-            else:
-
-                for v in diagnosis_disease_rate_dict.values():
-                    codes.append(v[1])
-                    probs.append(v[0])
-            all_log["codes"] = codes
-            all_log["probs"] = probs
+            for v in diagnosis_disease_rate_dict.values():
+                codes.append(v[1])
+                probs.append(v[0])
+            all_log["传给丽娟的codes"] = codes
+            all_log["传给丽娟的probs"] = probs
             recommendation = {
                 "doctors": self.get_common_doctors(codes=codes, probs=probs)
             }
             if debug:
                 recommendation["all_log"] = all_log
                 recommendation["jingwei"] = diagnosis_disease_rate_dict
-                recommendation["wangmeng"] = [d["l3name"] for d in result["diagnosis_list"]]
-
             self.update_session_log(session, all_log, log)
             return "doctors", None, recommendation
