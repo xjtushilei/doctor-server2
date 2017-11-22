@@ -279,7 +279,7 @@ class FindDoc:
             question = {
                 "type": "multiple",
                 "seqno": seqno_now + 1,
-                "query": "请问患者哪里不舒服?",
+                "query": "患者还有其他不适症状吗?",
                 "choices": choices
             }
             if debug:

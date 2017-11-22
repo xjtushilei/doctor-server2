@@ -174,7 +174,7 @@ def create_session(req):
     symptoms = get_common_symptoms(age, gender)
     if len(symptoms) >= 5:
         symptoms = symptoms[:5]
-    question = create_question('multiple', 1, '请问您哪里不舒服？', symptoms)
+    question = create_question('multiple', 1, '请问患者哪里不舒服?', symptoms)
     userRes = {
         'sessionId': sessionId,
         'greeting': '智能分诊助手帮您找到合适医生',
