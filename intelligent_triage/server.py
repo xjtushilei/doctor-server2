@@ -240,7 +240,7 @@ def find_doctors(req):
     elif status == "doctors" or status == "department":
         userRes = {
             'sessionId': sessionId,
-            'status': 'doctors',
+            'status': status,
             'recommendation': recommendation
         }
         session["recommendation"] = recommendation
