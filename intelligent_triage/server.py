@@ -9,7 +9,7 @@ import sys
 import yaml
 from flask import Flask
 from flask import request
-from .cmodel import FindDoc
+from cmodel import FindDoc
 import logging.config
 import os
 
