@@ -177,7 +177,7 @@ def create_session(req):
     question = create_question('multiple', 1, '请问您哪里不舒服？', symptoms)
     userRes = {
         'sessionId': sessionId,
-        'greeting': '欢迎使用智能分诊助手，帮您找到合适医生。',
+        'greeting': '智能分诊助手帮您找到合适医生',
         'question': question
     }
     session = load_session(req)

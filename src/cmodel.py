@@ -151,6 +151,14 @@ class FindDoc:
         print(" ".join(words))
         print(self.male_classifier.predict(" ".join(words), 2))
 
+    def update_session_log(self, session, all_log, log):
+        if "all_log" not in session:
+            session["all_log"] = [all_log]
+        else:
+            temp_all_log = session["all_log"]
+            temp_all_log.append(all_log)
+            session["all_log"] = temp_all_log
+
     def find_doctors(self, session, log, seqno, choice_now, age, gender, debug=False):
         choice_now = choice_now.replace("以上都没有", "")
         all_log = {"info": []}
@@ -166,6 +174,7 @@ class FindDoc:
             # 当用户第一轮的输入为空时候，返回不可诊断
             if choice_now.strip() == "":
                 all_log["info"].append("当用户第一轮的输入为空时候，返回不可诊断")
+                self.update_session_log(session, all_log, log)
                 return "other", None, None
                 # if age >= 18:
                 #     all_log["info"].append("年龄大于18岁")
@@ -209,12 +218,12 @@ class FindDoc:
                 #         else:
                 #             all_log["info"].append("女性大于18，且没有分到专科，进入后面的处理")
                 # print(pred, prob)
-            dis_out = ['遗传咨询', '男科', '产科']
+            dis_out = ['遗传咨询', '男科', '产科', "无科室[程序继续往下走]"]
             dis_out_id = ['6', '5', '8']
             Label, prob_max = self.p_model.pre_predict(choice_now.strip(), age, gender)
+            all_log["info"].append("jingwei  pre_predict的计算值:" + str(prob_max))
+            all_log["info"].append("jingwei  pre_predict分到科室:" + dis_out[Label])
             if Label != 3:
-                all_log["info"].append("jingwei分到科室的阈值:" + str(prob_max))
-                all_log["info"].append("jingwei分到科室:" + dis_out[Label])
                 recommendation = {
                     "department":
                         {
@@ -224,7 +233,7 @@ class FindDoc:
                 }
                 if debug:
                     recommendation["all_log"] = all_log
-                log.debug(all_log)
+                self.update_session_log(session, all_log, log)
                 return "department", None, recommendation
 
             # 进入jingwei的节奏
@@ -233,7 +242,7 @@ class FindDoc:
                 model=self.p_model,
                 age=age, gender=gender)
             if diagnosis_disease_rate_dict is None:
-                log.debug(all_log)
+                self.update_session_log(session, all_log, log)
                 return "other", None, None
             # 阈值大于0.8，退出
             codes = []
@@ -249,7 +258,7 @@ class FindDoc:
                 if debug:
                     recommendation["all_log"] = all_log
                     recommendation["jingwei"] = diagnosis_disease_rate_dict
-                log.debug(all_log)
+                self.update_session_log(session, all_log, log)
                 return "doctors", None, recommendation
 
             all_log["jingwei识别疾病："] = diagnosis_disease_rate_dict
@@ -265,17 +274,17 @@ class FindDoc:
                                               [question["choice"] for question in session["questions"]]), seq=1,
                                           all_sym_count=self.all_sym_count)
             all_log["王萌推介结果"] = result
-            choices=[r["name"] for r in result["recommend_sym_list"]]
+            choices = [r["name"] for r in result["recommend_sym_list"]]
             choices.append("以上都没有")
             question = {
                 "type": "multiple",
                 "seqno": seqno_now + 1,
-                "query": "您还有哪些不适的症状？",
-                "choices":choices
+                "query": "请问患者哪里不舒服?",
+                "choices": choices
             }
             if debug:
                 question["all_log"] = all_log
-            log.debug(all_log)
+            self.update_session_log(session, all_log, log)
             return "followup", question, None
         elif seqno_now == 2:
 
@@ -328,7 +337,7 @@ class FindDoc:
                     if debug:
                         recommendation["all_log"] = all_log
                         recommendation["jingwei"] = diagnosis_disease_rate_dict
-                    log.debug(all_log)
+                    self.update_session_log(session, all_log, log)
                     return "doctors", None, recommendation
                 session["probs"] = probs[0]
 
@@ -347,13 +356,13 @@ class FindDoc:
             question = {
                 "type": "multiple",
                 "seqno": seqno_now + 1,
-                "query": "您还有哪些不适的症状？",
+                "query": "患者还有其他不适症状吗?",
                 "choices": choices
             }
             if debug:
                 question["all_log"] = all_log
             # 2仅仅推荐症状,最后一轮推荐doctor
-            log.debug(all_log)
+            self.update_session_log(session, all_log, log)
             return "followup", question, None
         # 最后一轮会计算疾病的概率，并推荐医生（目前有两种策略，之后会进行对比评测）
         else:
@@ -395,8 +404,8 @@ class FindDoc:
                 for v in diagnosis_disease_rate_dict.values():
                     codes.append(v[1])
                     probs.append(v[0])
-            all_log["codes"]=codes
-            all_log["probs"]=probs
+            all_log["codes"] = codes
+            all_log["probs"] = probs
             recommendation = {
                 "doctors": self.get_common_doctors(codes=codes, probs=probs)
             }
@@ -405,5 +414,5 @@ class FindDoc:
                 recommendation["jingwei"] = diagnosis_disease_rate_dict
                 recommendation["wangmeng"] = [d["l3name"] for d in result["diagnosis_list"]]
 
-            log.debug(all_log)
+            self.update_session_log(session, all_log, log)
             return "doctors", None, recommendation
