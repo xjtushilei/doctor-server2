@@ -255,7 +255,7 @@ def find_doctors(req):
 
 
 # 获取配置文件
-def load_config(yaml_path="app-config.yaml"):
+def load_config(yaml_path="app_config.yaml"):
     with open(yaml_path) as config_file:
         return yaml.load(config_file)
 
@@ -266,7 +266,7 @@ if __name__ == '__main__':
         config_path = sys.argv[1]
         log_config_path = sys.argv[2]
     else:
-        config_path = "./conf/app-config.yaml"
+        config_path = "./conf/app_config.yaml"
         log_config_path = "./conf/logger.conf"
     config = load_config(config_path)
 

@@ -4,9 +4,9 @@ log/
 src/
 *.conf
 *.yaml
-!intelligent_triage/conf/app-config.yaml
-!intelligent_triage/conf/app-config-prod.yaml
-!intelligent_triage/conf/logger-prod.conf
+!intelligent_triage/conf/app_config.yaml
+!intelligent_triage/conf/app_config-prod.yaml
+!intelligent_triage/conf/logger_prod.conf
 !intelligent_triage/conf/logger.conf
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
