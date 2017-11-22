@@ -262,16 +262,18 @@ def load_config(yaml_path="app-config.yaml"):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
         config_path = sys.argv[1]
+        log_config_path = sys.argv[2]
     else:
         config_path = "./conf/app-config.yaml"
+        log_config_path = "./conf/logger.conf"
     config = load_config(config_path)
 
     CLIENT_API_SESSIONS = config["api"]["CLIENT_API_SESSIONS"]
     CLIENT_API_DOCTORS = config["api"]["CLIENT_API_DOCTORS"]
 
-    logging.config.fileConfig("./conf/logger.conf")
+    logging.config.fileConfig(log_config_path)
     # 通用日志
     log_info = logging.getLogger("myinfo")
     # 记录我们检测到的error，比如url错误或者orgid不对等
