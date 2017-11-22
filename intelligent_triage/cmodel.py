@@ -388,6 +388,7 @@ class FindDoc:
                 age=age,
                 gender=gender
             )
+            session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
             all_log["jingwei最终识别疾病"] = diagnosis_disease_rate_dict
             all_log["jingwei最终识别症状（没有使用）"] = input_list
 
