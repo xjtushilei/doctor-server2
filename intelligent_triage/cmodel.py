@@ -67,8 +67,8 @@ class FindDoc:
         self.segmentor = self.p_model.segmentor
         self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
                                                                          self.all_symptom_count_file_path)
-        self.male_classifier = fastText.load_model(self.male_classifier_path)
-        self.female_classifier = fastText.load_model(self.female_classifier_path)
+        # self.male_classifier = fastText.load_model(self.male_classifier_path)
+        # self.female_classifier = fastText.load_model(self.female_classifier_path)
 
         # 读丽娟给的doctor两个字典存到内存
         with open(self.doctors_distributions_path, 'r') as fp:
@@ -146,10 +146,10 @@ class FindDoc:
         return words_choices, words_no_choices
 
     # 该函数没有使用，仅仅是老大自己测试时候使用的
-    def classify(self, sentences):
-        words = self.process_sentences(sentences)
-        print(" ".join(words))
-        print(self.male_classifier.predict(" ".join(words), 2))
+    # def classify(self, sentences):
+    #     words = self.process_sentences(sentences)
+    #     print(" ".join(words))
+    #     print(self.male_classifier.predict(" ".join(words), 2))
 
     def update_session_log(self, session, all_log, log):
         if "all_log" not in session:
