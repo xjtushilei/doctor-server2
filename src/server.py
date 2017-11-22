@@ -146,7 +146,7 @@ def get_common_symptoms(age, gender, month=None):
         symptoms_rankings = json.load(fp)
     # months = [1,2,3,4,5,6,7,8,9,10,11,12] # 12 months
     # genders = ['F', 'M']
-    ages = [0, 0.08, 1, 3, 6, 12, 18, 40, 100]  # 8 phases
+    ages = [0, 0.08, 1, 3, 6, 12, 18, 30, 45, 100]  # 8 phases
     a = np.argmax(np.array(ages) > age)
     index = 'M' + str(month) + 'A' + str(ages[a - 1]) + 'A' + str(ages[a]) + gender
     return [item[0] for item in symptoms_rankings[index]]
