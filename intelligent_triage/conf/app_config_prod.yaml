@@ -7,8 +7,8 @@ api:
     CLIENT_API_SESSIONS: "/v1/sessions"
     CLIENT_API_DOCTORS: "/v1/doctors"
 model:
-    model_path: "/ceph/10646/intelligent_triage/model/model-webqa-hdf-2c.bin"
-    seg_model_path: "/ceph/10646/intelligent_triage/model/model/cws.model"
+    model_path: "/ceph/10646/intelligent_triage/model-webqa-hdf-2c.bin"
+    seg_model_path: "/ceph/10646/intelligent_triage/model/cws.model"
     dict_var_path: "/ceph/10646/intelligent_triage/model/dict_var.npy"
     all_symptom_count_file_path: "/ceph/10646/intelligent_triage/model/all-symptom-count.data"
     disease_symptom_file_dir: "/ceph/10646/intelligent_triage/model/disease-symptom3.data"
