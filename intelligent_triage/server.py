@@ -253,7 +253,7 @@ def find_doctors(req):
             'sessionId': sessionId,
             'status': 'other',
             'recommendation': {
-                "other": "非常抱歉，暂不能为您找到合适的医生."
+                "other": "非常抱歉，暂不能为您找到合适的医生"
             }
 
         }
