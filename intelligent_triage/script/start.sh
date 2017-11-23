@@ -3,7 +3,7 @@
 local_ip=`/sbin/ifconfig eth1|grep "inet addr:"|cut -d: -f 2|cut -d" " -f1`
 BASEDIR=`cd "$(dirname "$0")"; cd ..;  pwd `
 
-py_bin="/usr/bin/python"
+py_bin="/usr/bin/python3.4"
 
 APP="sl_guangdu_tongji"
 
