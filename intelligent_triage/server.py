@@ -223,6 +223,7 @@ def find_doctors(req):
         choice = " "
     else:
         choice = params["choice"][0]
+        choice = choice.replace("以上都没有", " ")
     # 是否在测试页面展示debug信息
     if "debug" in params:
         debug = True
