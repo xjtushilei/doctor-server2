@@ -251,7 +251,10 @@ def find_doctors(req):
         userRes = {
             'sessionId': sessionId,
             'status': 'other',
-            "other": "非常抱歉，暂不能为您找到合适的医生."
+            'recommendation': {
+                "other": "非常抱歉，暂不能为您找到合适的医生."
+            }
+
         }
     res = create_client_response(200, sessionId, userRes, session)
     return res
