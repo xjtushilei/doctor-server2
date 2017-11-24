@@ -7,6 +7,7 @@ Cython==0.27.3
 # fastTextpy==0.0.1
 Flask==0.12.2
 future==0.16.0
+gensim>=3.1.0
 gevent==1.2.2
 greenlet==0.4.12
 gunicorn==19.7.1

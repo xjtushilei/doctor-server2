@@ -63,7 +63,7 @@ res = post(create_session_req)
 session = res["sessionDataUpdate"]
 print(2, res["toUserResponse"]["content"])
 
-user_input = "阴道不规则出血"
+user_input = "阴道不规则出血,没有其他症状了"
 # user_input = input("请问您哪里不舒服？")
 create_session_req = {
     "sessionId": "org_" + wechatid,

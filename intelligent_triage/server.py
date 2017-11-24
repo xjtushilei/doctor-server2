@@ -142,17 +142,20 @@ def get_common_symptoms(age, gender, month=None):
         gender = "M"
         # 疾病是男性，切性别大于18，则不进行推荐
         if gender == "M" and age >= 18:
-            return ["男性不育", "性功能障碍", "排尿异常", "阴囊肿胀", "包皮龟头肿痛"]
+            return ["男性不育", "勃起困难", "排尿异常", "阴囊肿胀", "龟头疼痛"]
     if month is None:
         month = datetime.now().month
     with open(symptoms_distributions_file_dir, 'r') as fp:
         symptoms_rankings = json.load(fp)
     # months = [1,2,3,4,5,6,7,8,9,10,11,12] # 12 months
     # genders = ['F', 'M']
-    ages = [0, 0.08, 1, 3, 6, 12, 18, 30, 45, 100]  # 8 phases
-    a = np.argmax(np.array(ages) > age)
-    index = 'M' + str(month) + 'A' + str(ages[a - 1]) + 'A' + str(ages[a]) + gender
-    return [item[0] for item in symptoms_rankings[index]]
+    months = [0, 3, 6, 9, 12]  # 4 seasons
+    genders = ['F', 'M']  # gender
+    ages = [0, 0.083, 1, 6, 18, 30, 45, 150]  # 7 phases in year
+    m = np.argmax(np.array(months) >= month)
+    a = np.argmax(np.array(ages) >= age)
+    index = 'M' + str(months[m - 1]) + 'M' + str(months[m]) + 'A' + str(ages[a - 1]) + 'A' + str(ages[a]) + gender
+    return [item[0] for item in symptoms_rankings[index]][0:5]
 
 
 def create_client_response(code, sessionId, userRes, session):
@@ -223,7 +226,7 @@ def find_doctors(req):
         choice = " "
     else:
         choice = params["choice"][0]
-        choice = choice.replace("以上都没有", " ")
+        choice = choice.replace(NO_SYMPTOMS_PROMPT, " ")
     # 是否在测试页面展示debug信息
     if "debug" in params:
         debug = True
@@ -253,7 +256,7 @@ def find_doctors(req):
             'sessionId': sessionId,
             'status': 'other',
             'recommendation': {
-                "other": "非常抱歉，暂不能为您找到合适的医生"
+                "other": STATUS_OTHER
             }
 
         }
@@ -269,11 +272,19 @@ def load_config(yaml_path="app_config.yaml"):
 
 if __name__ == '__main__':
 
+    # ###################文案#################################
+    # 获取文案信息
+    text_config = load_config("./conf/text_config.yaml")
     # 创建session的打招呼用语
-    GREETING_PROMPT = "请问患者哪里不舒服?"
+    GREETING_PROMPT = text_config["GREETING_PROMPT"]
     # 第1轮的提问文案
-    NO_1_PROMPT = '智能分诊助手帮您找到合适医生'
-
+    NO_1_PROMPT = text_config["NO_1_PROMPT"]
+    # 第x轮的"没有其他症状"的文案
+    NO_SYMPTOMS_PROMPT = text_config["NO_SYMPTOMS_PROMPT"]
+    # other状态的文案
+    STATUS_OTHER = text_config["STATUS_OTHER"]
+    ######################其他配置文件加载##################################
+    # 获取配置文件
     # 获取命令行参数
     if len(sys.argv) == 3:
         config_path = sys.argv[1]
@@ -284,10 +295,11 @@ if __name__ == '__main__':
         config_path = "./conf/app_config.yaml"
         log_config_path = "./conf/logger.conf"
     # 获取yaml配置文件
-    config = load_config(config_path)
-
-    CLIENT_API_SESSIONS = config["api"]["CLIENT_API_SESSIONS"]
-    CLIENT_API_DOCTORS = config["api"]["CLIENT_API_DOCTORS"]
+    app_config = load_config(config_path)
+    ############################API名字############################
+    CLIENT_API_SESSIONS = app_config["api"]["CLIENT_API_SESSIONS"]
+    CLIENT_API_DOCTORS = app_config["api"]["CLIENT_API_DOCTORS"]
+    ################################LOG日志文件#######################
     # 获取log配置文件
     logging.config.fileConfig(log_config_path)
     # 通用日志
@@ -297,19 +309,20 @@ if __name__ == '__main__':
     # 记录程序中位置的错误，比如jignwei的模型突然出现不可预知的except，就捕获
     log_unkonw_error = logging.getLogger("unknown_error")
     log_level = "DEBUG"
-
+    ############################模型文件位置############################
     # 丽娟第一轮推荐症状
-    symptoms_distributions_file_dir = config["model"]["symptoms_distributions_file_dir"]
+    symptoms_distributions_file_dir = app_config["model"]["symptoms_distributions_file_dir"]
     # 配置核心模型
-    cm = FindDoc(model_path=config["model"]["model_path"],
-                 seg_model_path=config["model"]["seg_model_path"],
-                 dict_var_path=config["model"]["dict_var_path"],
-                 all_symptom_count_file_path=config["model"]["all_symptom_count_file_path"],
-                 disease_symptom_file_dir=config["model"]["disease_symptom_file_dir"],
-                 doctors_distributions_path=config["model"]["doctors_distributions_path"],
-                 doctors_id_path=config["model"]["doctors_id_path"],
+    cm = FindDoc(model_path=app_config["model"]["model_path"],
+                 seg_model_path=app_config["model"]["seg_model_path"],
+                 dict_var_path=app_config["model"]["dict_var_path"],
+                 all_symptom_count_file_path=app_config["model"]["all_symptom_count_file_path"],
+                 disease_symptom_file_dir=app_config["model"]["disease_symptom_file_dir"],
+                 doctors_distributions_path=app_config["model"]["doctors_distributions_path"],
+                 doctors_id_path=app_config["model"]["doctors_id_path"],
+                 text_config=text_config
                  )
-
+    ###############################模型文件加载#########################
     # 统计加载模型时间
     starttime = datetime.now()
     cm.load()
@@ -318,8 +331,8 @@ if __name__ == '__main__':
     log_info.info(
         "模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + " finished loading models. server started .")
     print("模型加载一共用时：" + str((endtime - starttime).seconds) + "秒" + "\nfinished loading models.\n server started .")
-    # flask 启动
-    app.run(debug=config["app"]["debug"],
-            host=config["app"]["host"],
-            port=config["app"]["port"],
-            threaded=config["app"]["threaded"])
+    ######################### flask 启动#############################
+    app.run(debug=app_config["app"]["debug"],
+            host=app_config["app"]["host"],
+            port=app_config["app"]["port"],
+            threaded=app_config["app"]["threaded"])

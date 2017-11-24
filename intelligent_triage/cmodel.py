@@ -2,27 +2,24 @@ import json
 import os.path
 import re
 
-import dialogue
+import numpy as np
 import pandas as pd
 
+import dialogue
 from pmodel import PredModel
 
 sws = "[！|“|”|‘|’|…|′|｜|、|，|。|〈|〉:：|《|》|「|」|『|』|【|】|〔|〕|︿|！|＃|＄|％|＆|＇|（|）|＊|＋|－|,．||；|＜|＝|＞|？|＠|［|］|＿|｛|｜|｝|～|↑|→|≈|①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩|￥|Δ|Ψ|γ|μ|φ|!|\"|'|#|\$|%|&|\*|\+|,|\.|;|\?|\\\|@|\(|\)|\[|\]|\^|_|`|\||\{|\}|~|<|>|=]"
 
-# 不继续进行询问诊断的阈值,直接返回诊断结果
-NO_CONTINUE = 0.85
-# 第2轮的提问文案
-NO_2_PROMPT="患者还有其他不适症状吗?"
-# 第3轮的提问文案
-NO_3_PROMPT="患者还有其他不适症状吗?"
 
 class FindDoc:
-    def __init__(self, model_path='./model/model-wiki-hdf-5k.bin', seg_model_path="model/cws.model",
+    def __init__(self, text_config, model_path='./model/model-wiki-hdf-5k.bin', seg_model_path="model/cws.model",
                  dict_var_path="./model/dict_var.npy",
                  disease_symptom_file_dir="./model/disease-symptom3.data",
                  all_symptom_count_file_path="./model/all-symptom-count.data",
                  doctors_distributions_path="./model/doctors_distributions.json",
                  doctors_id_path="./model/doctors_id.txt"):
+        self.text_config = text_config
+
         if os.path.isfile(all_symptom_count_file_path):
             self.all_symptom_count_file_path = all_symptom_count_file_path
         else:
@@ -55,6 +52,16 @@ class FindDoc:
             raise RuntimeError("cannot find model file: " + doctors_id_path)
 
     def load(self):
+
+        # 不继续进行询问诊断的阈值,直接返回诊断结果
+        self.NO_CONTINUE = self.text_config["NO_CONTINUE"]
+        # 第2轮的提问文案
+        self.NO_2_PROMPT = self.text_config["NO_2_PROMPT"]
+        # 第3轮的提问文案
+        self.NO_3_PROMPT = self.text_config["NO_3_PROMPT"]
+        # 第x轮的"没有其他症状"的文案
+        self.NO_SYMPTOMS_PROMPT = self.text_config["NO_SYMPTOMS_PROMPT"]
+
         self.p_model = PredModel(self.seg_model_path, self.model_path, self.dict_var_path)
         self.segmentor = self.p_model.segmentor
         self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
@@ -74,27 +81,67 @@ class FindDoc:
             }
 
     # 丽娟的获取医生信息
-    def get_common_doctors(self, codes, probs):
+    def get_common_doctors(self, codes, probs, age, gender):
         # input: icd10 code: list; probs: list
-        # get_common_doctors(['D39', 'L01'],[0.5, 0.5], path)
+        # get_common_doctors(['D39', 'L01'],gender='male',age=30)
+        diff = -100 * np.diff(probs)
+        x_stop = 4
+        for ii in range(len(diff)):
+            if diff[ii] > 1:
+                x_stop = ii
+                break
+
+        # codes = codes[0:x_stop+1]
+        # probs = probs[0:x_stop+1]
+
         rankings = dict()
+        ## diff pediatric and gyna and general
+        if age <= 1:
+            symptoms_rankings2 = self.symptoms_rankings['newborn']
+        elif gender == 'male' and age <= 18:
+            symptoms_rankings2 = self.symptoms_rankings['pediatrics']
+        elif gender == 'female' and age <= 12:
+            symptoms_rankings2 = self.symptoms_rankings['pediatrics']
+        elif gender == 'female' and age > 18:
+            symptoms_rankings2 = self.symptoms_rankings['gynaecology']
+        elif gender == 'female':
+            symptoms_rankings2 = self.symptoms_rankings['general']
+        else:
+            symptoms_rankings2 = {}
+
         for i, code in enumerate(codes):
-            if code in self.symptoms_rankings:
-                for name, prob in self.symptoms_rankings[code]:
+            if code in symptoms_rankings2:
+                for name, prob in symptoms_rankings2[code]:
                     if code in rankings:
-                        rankings[name] += probs[i] * prob
+                        rankings[name] += prob / self.symptoms_rankings['doc_case_num'][name]
                     else:
-                        rankings[name] = probs[i] * prob
+                        rankings[name] = prob / self.symptoms_rankings['doc_case_num'][name]
             else:
                 continue
         rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
+
+        ## if no matched doctors, use general instead
+        if rankings == []:
+            if age <= 1:
+                # print('newborn general')
+                rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
+            elif age <= 18:
+                # print('pediatric general')
+                rankings = sorted(self.symptoms_rankings['gp_ped'].items(), key=lambda x: x[1][0], reverse=True)
+            elif gender == 'female' and age > 18:
+                # print('gynaecology general')
+                rankings = sorted(self.symptoms_rankings['gp_gyn'].items(), key=lambda x: x[1][0], reverse=True)
+
+        ## remove '院际会诊' and get id of doctor
         results = []
-        for name in rankings[0:10]:
-            if name[0] in self.doctors_id_map.keys():
+        for name in rankings:
+            if name[0] in self.doctors_id_map.keys() and '会诊' not in name[0]:
+                # if name[0] in doctors_id_map.keys():
                 results.append(self.doctors_id_map[name[0]])
             else:
+                # print ('remove',name[0])
                 continue
-        return results
+        return results[0:30]
 
     # 去掉停用词，并用空格替换
     def remove_stopwords(self, line):
@@ -147,7 +194,7 @@ class FindDoc:
     # 核心模型、主要的逻辑实现
     def find_doctors(self, session, log, seqno, choice_now, age, gender, debug=False):
         # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
-        choice_now = choice_now.replace("以上都没有", " ")
+        choice_now = choice_now.replace(self.NO_SYMPTOMS_PROMPT, " ")
         all_log = {"info": []}
         # 得到用户选择的症状和没有选择的症状
         all_log["choice_now"] = choice_now
@@ -166,6 +213,7 @@ class FindDoc:
             # jingwei的代码，进来先判断3种科室，不在目标科室则继续,有则返回
             dis_out = ['遗传咨询', '男科', '产科', "无科室[程序继续往下走]"]
             dis_out_id = ['6', '5', '8']
+            all_log["jingwei的预测专科模型输入"] = choice_now.strip()
             Label, prob_max = self.p_model.pre_predict(choice_now.strip(), age, gender)
             all_log["jingwei  pre_predict的计算值"] = str(prob_max)
             all_log["jingwei  pre_predict分到科室"] = dis_out[Label]
@@ -183,7 +231,7 @@ class FindDoc:
                 return "department", None, recommendation
 
             # 进入jingwei的正常判断
-
+            all_log["jingwei首轮模型输入"] = ",".join([question["choice"] for question in session["questions"]])
             # 诊断得到的疾病;识别到的症状
             diagnosis_disease_rate_dict, input_list = dialogue.get_diagnosis_first(
                 input=",".join([question["choice"] for question in session["questions"]]),
@@ -202,9 +250,10 @@ class FindDoc:
                 codes.append(v[1])
                 probs.append(v[0])
             # 如果阈值大于 NO_CONTINUE ,则直接返回诊断结果,不进行下一轮
-            if probs[0] >= NO_CONTINUE:
+            if probs[0] >= self.NO_CONTINUE:
+                all_log["丽娟输入"] = [codes, probs, age, gender]
                 recommendation = {
-                    "doctors": self.get_common_doctors(codes=codes, probs=probs)
+                    "doctors": self.get_common_doctors(codes=codes, probs=probs, age=age, gender=gender)
                 }
                 if debug:
                     recommendation["all_log"] = all_log
@@ -230,12 +279,12 @@ class FindDoc:
 
             # 从结果中筛选出所有可以选择的症状,并增加"以上都没有"选项
             choices = [r["name"] for r in result["recommend_sym_list"]]
-            choices.append("以上都没有")
+            choices.append(self.NO_SYMPTOMS_PROMPT)
 
             question = {
                 "type": "multiple",
                 "seqno": seqno + 1,
-                "query": NO_2_PROMPT,
+                "query": self.NO_2_PROMPT,
                 "choices": choices
             }
             if debug:
@@ -289,9 +338,10 @@ class FindDoc:
                 for v in diagnosis_disease_rate_dict.values():
                     codes.append(v[1])
                     probs.append(v[0])
-                if probs[0] >= NO_CONTINUE:
+                if probs[0] >= self.NO_CONTINUE:
+                    all_log["丽娟输入"] = [codes, probs, age, gender]
                     recommendation = {
-                        "doctors": self.get_common_doctors(codes=codes, probs=probs)
+                        "doctors": self.get_common_doctors(codes=codes, probs=probs, age=age, gender=gender)
                     }
                     if debug:
                         recommendation["all_log"] = all_log
@@ -313,12 +363,12 @@ class FindDoc:
 
             # 从结果中筛选出所有可以选择的症状,并增加"以上都没有"选项
             choices = [r["name"] for r in result["recommend_sym_list"]]
-            choices.append("以上都没有")
+            choices.append(self.NO_SYMPTOMS_PROMPT)
 
             question = {
                 "type": "multiple",
                 "seqno": seqno + 1,
-                "query": "患者还有其他不适症状吗?",
+                "query": self.NO_3_PROMPT,
                 "choices": choices
             }
             if debug:
@@ -345,10 +395,9 @@ class FindDoc:
             for v in diagnosis_disease_rate_dict.values():
                 codes.append(v[1])
                 probs.append(v[0])
-            all_log["传给丽娟的codes"] = codes
-            all_log["传给丽娟的probs"] = probs
+            all_log["丽娟输入"] = [codes, probs, age, gender]
             recommendation = {
-                "doctors": self.get_common_doctors(codes=codes, probs=probs)
+                "doctors": self.get_common_doctors(codes=codes, probs=probs, age=age, gender=gender)
             }
             if debug:
                 recommendation["all_log"] = all_log

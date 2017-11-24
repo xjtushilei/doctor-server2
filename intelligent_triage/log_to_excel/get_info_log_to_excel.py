@@ -21,7 +21,7 @@ if __name__ == '__main__':
         time, log_info, python_file, python_fun, python_line, content = x.split("---")
         if python_fun == "do":
             content_json = json.loads(content)
-            if "sessionDataUpdate" in content_json and ("doctors" in content or "department" in content):
+            if "sessionDataUpdate" in content_json and ("doctors" in content or "department" in content or "other" in content):
                 sessionId = content_json["sessionId"]
 
                 session = json.loads(content_json["sessionDataUpdate"])

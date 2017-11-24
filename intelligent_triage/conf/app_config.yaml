@@ -17,3 +17,4 @@ model:
     doctors_distributions_path: "/tvm/mdata/jerryzchen/model/doctors_distributions.json"
     doctors_id_path: "/tvm/mdata/jerryzchen/model/doctors_id.txt"
     symptoms_distributions_file_dir: "/tvm/mdata/jerryzchen/model/symptoms_distributions.json"
+
