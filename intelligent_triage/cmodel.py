@@ -321,7 +321,7 @@ class FindDoc:
             # wangmeng推荐算法
             ner_words, resp = ner.post(choice_now)
             all_log["nlu输入"] = choice_now
-            all_log["nlu-response"] = ner_words
+            all_log["nlu-response"] = resp
             all_log["nlu-提取结果"] = ner_words
             symptoms_no_chioce.extend(ner_words)
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
@@ -371,7 +371,7 @@ class FindDoc:
                     [question["choice"] for question in session["questions"]])
                 ner_words, resp = ner.post(choice_now)
                 all_log["nlu输入"] = choice_now
-                all_log["nlu-response"] = ner_words
+                all_log["nlu-response"] = resp
                 all_log["nlu-提取结果"] = ner_words
                 symptoms_no_chioce.extend(ner_words)
                 symptoms_no_chioce.extend(symptoms)
@@ -415,7 +415,7 @@ class FindDoc:
 
                 ner_words, resp = ner.post(choice_now)
                 all_log["nlu输入"] = choice_now
-                all_log["nlu-response"] = ner_words
+                all_log["nlu-response"] = resp
                 all_log["nlu-提取结果"] = ner_words
                 symptoms_no_chioce.extend(ner_words)
                 # 注意这里的seq=1
