@@ -5,8 +5,8 @@ import re
 import numpy as np
 import pandas as pd
 
-import ner
 import dialogue
+import ner
 from pmodel import PredModel
 
 sws = "[！|“|”|‘|’|…|′|｜|、|，|。|〈|〉:：|《|》|「|」|『|』|【|】|〔|〕|︿|！|＃|＄|％|＆|＇|（|）|＊|＋|－|,．||；|＜|＝|＞|？|＠|［|］|＿|｛|｜|｝|～|↑|→|≈|①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩|￥|Δ|Ψ|γ|μ|φ|!|\"|'|#|\$|%|&|\*|\+|,|\.|;|\?|\\\|@|\(|\)|\[|\]|\^|_|`|\||\{|\}|~|<|>|=]"
@@ -277,9 +277,10 @@ class FindDoc:
             # 记住jingwei的诊断结果,wangmeng下一轮使用
             session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
             # wangmeng推荐算法
-            ner_words = ner.post(choice_now)
-            all_log["ner输入"] = choice_now
-            all_log["ner结果"] = ner_words
+            ner_words, resp = ner.post(choice_now)
+            all_log["nlu输入"] = choice_now
+            all_log["nlu-response"] = ner_words
+            all_log["nlu-提取结果"] = ner_words
             symptoms_no_chioce.extend(ner_words)
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences_sl(
@@ -321,16 +322,17 @@ class FindDoc:
                 # 获取到上一轮记录在session中jingwei识别出的疾病列表,避免重复访问jingwei模型
                 diagnosis_disease_rate_dict = session["diagnosis_disease_rate_dict"]
                 input_list = choice_now.split(",")
-                input_list.extend(symptoms)
                 all_log["jingwei上一轮识别疾病"] = diagnosis_disease_rate_dict
-                all_log["wangmeng推荐模型的输入"] = input_list
+                all_log["wangmeng推荐模型(相对概率)的输入"] = input_list
                 all_log["本轮为止,用户没有选择的所有症状"] = symptoms_no_chioce
                 all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
                     [question["choice"] for question in session["questions"]])
-                ner_words=ner.post(choice_now)
-                all_log["ner输入"] = choice_now
-                all_log["ner结果"] = ner_words
+                ner_words, resp = ner.post(choice_now)
+                all_log["nlu输入"] = choice_now
+                all_log["nlu-response"] = ner_words
+                all_log["nlu-提取结果"] = ner_words
                 symptoms_no_chioce.extend(ner_words)
+                symptoms_no_chioce.extend(symptoms)
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences_sl(
@@ -369,14 +371,16 @@ class FindDoc:
                 # jingwei识别的疾病记录到session中
                 session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
 
-                ner_words = ner.post(choice_now)
-                all_log["ner输入"] = choice_now
-                all_log["ner结果"] = ner_words
+                ner_words, resp = ner.post(choice_now)
+                all_log["nlu输入"] = choice_now
+                all_log["nlu-response"] = ner_words
+                all_log["nlu-提取结果"] = ner_words
                 symptoms_no_chioce.extend(ner_words)
+                # 注意这里的seq=1
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences_sl(
-                                                  [question["choice"] for question in session["questions"]]), seq=2,
+                                                  [question["choice"] for question in session["questions"]]), seq=1,
                                               all_sym_count=self.all_sym_count)
                 all_log["wangmeng症状推荐算法结果"] = result
 

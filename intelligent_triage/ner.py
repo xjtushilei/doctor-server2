@@ -4,10 +4,16 @@ import requests
 def post(content):
     body = {
         "version": '1.0',
-        "content": content
+        "text": content,
+        "userId": "jerryz"
     }
     try:
-        rep = requests.post("http://100.115.147.209:8802/ner", json=body, timeout=0.25).json()
-        return rep["ners"]
+        resp = requests.post("http://100.115.147.209:8802/nlu", json=body, timeout=0.25).json()
+        nerList = resp["reply"]["ner_norms"]
+        result = []
+        for w in nerList:
+            result.extend(w.split("-"))
+        result = list(set(result))
+        return result, resp
     except Exception:
-        return []
+        return [], "超时（250ms）或者json解析错误"
