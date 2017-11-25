@@ -111,7 +111,6 @@ def load_session(req):
     session = json.loads(sessionData)
     return session
 
-
 def get_age_from_dob(dob):
     birth = datetime.strptime(dob, "%Y-%m-%d")
     today = datetime.today()
@@ -127,36 +126,6 @@ def create_question(qtype, seqno, query, choices):
         'query': query,
         'choices': choices
     }
-
-
-# 丽娟的首轮推荐症状
-def get_common_symptoms(age, gender, month=None):
-    # input: age: int, age>0; gender: {'F','M'}; month:int, [1,..12]
-    # age = 12
-    # gender = 'F'
-    # month = 10
-    # get_common_symptoms(age,gender,month)
-    if gender == "female":
-        gender = "F"
-    else:
-        gender = "M"
-        # 疾病是男性，切性别大于18，则不进行推荐
-        if gender == "M" and age >= 18:
-            return ["男性不育", "勃起困难", "排尿异常", "阴囊肿胀", "龟头疼痛"]
-    if month is None:
-        month = datetime.now().month
-    with open(symptoms_distributions_file_dir, 'r') as fp:
-        symptoms_rankings = json.load(fp)
-    # months = [1,2,3,4,5,6,7,8,9,10,11,12] # 12 months
-    # genders = ['F', 'M']
-    months = [0, 3, 6, 9, 12]  # 4 seasons
-    genders = ['F', 'M']  # gender
-    ages = [0, 0.083, 1, 6, 18, 30, 45, 150]  # 7 phases in year
-    m = np.argmax(np.array(months) >= month)
-    a = np.argmax(np.array(ages) >= age)
-    index = 'M' + str(months[m - 1]) + 'M' + str(months[m]) + 'A' + str(ages[a - 1]) + 'A' + str(ages[a]) + gender
-    return [item[0] for item in symptoms_rankings[index]][0:5]
-
 
 def create_client_response(code, sessionId, userRes, session):
     return {
@@ -177,7 +146,7 @@ def create_session(req):
     dob = patient["dob"]
     age = get_age_from_dob(dob)
     gender = patient["sex"]
-    symptoms = get_common_symptoms(age, gender)
+    symptoms = cm.get_common_symptoms(age, gender)
     if len(symptoms) >= 5:
         symptoms = symptoms[:5]
     question = create_question('multiple', 1, GREETING_PROMPT, symptoms)
@@ -312,8 +281,6 @@ if __name__ == '__main__':
     log_unkonw_error = logging.getLogger("unknown_error")
     log_level = "DEBUG"
     ############################模型文件位置############################
-    # 丽娟第一轮推荐症状
-    symptoms_distributions_file_dir = app_config["model"]["symptoms_distributions_file_dir"]
     # 配置核心模型
     cm = FindDoc(model_path=app_config["model"]["model_path"],
                  seg_model_path=app_config["model"]["seg_model_path"],
@@ -322,7 +289,8 @@ if __name__ == '__main__':
                  disease_symptom_file_dir=app_config["model"]["disease_symptom_file_dir"],
                  doctors_distributions_path=app_config["model"]["doctors_distributions_path"],
                  doctors_id_path=app_config["model"]["doctors_id_path"],
-                 text_config=text_config
+                 text_config=text_config,
+                 symptoms_distributions_file_dir=app_config["model"]["symptoms_distributions_file_dir"]
                  )
     ###############################模型文件加载#########################
     # 统计加载模型时间

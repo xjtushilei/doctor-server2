@@ -4,6 +4,7 @@ import re
 
 import numpy as np
 import pandas as pd
+import datetime
 
 import dialogue
 import ner
@@ -18,7 +19,8 @@ class FindDoc:
                  disease_symptom_file_dir="./model/disease-symptom3.data",
                  all_symptom_count_file_path="./model/all-symptom-count.data",
                  doctors_distributions_path="./model/doctors_distributions.json",
-                 doctors_id_path="./model/doctors_id.txt"):
+                 doctors_id_path="./model/doctors_id.txt",
+                 symptoms_distributions_file_dir=""):
         self.text_config = text_config
 
         if os.path.isfile(all_symptom_count_file_path):
@@ -47,10 +49,17 @@ class FindDoc:
             self.doctors_distributions_path = doctors_distributions_path
         else:
             raise RuntimeError("cannot find model file: " + doctors_distributions_path)
+
         if os.path.isfile(doctors_id_path):
             self.doctors_id_path = doctors_id_path
         else:
             raise RuntimeError("cannot find model file: " + doctors_id_path)
+
+        if os.path.isfile(symptoms_distributions_file_dir):
+            self.symptoms_distributions_file_dir = symptoms_distributions_file_dir
+        else:
+            raise RuntimeError("cannot find model file: " + symptoms_distributions_file_dir)
+
 
     def load(self):
 
@@ -71,6 +80,7 @@ class FindDoc:
         # 读丽娟给的doctor两个字典存到内存
         with open(self.doctors_distributions_path, 'r') as fp:
             self.symptoms_rankings = json.load(fp)
+
         self.doctors_id_map = {}
         doctors_id_txt = pd.read_csv(self.doctors_id_path, sep='\t')
         doctor_id_temp = zip(doctors_id_txt['names'], doctors_id_txt['name_id'], doctors_id_txt['label'])
@@ -80,6 +90,39 @@ class FindDoc:
                 "id": line[1],
                 "label": line[2]
             }
+
+        with open(self.symptoms_distributions_file_dir, 'r') as fp:
+            self.symptoms_dist = json.load(fp)
+
+    # 丽娟的首轮推荐症状
+    def get_common_symptoms(self, age, gender, month=None):
+        # input: age: int, age>0; gender: {'F','M'}; month:int, [1,..12]
+        # age = 12
+        # gender = 'F'
+        # month = 10
+        # get_common_symptoms(age,gender,month)
+        if gender == "female":
+            gender = "F"
+        else:
+            gender = "M"
+
+        # 成人男性，推荐以下男科症状
+        if gender == "M" and age >= 18:
+            return ["男性不育", "勃起困难", "排尿异常", "阴囊肿胀", "龟头疼痛"]
+
+        if month is None:
+            month = datetime.now().month
+
+        # months = [1,2,3,4,5,6,7,8,9,10,11,12] # 12 months
+        # genders = ['F', 'M']
+        months = [0, 3, 6, 9, 12]  # 4 seasons
+        genders = ['F', 'M']  # gender
+        ages = [0, 0.083, 1, 6, 18, 30, 45, 150]  # 7 phases in year
+        m = np.argmax(np.array(months) >= month)
+        a = np.argmax(np.array(ages) >= age)
+        index = 'M' + str(months[m - 1]) + 'M' + str(months[m]) + 'A' + str(ages[a - 1]) + 'A' + str(ages[a]) + gender
+        return [item[0] for item in self.symptoms_dist[index]][0:5]
+
 
     # 丽娟的获取医生信息
     def get_common_doctors(self, codes, probs, age, gender):
@@ -96,33 +139,32 @@ class FindDoc:
         # probs = probs[0:x_stop+1]
 
         rankings = dict()
+        symptoms_rankings = {}
         ## diff pediatric and gyna and general
         if age <= 1:
-            symptoms_rankings2 = self.symptoms_rankings['newborn']
+            symptoms_rankings = self.symptoms_rankings['newborn']
         elif gender == 'male' and age <= 18:
-            symptoms_rankings2 = self.symptoms_rankings['pediatrics']
+            symptoms_rankings = self.symptoms_rankings['pediatrics']
         elif gender == 'female' and age <= 12:
-            symptoms_rankings2 = self.symptoms_rankings['pediatrics']
+            symptoms_rankings = self.symptoms_rankings['pediatrics']
         elif gender == 'female' and age > 18:
-            symptoms_rankings2 = self.symptoms_rankings['gynaecology']
+            symptoms_rankings = self.symptoms_rankings['gynaecology']
         elif gender == 'female':
-            symptoms_rankings2 = self.symptoms_rankings['general']
-        else:
-            symptoms_rankings2 = {}
+            symptoms_rankings = self.symptoms_rankings['general']
 
         for i, code in enumerate(codes):
-            if code in symptoms_rankings2:
-                for name, prob in symptoms_rankings2[code]:
+            if code in symptoms_rankings:
+                for name, prob in symptoms_rankings[code]:
                     if code in rankings:
                         rankings[name] += prob / self.symptoms_rankings['doc_case_num'][name]
                     else:
                         rankings[name] = prob / self.symptoms_rankings['doc_case_num'][name]
             else:
                 continue
-        rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
 
+        rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
         ## if no matched doctors, use general instead
-        if rankings == []:
+        if len(rankings) == 0:
             if age <= 1:
                 # print('newborn general')
                 rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
@@ -218,15 +260,15 @@ class FindDoc:
             dis_out = ['遗传咨询', '男科', '产科', "无科室[程序继续往下走]"]
             dis_out_id = ['6', '5', '8']
             all_log["jingwei的预测专科模型输入"] = choice_now.strip()
-            Label, prob_max = self.p_model.pre_predict(choice_now.strip(), age, gender)
+            label, prob_max = self.p_model.pre_predict(choice_now.strip(), age, gender)
             all_log["jingwei  pre_predict的计算值"] = str(prob_max)
-            all_log["jingwei  pre_predict分到科室"] = dis_out[Label]
-            if Label != 3:
+            all_log["jingwei  pre_predict分到科室"] = dis_out[label]
+            if label != 3:
                 recommendation = {
                     "department":
                         {
-                            'name': dis_out[Label],
-                            'id': dis_out_id[Label]
+                            'name': dis_out[label],
+                            'id': dis_out_id[label]
                         }
                 }
                 if debug:
