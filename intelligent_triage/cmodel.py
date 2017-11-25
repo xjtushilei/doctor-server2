@@ -329,7 +329,7 @@ class FindDoc:
             if "ner" not in session:
                 session["ner"] = ner_words
             else:
-                session["ner"] = session["ner"].extend(ner_words)
+                session["ner"].extend(ner_words)
             all_log["nlu历史记录"] = session["ner"]
             all_log["nlu输入"] = choice_now
             all_log["nlu-response"] = resp
@@ -385,7 +385,7 @@ class FindDoc:
                 if "ner" not in session:
                     session["ner"] = ner_words
                 else:
-                    session["ner"] = session["ner"].extend(ner_words)
+                    session["ner"].extend(ner_words)
                 all_log["nlu历史记录"] = session["ner"]
                 all_log["nlu输入"] = choice_now
                 all_log["nlu-response"] = resp
@@ -434,7 +434,7 @@ class FindDoc:
                 if "ner" not in session:
                     session["ner"] = ner_words
                 else:
-                    session["ner"] = session["ner"].extend(ner_words)
+                    session["ner"].extend(ner_words)
                 all_log["nlu历史记录"] = session["ner"]
                 all_log["nlu输入"] = choice_now
                 all_log["nlu-response"] = resp
