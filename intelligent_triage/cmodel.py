@@ -209,6 +209,9 @@ class FindDoc:
             if choice_now.strip() == "":
                 all_log["info"].append("当用户第一轮的输入为空时候，返回不可诊断")
                 self.update_session_log(session, all_log, log)
+                recommendation = {
+                    "all_log": all_log
+                }
                 return "other", None, None
             # jingwei的代码，进来先判断3种科室，不在目标科室则继续,有则返回
             dis_out = ['遗传咨询', '男科', '产科', "无科室[程序继续往下走]"]
@@ -238,10 +241,19 @@ class FindDoc:
                 model=self.p_model,
                 age=age, gender=gender)
 
+            all_log["jingwei识别疾病："] = diagnosis_disease_rate_dict
+            all_log["jingwei识别症状："] = input_list
+            all_log["本轮为止,用户没有选择的所有症状"] = symptoms_no_chioce
+            all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
+                [question["choice"] for question in session["questions"]])
+
             # 如果jingwei返回了空,则表示输入的东西无意义,直接返回
             if diagnosis_disease_rate_dict is None:
                 self.update_session_log(session, all_log, log)
-                return "other", None, None
+                recommendation = {
+                    "all_log": all_log
+                }
+                return "other", None, recommendation
 
             # 丽娟的输入
             codes = []
@@ -263,13 +275,6 @@ class FindDoc:
 
             # 记住jingwei的诊断结果,wangmeng下一轮使用
             session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
-
-            all_log["jingwei识别疾病："] = diagnosis_disease_rate_dict
-            all_log["jingwei识别症状："] = input_list
-            all_log["本轮为止,用户没有选择的所有症状"] = symptoms_no_chioce
-            all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
-                [question["choice"] for question in session["questions"]])
-
             # wangmeng推荐算法
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences_sl(

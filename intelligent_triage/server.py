@@ -260,6 +260,8 @@ def find_doctors(req):
             }
 
         }
+        if debug:
+            userRes["debug"]=recommendation
     res = create_client_response(200, sessionId, userRes, session)
     return res
 
