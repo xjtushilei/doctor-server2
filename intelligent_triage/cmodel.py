@@ -61,7 +61,6 @@ class FindDoc:
         else:
             raise RuntimeError("cannot find model file: " + symptoms_distributions_file_dir)
 
-
     def load(self):
 
         # 不继续进行询问诊断的阈值,直接返回诊断结果
@@ -124,7 +123,6 @@ class FindDoc:
         index = 'M' + str(months[m - 1]) + 'M' + str(months[m]) + 'A' + str(ages[a - 1]) + 'A' + str(ages[a]) + gender
         return [item[0] for item in self.symptoms_dist[index]][0:5]
 
-
     # 丽娟的获取医生信息
     def get_common_doctors(self, codes, probs, age, gender):
         # input: icd10 code: list; probs: list
@@ -136,8 +134,8 @@ class FindDoc:
                 x_stop = ii
                 break
 
-        codes = codes[0:x_stop+1]
-        probs = probs[0:x_stop+1]
+        codes = codes[0:x_stop + 1]
+        probs = probs[0:x_stop + 1]
 
         rankings = dict()
         symptoms_rankings = {}
@@ -150,12 +148,12 @@ class FindDoc:
             symptoms_rankings = self.symptoms_rankings['pediatrics']
         elif gender == 'female' and age > 18:
             count = 0
-            for item in ['N46','Q96','Z31','E28','N97','E16','L70']:
-                if item  in codes:
+            for item in ['N46', 'Q96', 'Z31', 'E28', 'N97', 'E16', 'L70']:
+                if item in codes:
                     count += 1
-            if count >= len(codes)/2:
+            if count >= len(codes) / 2:
                 symptoms_rankings = self.symptoms_rankings['reproductive']
-            else :
+            else:
                 symptoms_rankings = self.symptoms_rankings['gynaecology']
         elif gender == 'female':
             symptoms_rankings = self.symptoms_rankings['general']
@@ -328,10 +326,16 @@ class FindDoc:
             session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
             # wangmeng推荐算法
             ner_words, resp = ner.post(choice_now)
+            if "ner" not in session:
+                session["ner"] = ner_words
+            else:
+                session["ner"] = session["ner"].extend(ner_words)
+            all_log["nlu历史记录"] = session["ner"]
             all_log["nlu输入"] = choice_now
             all_log["nlu-response"] = resp
             all_log["nlu-提取结果"] = ner_words
-            symptoms_no_chioce.extend(ner_words)
+            symptoms_no_chioce.extend(session["ner"])
+            # 记住ner的信息，之后还要用
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences_sl(
                                               [question["choice"] for question in session["questions"]]), seq=1,
@@ -378,10 +382,15 @@ class FindDoc:
                 all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
                     [question["choice"] for question in session["questions"]])
                 ner_words, resp = ner.post(choice_now)
+                if "ner" not in session:
+                    session["ner"] = ner_words
+                else:
+                    session["ner"] = session["ner"].extend(ner_words)
+                all_log["nlu历史记录"] = session["ner"]
                 all_log["nlu输入"] = choice_now
                 all_log["nlu-response"] = resp
                 all_log["nlu-提取结果"] = ner_words
-                symptoms_no_chioce.extend(ner_words)
+                symptoms_no_chioce.extend(session["ner"])
                 symptoms_no_chioce.extend(symptoms)
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
@@ -422,10 +431,16 @@ class FindDoc:
                 session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
 
                 ner_words, resp = ner.post(choice_now)
+                if "ner" not in session:
+                    session["ner"] = ner_words
+                else:
+                    session["ner"] = session["ner"].extend(ner_words)
+                all_log["nlu历史记录"] = session["ner"]
                 all_log["nlu输入"] = choice_now
                 all_log["nlu-response"] = resp
                 all_log["nlu-提取结果"] = ner_words
-                symptoms_no_chioce.extend(ner_words)
+                symptoms_no_chioce.extend(session["ner"])
+                symptoms_no_chioce.extend(symptoms)
                 # 注意这里的seq=1
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
