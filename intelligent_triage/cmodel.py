@@ -4,7 +4,7 @@ import re
 
 import numpy as np
 import pandas as pd
-import datetime
+from datetime import datetime
 
 import dialogue
 import ner
