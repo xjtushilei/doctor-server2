@@ -255,7 +255,7 @@ class FindDoc:
                 recommendation = {
                     "all_log": all_log
                 }
-                return "other", None, None
+                return "other", None, recommendation
             # jingwei的代码，进来先判断3种科室，不在目标科室则继续,有则返回
             dis_out = ['遗传咨询', '男科', '产科', "无科室[程序继续往下走]"]
             dis_out_id = ['6', '5', '8']
