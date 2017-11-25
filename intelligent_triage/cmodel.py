@@ -135,8 +135,8 @@ class FindDoc:
                 x_stop = ii
                 break
 
-        # codes = codes[0:x_stop+1]
-        # probs = probs[0:x_stop+1]
+        codes = codes[0:x_stop+1]
+        probs = probs[0:x_stop+1]
 
         rankings = dict()
         symptoms_rankings = {}
@@ -148,7 +148,14 @@ class FindDoc:
         elif gender == 'female' and age <= 12:
             symptoms_rankings = self.symptoms_rankings['pediatrics']
         elif gender == 'female' and age > 18:
-            symptoms_rankings = self.symptoms_rankings['gynaecology']
+            count = 0
+            for item in ['N46','Q96','Z31','E28','N97','E16','L70']:
+                if item  in codes:
+                    count += 1
+            if count >= len(codes)/2:
+                symptoms_rankings = self.symptoms_rankings['reproductive']
+            else :
+                symptoms_rankings = self.symptoms_rankings['gynaecology']
         elif gender == 'female':
             symptoms_rankings = self.symptoms_rankings['general']
 
