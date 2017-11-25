@@ -5,6 +5,7 @@ import re
 import numpy as np
 import pandas as pd
 
+import ner
 import dialogue
 from pmodel import PredModel
 
@@ -276,6 +277,10 @@ class FindDoc:
             # 记住jingwei的诊断结果,wangmeng下一轮使用
             session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
             # wangmeng推荐算法
+            ner_words = ner.post(choice_now)
+            all_log["ner输入"] = choice_now
+            all_log["ner结果"] = ner_words
+            symptoms_no_chioce.extend(ner_words)
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list, symptoms_no_chioce,
                                           choice_history_words=self.process_sentences_sl(
                                               [question["choice"] for question in session["questions"]]), seq=1,
@@ -322,6 +327,10 @@ class FindDoc:
                 all_log["本轮为止,用户没有选择的所有症状"] = symptoms_no_chioce
                 all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
                     [question["choice"] for question in session["questions"]])
+                ner_words=ner.post(choice_now)
+                all_log["ner输入"] = choice_now
+                all_log["ner结果"] = ner_words
+                symptoms_no_chioce.extend(ner_words)
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences_sl(
@@ -359,6 +368,11 @@ class FindDoc:
                 all_log["jingwei识别症状"] = input_list
                 # jingwei识别的疾病记录到session中
                 session["diagnosis_disease_rate_dict"] = diagnosis_disease_rate_dict
+
+                ner_words = ner.post(choice_now)
+                all_log["ner输入"] = choice_now
+                all_log["ner结果"] = ner_words
+                symptoms_no_chioce.extend(ner_words)
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_dict, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences_sl(

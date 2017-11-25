@@ -1,9 +1,9 @@
+import collections
+import re
+from pyltp import Segmentor
+
 import fastText
 import numpy as np
-import collections
-from pyltp import Segmentor
-from gensim.models import word2vec
-import re
 
 
 class PredModel:
@@ -20,7 +20,7 @@ class PredModel:
         self.dict = np.load(dict_var_path)
         self.prog = re.compile("[\.|\,|\?|\!|。|，|？|！|\s]")
         self.wv_dim = 250
-        self.name_weight = 0.25
+        self.name_weight = 0.333
         self.th_word_mask = 0.06
 
 
@@ -262,7 +262,7 @@ class PredModel:
         x_stop = k_disease
         for ii in range(len(diff)):
 
-            if diff[ii] > 1 and val[0] > 1:
+            if diff[ii] > 1 and val[0] > 0.84:
                 x_stop = ii
 
                 break
