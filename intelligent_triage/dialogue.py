@@ -1,3 +1,4 @@
+# coding=utf-8
 import json
 
 
@@ -7,8 +8,8 @@ def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
     1.disease and 症状   2.还有所有症状的排序
     :return: 1.disease and 症状   2.还有所有症状的排序
     """
-    with open(disease_symptom_file_dir, encoding="utf-8") as file1, open(all_symptom_count_file_path,
-                                                                         encoding="utf-8") as file2:
+    with open(disease_symptom_file_dir, encoding='utf-8') as file1, open(all_symptom_count_file_path,
+                                                                         encoding='utf-8') as file2:
         return json.load(file1), json.load(file2)
 
 

@@ -1,10 +1,11 @@
+# coding=utf-8
 import json
 import os.path
 import re
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
-from datetime import datetime
 
 import dialogue
 import ner
