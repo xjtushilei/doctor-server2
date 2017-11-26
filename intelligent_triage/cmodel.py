@@ -145,8 +145,8 @@ class FindDoc:
         # input: icd10 code: list; probs: list
         # get_common_doctors(['D39', 'L01'],[0.877,0.876,0.875,0.86],[0.557,0.556,0.555,0.55],gender='male',age=30)
         # sort input
-        probs = [x for y, x in sorted(zip(probs, codes), reverse=True)]
-        codes = [y for y, x in sorted(zip(probs, codes), reverse=True)]
+        probs = [y for y, x in sorted(zip(probs, codes), reverse=True)]
+        codes = [x for y, x in sorted(zip(probs, codes), reverse=True)]
 
         # filter codes when prob < 0.65
         new_codes = []
