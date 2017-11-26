@@ -143,16 +143,24 @@ class FindDoc:
     # 丽娟的获取医生信息
     def get_common_doctors(self, codes, probs, age, gender):
         # input: icd10 code: list; probs: list
-        # get_common_doctors(['D39', 'L01'],gender='male',age=30)
-        diff = -100 * np.diff(probs)
-        x_stop = 4
+        # get_common_doctors(['D39', 'L01'],[0.877,0.876,0.875,0.86],[0.557,0.556,0.555,0.55],gender='male',age=30)
+        new_codes = []
+        new_probs = []
+        for (i, k) in enumerate(probs):
+            print (k)
+            if k >= 0.65:
+                new_codes.append(codes[i])
+                new_probs.append(probs[i])
+
+        x_stop = len(new_probs)
+        diff = -np.diff(new_probs)
         for ii in range(len(diff)):
-            if diff[ii] > 1:
+            if diff[ii] > 0.01:
                 x_stop = ii
                 break
 
-        codes = codes[0:x_stop + 1]
-        probs = probs[0:x_stop + 1]
+        codes = new_codes[0:x_stop + 1]
+        probs = new_probs[0:x_stop + 1]
 
         rankings = dict()
         symptoms_rankings = {}
@@ -186,23 +194,23 @@ class FindDoc:
                 continue
 
         rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
-        ## if no matched doctors, use general instead
-        if len(rankings) == 0:
-            if age <= 1:
-                # print('newborn general')
-                rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
-            elif age <= 18:
-                # print('pediatric general')
-                rankings = sorted(self.symptoms_rankings['gp_ped'].items(), key=lambda x: x[1][0], reverse=True)
-            elif gender == 'female' and age > 18:
-                # print('gynaecology general')
-                rankings = sorted(self.symptoms_rankings['gp_gyn'].items(), key=lambda x: x[1][0], reverse=True)
+        # ## if no matched doctors, use general instead
+        # if len(rankings) == 0:
+        #     if age <= 1:
+        #         # print('newborn general')
+        #         rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
+        #     elif age <= 18:
+        #         # print('pediatric general')
+        #         rankings = sorted(self.symptoms_rankings['gp_ped'].items(), key=lambda x: x[1][0], reverse=True)
+        #     elif gender == 'female' and age > 18:
+        #         # print('gynaecology general')
+        #         rankings = sorted(self.symptoms_rankings['gp_gyn'].items(), key=lambda x: x[1][0], reverse=True)
 
         ## remove '院际会诊' and get id of doctor
         results = []
         for name in rankings:
-            if name[0] in self.doctors_id_map.keys() and '会诊' not in name[0]:
-                # if name[0] in doctors_id_map.keys():
+            if name[0] in self.doctors_id_map.keys():
+                # if name[0] in doctors_id_map.keys() and '会诊' not in name[0]:
                 results.append(self.doctors_id_map[name[0]])
             else:
                 # print ('remove',name[0])
