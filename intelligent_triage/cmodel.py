@@ -232,7 +232,7 @@ class FindDoc:
         return words_choices, words_no_choices
 
     # 在session中设置log，这样方便在response前记录日志
-    def update_session_log(self, session, all_log, log):
+    def update_session_log(self, session, all_log):
         if "all_log" not in session:
             session["all_log"] = [all_log]
         else:
@@ -241,7 +241,7 @@ class FindDoc:
             session["all_log"] = temp_all_log
 
     # 核心模型、主要的逻辑实现
-    def find_doctors(self, session, log, seqno, choice_now, age, gender, debug=False):
+    def find_doctors(self, session, seqno, choice_now, age, gender, debug=False):
         # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
         choice_now = choice_now.replace(self.NO_SYMPTOMS_PROMPT, " ")
         all_log = {"info": []}
@@ -257,7 +257,7 @@ class FindDoc:
             # 当用户第一轮的输入为空时候，返回不可诊断
             if choice_now.strip() == "":
                 all_log["info"].append("当用户第一轮的输入为空时候，返回不可诊断")
-                self.update_session_log(session, all_log, log)
+                self.update_session_log(session, all_log)
                 recommendation = {
                     "all_log": all_log
                 }
@@ -279,7 +279,7 @@ class FindDoc:
                 }
                 if debug:
                     recommendation["all_log"] = all_log
-                self.update_session_log(session, all_log, log)
+                self.update_session_log(session, all_log)
                 return "department", None, recommendation
 
             # 进入jingwei的正常判断
@@ -298,7 +298,7 @@ class FindDoc:
 
             # 如果jingwei返回了空,则表示输入的东西无意义,直接返回
             if diagnosis_disease_rate_dict is None:
-                self.update_session_log(session, all_log, log)
+                self.update_session_log(session, all_log)
                 recommendation = {
                     "all_log": all_log
                 }
@@ -319,7 +319,7 @@ class FindDoc:
                 if debug:
                     recommendation["all_log"] = all_log
                     recommendation["jingwei"] = diagnosis_disease_rate_dict
-                self.update_session_log(session, all_log, log)
+                self.update_session_log(session, all_log)
                 return "doctors", None, recommendation
 
             # 记住jingwei的诊断结果,wangmeng下一轮使用
@@ -354,7 +354,7 @@ class FindDoc:
             }
             if debug:
                 question["all_log"] = all_log
-            self.update_session_log(session, all_log, log)
+            self.update_session_log(session, all_log)
             return "followup", question, None
         elif seqno == 2:
 
@@ -421,7 +421,7 @@ class FindDoc:
                     if debug:
                         recommendation["all_log"] = all_log
                         recommendation["jingwei"] = diagnosis_disease_rate_dict
-                    self.update_session_log(session, all_log, log)
+                    self.update_session_log(session, all_log)
                     return "doctors", None, recommendation
                 session["probs"] = probs[0]
 
@@ -461,7 +461,7 @@ class FindDoc:
             }
             if debug:
                 question["all_log"] = all_log
-            self.update_session_log(session, all_log, log)
+            self.update_session_log(session, all_log)
             return "followup", question, None
         # 最后一轮会给出诊断结果
         elif seqno == 3:
@@ -490,5 +490,5 @@ class FindDoc:
             if debug:
                 recommendation["all_log"] = all_log
                 recommendation["jingwei"] = diagnosis_disease_rate_dict
-            self.update_session_log(session, all_log, log)
+            self.update_session_log(session, all_log)
             return "doctors", None, recommendation

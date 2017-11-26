@@ -1,17 +1,19 @@
 # -*-coding:utf-8 -*-
 
 import json
+import logging.config
+import os
 import random
+import sys
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
-import numpy as np
-import sys
+
 import yaml
 from flask import Flask
 from flask import request
+
 from cmodel import FindDoc
-import logging.config
-import os
+from mongolog import Mongo
 
 app = Flask(__name__)
 
@@ -111,6 +113,7 @@ def load_session(req):
     session = json.loads(sessionData)
     return session
 
+
 def get_age_from_dob(dob):
     birth = datetime.strptime(dob, "%Y-%m-%d")
     today = datetime.today()
@@ -126,6 +129,7 @@ def create_question(qtype, seqno, query, choices):
         'query': query,
         'choices': choices
     }
+
 
 def create_client_response(code, sessionId, userRes, session):
     return {
@@ -208,7 +212,7 @@ def find_doctors(req):
     dob = session["patient"]["dob"]
     age = get_age_from_dob(dob)
     sex = session["patient"]["sex"]
-    status, question, recommendation = cm.find_doctors(session, log_info, seqno, choice, age, sex, debug)
+    status, question, recommendation = cm.find_doctors(session, seqno, choice, age, sex, debug)
     if status == "followup":
         userRes = {
             'sessionId': sessionId,
@@ -233,7 +237,7 @@ def find_doctors(req):
 
         }
         if debug:
-            userRes["debug"]=recommendation
+            userRes["debug"] = recommendation
     res = create_client_response(200, sessionId, userRes, session)
     return res
 
@@ -270,6 +274,10 @@ if __name__ == '__main__':
         log_config_path = "./conf/logger.conf"
     # 获取yaml配置文件
     app_config = load_config(config_path)
+    #################### mongodb #################################
+    mongolog = Mongo(host=app_config["mongo"]["host"],
+                     port=app_config["mongo"]["port"],
+                     db_name=app_config["mongo"]["db_name"])
     ############################API名字############################
     CLIENT_API_SESSIONS = app_config["api"]["CLIENT_API_SESSIONS"]
     CLIENT_API_DOCTORS = app_config["api"]["CLIENT_API_DOCTORS"]
