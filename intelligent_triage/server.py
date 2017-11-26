@@ -132,11 +132,12 @@ def create_client_response(code, sessionId, userRes, session):
         'sessionId': sessionId,
         'toUserResponse': {
             'code': code,
-            # 'content': json.dumps(userRes, ensure_ascii=False)
-            'content': userRes
+            'content': json.dumps(userRes, ensure_ascii=False)
+            # 'content': userRes  这里一定要这个格式。taf那边写死了
         },
-        'sessionDataUpdate': session
-        # 'sessionDataUpdate': json.dumps(session, ensure_ascii=False)
+        # 'sessionDataUpdate': session
+        'sessionDataUpdate': json.dumps(session, ensure_ascii=False)
+        # 'content': userRes  这里一定要这个格式。taf那边写死了
     }
 
 
