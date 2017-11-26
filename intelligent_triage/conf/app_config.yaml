@@ -15,4 +15,6 @@ model:
     doctors_distributions_path: "/tvm/mdata/jerryzchen/model/doctors_distributions.json"
     doctors_id_path: "/tvm/mdata/jerryzchen/model/doctors_id.txt"
     symptoms_distributions_file_dir: "/tvm/mdata/jerryzchen/model/symptoms_distributions.json"
+    female_classifier_path: "/tvm/mdata/jerryzchen/model/1round-female.ftz"
+    male_classifier_path: "/tvm/mdata/jerryzchen/model/1round-male.ftz"
 

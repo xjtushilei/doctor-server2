@@ -293,6 +293,8 @@ if __name__ == '__main__':
                  doctors_distributions_path=app_config["model"]["doctors_distributions_path"],
                  doctors_id_path=app_config["model"]["doctors_id_path"],
                  text_config=text_config,
+                 male_classifier_path=app_config["model"]["male_classifier_path"],
+                 female_classifier_path =app_config["model"]["female_classifier_path"],
                  symptoms_distributions_file_dir=app_config["model"]["symptoms_distributions_file_dir"]
                  )
     ###############################模型文件加载#########################

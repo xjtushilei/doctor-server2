@@ -4,6 +4,7 @@ import os.path
 import re
 from datetime import datetime
 
+import fastText
 import numpy as np
 import pandas as pd
 
@@ -21,7 +22,10 @@ class FindDoc:
                  all_symptom_count_file_path="./model/all-symptom-count.data",
                  doctors_distributions_path="./model/doctors_distributions.json",
                  doctors_id_path="./model/doctors_id.txt",
-                 symptoms_distributions_file_dir=""):
+                 symptoms_distributions_file_dir="",
+                 male_classifier_path="./model/model-hdf-5k-ml.ftz",
+                 female_classifier_path="./model/model-hdf-5k-fm.ftz",
+                 ):
         self.text_config = text_config
 
         if os.path.isfile(all_symptom_count_file_path):
@@ -61,7 +65,20 @@ class FindDoc:
         else:
             raise RuntimeError("cannot find model file: " + symptoms_distributions_file_dir)
 
+        if os.path.isfile(male_classifier_path):
+                     self.male_classifier_path = male_classifier_path
+        else:
+            raise RuntimeError("cannot find model file: " + male_classifier_path)
+        if os.path.isfile(female_classifier_path):
+            self.female_classifier_path = female_classifier_path
+        else:
+            raise RuntimeError("cannot find model file: " + female_classifier_path)
+
     def load(self):
+
+        # 老大的模型
+        self.male_classifier = fastText.load_model(self.male_classifier_path)
+        self.female_classifier = fastText.load_model(self.female_classifier_path)
 
         # 不继续进行询问诊断的阈值,直接返回诊断结果
         self.NO_CONTINUE = self.text_config["NO_CONTINUE"]
@@ -262,6 +279,21 @@ class FindDoc:
                     "all_log": all_log
                 }
                 return "other", None, recommendation
+            # 老大的bad case处理
+            if age >= 18:
+                all_log["info"].append("年龄大于18岁")
+                words = self.process_sentences([choice_now])
+                all_log["info"].append("第一轮预处理预测-分词结果:" + " ".join(words))
+                if gender == "male":
+                    pred, prob = self.male_classifier.predict(" ".join(words))
+                    all_log["info"].append("第一轮预处理预测-male-pred:" + str(pred))
+                    all_log["info"].append("第一轮预处理预测-male-prob:" + str(prob))
+                else:
+                    pred, prob = self.female_classifier.predict(" ".join(words))
+                    all_log["info"].append("第一轮预处理预测-female-pred:" + str(pred))
+                    all_log["info"].append("第一轮预处理预测-female-prob:" + str(prob))
+                all_log["info"].append("第一轮预处理预测-处理结束")
+
             # jingwei的代码，进来先判断3种科室，不在目标科室则继续,有则返回
             dis_out = ['遗传咨询', '男科', '产科', "无科室[程序继续往下走]"]
             dis_out_id = ['6', '5', '8']
