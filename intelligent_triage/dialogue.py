@@ -16,7 +16,7 @@ def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
 def get_diagnosis_first(input, model, age, gender):
     """
     接受京伟的数据
-    :return: 两个东西(1.疾病的名字和概率的dict；2.京伟给出的症状列表，之后作为我们的输入)
+    :return: 两个东西(1.疾病的名字和概率的list(0name.1rate,2icd10)；2.京伟给出的症状列表，之后作为我们的输入)
     """
 
     K_Top_dis = 5
@@ -27,10 +27,17 @@ def get_diagnosis_first(input, model, age, gender):
         return None, None
     nvs = zip(symp_out, Coeff_sim_out)
     symp_list = [symp for symp, value in nvs]
-    disease_rate_dict = {}
+    disease_rate_list = []
     for i, d in enumerate(diseases):
-        disease_rate_dict[d] = [val[i], icd10[i]]
-    return disease_rate_dict, symp_list
+        disease_rate_list.append([d, val[i], icd10[i]])
+    return disease_rate_list, symp_list
+
+
+def disease_rate_list_to_dict(disease_rate_list):
+    disease_rate_dict = {}
+    for d in disease_rate_list:
+        disease_rate_dict[d[0]] = [d[1], d[2]]
+    return disease_rate_dict
 
 
 def calculate_p_sym(l3sym_map_less, S_i_name, S_j_name):
@@ -66,10 +73,11 @@ def calculate_p_sym_plus(rateList):
     return p
 
 
-def core_method(l3sym_dict, disease_rate_dict=None, input_list=None, no_use_input_list=[],
+def core_method(l3sym_dict, disease_rate_list=None, input_list=None, no_use_input_list=[],
                 max_recommend_sym_num=5, choice_history_words=[], seq=2, all_sym_count={}):
     # print(input_list,no_use_input_list,choice_history_words)
     # 症状的排序,只返回5个
+    disease_rate_dict = disease_rate_list_to_dict(disease_rate_list)
     rate_matrix = {}
     # disease that we need from all disease
     l3sym_dict_we_need = []

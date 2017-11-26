@@ -29,7 +29,7 @@ wechatid = create_md5()
 client_request_body = {
     "patient": {
         "name": "J",
-        "dob": "1993-03-09",
+        "dob": "1991-03-09",
         "sex": "female",
         "cardNo": "abc1231"
     },
@@ -50,6 +50,7 @@ res = post(create_session_req)
 # print(res)
 session = res["sessionDataUpdate"]
 print(1, res["toUserResponse"]["content"])
+# user_input = "今天很开心"
 user_input = "白带增多"
 # user_input = input("请问您哪里不舒服？")
 

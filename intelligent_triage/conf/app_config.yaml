@@ -17,4 +17,9 @@ model:
     symptoms_distributions_file_dir: "/tvm/mdata/jerryzchen/model/symptoms_distributions.json"
     female_classifier_path: "/tvm/mdata/jerryzchen/model/1round-female.ftz"
     male_classifier_path: "/tvm/mdata/jerryzchen/model/1round-male.ftz"
+mongo:
+    host: "127.0.0.1"
+    port: 27017
+    db_name: "intelligent_triage"
+    active: false
 
