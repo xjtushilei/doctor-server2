@@ -263,20 +263,6 @@ class FindDoc:
                 }
                 return "other", None, recommendation
 
-            if gender == "male" and age >= 18:
-                all_log["info"].append("gender == 'male' and age >= 18，返回男科")
-                recommendation = {
-                    "department":
-                        {
-                            'name': "男科",
-                            'id': "5"
-                        }
-                }
-                if debug:
-                    recommendation["all_log"] = all_log
-                self.update_session_log(session, all_log)
-                return "department", None, recommendation
-
             # jingwei的代码，进来先判断3种科室，不在目标科室则继续,有则返回
             dis_out = ['遗传咨询', '男科', '产科', "（非'遗传咨询', '男科', '产科'）[程序继续往下走]"]
             dis_out_id = ['6', '5', '8']
@@ -290,6 +276,20 @@ class FindDoc:
                         {
                             'name': dis_out[label],
                             'id': dis_out_id[label]
+                        }
+                }
+                if debug:
+                    recommendation["all_log"] = all_log
+                self.update_session_log(session, all_log)
+                return "department", None, recommendation
+
+            if gender == "male" and age >= 18:
+                all_log["info"].append("gender == 'male' and age >= 18,并且没有识别出是‘遗传咨询’,返回男科")
+                recommendation = {
+                    "department":
+                        {
+                            'name': "男科",
+                            'id': "5"
                         }
                 }
                 if debug:
