@@ -132,9 +132,11 @@ def create_client_response(code, sessionId, userRes, session):
         'sessionId': sessionId,
         'toUserResponse': {
             'code': code,
-            'content': json.dumps(userRes, ensure_ascii=False)
+            # 'content': json.dumps(userRes, ensure_ascii=False)
+            'content': userRes
         },
-        'sessionDataUpdate': json.dumps(session, ensure_ascii=False)
+        'sessionDataUpdate': session
+        # 'sessionDataUpdate': json.dumps(session, ensure_ascii=False)
     }
 
 
