@@ -168,6 +168,8 @@ class FindDoc:
         codes = new_codes[0:x_stop + 1]
         probs = new_probs[0:x_stop + 1]
 
+        print(codes)
+        print(probs)
         rankings = dict()
         symptoms_rankings = {}
         ## diff pediatric and gyna and general
