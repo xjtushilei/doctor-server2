@@ -147,7 +147,7 @@ class FindDoc:
         new_codes = []
         new_probs = []
         for (i, k) in enumerate(probs):
-            print (k)
+            # print (k)
             if k >= 0.65:
                 new_codes.append(codes[i])
                 new_probs.append(probs[i])
