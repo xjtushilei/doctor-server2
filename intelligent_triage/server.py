@@ -5,6 +5,8 @@ import logging.config
 import os
 import random
 import sys
+import time
+import traceback
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 
@@ -35,7 +37,16 @@ def test():
 @app.errorhandler(Exception)
 def unknow_error(error):
     """"处理所有未处理的异常"""
-    log_unkonw_error.exception(error)
+    req = request.get_json()
+    exstr = traceback.format_exc()
+    error_data = {
+        "req": req,
+        "traceback": exstr,
+        "error": str(error),
+        "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    }
+    log_unkonw_error.error(error_data)
+    mongolog.unknow_error(error_data)
     return "内部错误", 500
 
 
@@ -44,17 +55,20 @@ def unknow_error(error):
 def do():
     log_info.setLevel(log_level)
     req = request.get_json()
-    log_info.info(json.dumps(req))
     if req is None:
         res = upstream_error("错误的请求: 无法解析JSON")
         res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
+        mongolog.error(
+            {"req": req, "res": res, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
         return res, 400
 
     isOk, res = request_sanity_check(req)
     if not isOk:
         res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
+        mongolog.error(
+            {"req": req, "res": res, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
         return res, 400
 
     requestUrl = req["requestUrl"]
@@ -63,18 +77,20 @@ def do():
         res = client_error(req, 401, "未授权用户")
         res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
+        mongolog.error(
+            {"req": req, "res": res, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
     elif url.path == CLIENT_API_SESSIONS:
         res = create_session(req)
         res = json.dumps(res, ensure_ascii=False)
-        log_info.info(res)
     elif url.path == CLIENT_API_DOCTORS:
         res = find_doctors(req)
         res = json.dumps(res, ensure_ascii=False)
-        log_info.info(res)
     else:
         res = client_error(req, 404, " 错误的路径: " + url.path)
         res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
+        mongolog.error(
+            {"req": req, "res": res, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
 
     return res, 200
 
@@ -187,6 +203,42 @@ def update_session(session, seqno, choice):
     return session
 
 
+def info_log(sessionId, status, recommendation, debug, session):
+    if "patient" in session:
+        patient = session['patient']
+    else:
+        patient = {}
+    if "diagnosis_disease_rate_list" in session:
+        final_disease = session["diagnosis_disease_rate_list"]
+    else:
+        final_disease = []
+    if "questions" in session:
+        questions = session["questions"]
+    else:
+        questions = []
+    if "all_log" in session:
+        all_log = session["all_log"]
+    else:
+        all_log = []
+    data = {
+        "sessionId": sessionId,
+        "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
+        "patient": patient,
+        "status": status,
+        "final_disease": final_disease,
+        "recommendation": recommendation,
+        "questions": questions,
+        "all_log": all_log,
+        "debug": debug
+    }
+    # 本地文件日志
+    log_info.setLevel(log_level)
+    log_info.info(json.dumps(data, ensure_ascii=False))
+    # 是否打开芒果日志记录功能
+    if mongolog.active:
+        mongolog.info(data)
+
+
 def find_doctors(req):
     sessionId = req["sessionId"]
     requestUrl = req["requestUrl"]
@@ -226,7 +278,14 @@ def find_doctors(req):
             'status': status,
             'recommendation': recommendation
         }
-        session["recommendation"] = recommendation
+        # 记录芒果db的日志
+        info_log(sessionId=sessionId,
+                 status=status,
+                 recommendation=recommendation,
+                 debug=debug,
+                 session=session)
+        # 文件日志记录日志
+
     else:
         userRes = {
             'sessionId': sessionId,
@@ -236,6 +295,13 @@ def find_doctors(req):
             }
 
         }
+        # 记录芒果db的日志
+        info_log(sessionId=sessionId,
+                 status=status,
+                 recommendation={},
+                 debug=debug,
+                 session=session
+                 )
         if debug:
             userRes["debug"] = recommendation
     res = create_client_response(200, sessionId, userRes, session)
@@ -277,7 +343,8 @@ if __name__ == '__main__':
     #################### mongodb #################################
     mongolog = Mongo(host=app_config["mongo"]["host"],
                      port=app_config["mongo"]["port"],
-                     db_name=app_config["mongo"]["db_name"])
+                     db_name=app_config["mongo"]["db_name"],
+                     active=app_config["mongo"]["active"])
     ############################API名字############################
     CLIENT_API_SESSIONS = app_config["api"]["CLIENT_API_SESSIONS"]
     CLIENT_API_DOCTORS = app_config["api"]["CLIENT_API_DOCTORS"]
@@ -290,7 +357,8 @@ if __name__ == '__main__':
     log_error = logging.getLogger("error")
     # 记录程序中位置的错误，比如jignwei的模型突然出现不可预知的except，就捕获
     log_unkonw_error = logging.getLogger("unknown_error")
-    log_level = "DEBUG"
+    # DEBUG--INFO--ERROR
+    log_level = "INFO"
     ############################模型文件位置############################
     # 配置核心模型
     cm = FindDoc(model_path=app_config["model"]["model_path"],
