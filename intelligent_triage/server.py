@@ -295,18 +295,23 @@ def find_doctors(req):
     res = create_client_response(200, sessionId, userRes, session)
     return res
 
+# 获取当前文件的绝对路径，加在配置文件前，这样才能读出来
+def src_path():
+    return os.path.dirname(os.path.realpath(__file__))
 
 # 获取配置文件
 def load_config(yaml_path="app_config.yaml"):
     with open(yaml_path) as config_file:
         return yaml.load(config_file)
 
+def src_dir():
+    return os.path.dirname(os.path.realpath(__file__))
 
 if __name__ == '__main__':
 
     # ###################文案#################################
     # 获取文案信息
-    text_config = load_config("./conf/text_config.yaml")
+    text_config = load_config(src_path()+"/conf/text_config.yaml")
     # 创建session的打招呼用语
     GREETING_PROMPT = text_config["GREETING_PROMPT"]
     # 第1轮的提问文案
@@ -324,8 +329,8 @@ if __name__ == '__main__':
     else:
         if not os.path.exists("log/"):
             os.makedirs("log/")
-        config_path = "./conf/app_config.yaml"
-        log_config_path = "./conf/logger.conf"
+        config_path = src_path()+"/conf/app_config.yaml"
+        log_config_path = src_path()+"/conf/logger.conf"
     # 获取yaml配置文件
     app_config = load_config(config_path)
     ############################API名字############################
