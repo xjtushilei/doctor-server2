@@ -2,7 +2,9 @@
 model/
 log/
 src/
-
+*.data
+!/intelligent_triage/utils/recommend_symp/symptoms_nov26.txt
+*.txt
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
 # Byte-compiled / optimized / DLL files
@@ -112,4 +114,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
 
