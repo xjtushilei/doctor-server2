@@ -63,7 +63,7 @@ class PredModel:
 
         mask_layer = np.ones(len(mask_matrix[0]))
 
-        if age <= 0.25:
+        if age <= 1:
 
             mask_layer[np.where(mask_matrix[5] == 0)] = 0
 

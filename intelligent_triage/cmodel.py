@@ -143,11 +143,11 @@ class FindDoc:
 
         # remove other codes when gradient > 0.01
         x_stop = len(new_probs)
-        diff = -np.diff(new_probs)
-        for ii in range(len(diff)):
-            if diff[ii] > 0.01:
-                x_stop = ii
-                break
+        # diff = -np.diff(new_probs)
+        # for ii in range(len(diff)):
+        #     if diff[ii] > 0.01:
+        #         x_stop = ii
+        #         break
 
         codes = new_codes[0:x_stop + 1]
         probs = new_probs[0:x_stop + 1]
@@ -157,7 +157,7 @@ class FindDoc:
         rankings = dict()
         symptoms_rankings = {}
         ## diff pediatric and gyna and general
-        if age <= 0.83:
+        if age <= 0.083:
             symptoms_rankings = self.symptoms_rankings['newborn']
         elif gender == 'male' and age <= 18:
             symptoms_rankings = self.symptoms_rankings['pediatrics']
@@ -179,16 +179,18 @@ class FindDoc:
             if code in symptoms_rankings:
                 for name, prob in symptoms_rankings[code]:
                     if code in rankings:
-                        rankings[name] += prob / self.symptoms_rankings['doc_case_num'][name]
+                        # rankings[name] += prob / self.symptoms_rankings['doc_case_num'][name]
+                        rankings[name] += prob
                     else:
-                        rankings[name] = prob / self.symptoms_rankings['doc_case_num'][name]
+                        rankings[name] = prob
+                        # rankings[name] = prob / self.symptoms_rankings['doc_case_num'][name]
             else:
                 continue
 
         rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
         ## if no matched doctors, use general instead
         if len(rankings) == 0:
-            if age <= 0.25:  # 3 months
+            if age <= 0.082:  # 3 months
                 # print('newborn general')
                 rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
             elif age <= 18:
@@ -207,7 +209,7 @@ class FindDoc:
             else:
                 # print ('remove',name[0])
                 continue
-        return results[0:10]
+        return results[0:30]
 
     # 去掉停用词，并用空格替换
     def remove_stopwords(self, line):
