@@ -67,10 +67,6 @@ class FindDoc:
 
     def load(self):
 
-        # 老大的模型
-        self.male_classifier = fastText.load_model(self.male_classifier_path)
-        self.female_classifier = fastText.load_model(self.female_classifier_path)
-
         # 不继续进行询问诊断的阈值,直接返回诊断结果
         self.NO_CONTINUE = self.text_config["NO_CONTINUE"]
         # 第2轮的提问文案
