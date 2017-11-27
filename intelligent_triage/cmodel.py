@@ -188,7 +188,7 @@ class FindDoc:
         rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
         ## if no matched doctors, use general instead
         if len(rankings) == 0:
-            if age <= 0.83:
+            if age <= 0.25:  # 3 months
                 # print('newborn general')
                 rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
             elif age <= 18:
