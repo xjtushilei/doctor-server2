@@ -5,7 +5,7 @@ BASEDIR=`cd "$(dirname "$0")"; cd ..;  pwd `
 
 ####################补充监控进程需要执行的操作####################
 
-exist=`killall -0 python;echo $?`
+exist=`killall -0 python3.4;echo $?`
 
 
 if [ $exist -ne 0 ]
