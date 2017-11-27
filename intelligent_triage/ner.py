@@ -10,9 +10,12 @@ def post(content):
     try:
         resp = requests.post("http://100.115.147.209:8802/nlu", json=body, timeout=0.25).json()
         nerList = resp["reply"]["ner_norms"]
+        slots = resp["reply"]["slots"]
         result = []
         for w in nerList:
             result.extend(w.split("-"))
+        for l in slots.values():
+            result.extend(l[0:2])
         result = list(set(result))
         return result, resp
     except Exception:

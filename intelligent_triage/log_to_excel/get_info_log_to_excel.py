@@ -6,12 +6,13 @@ import sys
 
 
 if __name__ == '__main__':
-    print(len(sys.argv))
-    if len(sys.argv) == 2:
-        log_path = sys.argv[1]
-    else:
-        print("参数不合法")
-        exit(-1)
+    # print(len(sys.argv))
+    # if len(sys.argv) == 2:
+    #     log_path = sys.argv[1]
+    # else:
+    #     print("参数不合法")
+    #     exit(-1)
+    log_path="logging_info.log"
     with open(log_path, "r") as file:
         all_lines = [L.strip() for L in file.readlines()]
 
@@ -21,21 +22,23 @@ if __name__ == '__main__':
         time, log_info, python_file, python_fun, python_line, content = x.split("---")
         if python_fun == "do":
             content_json = json.loads(content)
-            if "sessionDataUpdate" in content_json and ("doctors" in content or "department" in content or "other" in content):
-                sessionId = content_json["sessionId"]
+            sessionId = content_json["sessionId"]
 
-                session = json.loads(content_json["sessionDataUpdate"])
-                one_line = []
-                one_line.append(sessionId)
-                one_line.append(session["patient"]["dob"])
-                one_line.append(session["patient"]["name"])
-                one_line.append(session["patient"]["sex"])
-                one_line.append(session["patient"]["cardNo"])
-                one_line.append(len(session["questions"]))
-                one_line.append(session["questions"])
-                one_line.append(session["diagnosis_disease_rate_dict"])
-                one_line.append(session["all_log"])
-                result.append(one_line)
+            session = json.loads(content_json["sessionDataUpdate"])
+            one_line = []
+            one_line.append(sessionId)
+            one_line.append(session["patient"]["dob"])
+            one_line.append(session["patient"]["name"])
+            one_line.append(session["patient"]["sex"])
+            one_line.append(session["patient"]["cardNo"])
+            one_line.append(len(session["questions"]))
+            one_line.append(session["questions"])
+            if "diagnosis_disease_rate_list" in session:
+                one_line.append(session["diagnosis_disease_rate_list"])
+            else:
+                one_line.append([])
+            one_line.append(session["all_log"])
+            result.append(one_line)
     print(len(result))
     result = pd.DataFrame(result)
     if not os.path.exists("excel/"):

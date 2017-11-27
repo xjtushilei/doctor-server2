@@ -15,3 +15,7 @@ model:
     doctors_distributions_path: "/ceph/10646/intelligent_triage/model/doctors_distributions.json"
     doctors_id_path: "/ceph/10646/intelligent_triage/model/doctors_id.txt"
     symptoms_distributions_file_dir: "/ceph/10646/intelligent_triage/model/symptoms_distributions.json"
+mongo:
+    host: "127.0.0.1"
+    port: 27017
+    db_name: "intelligent_triage"
