@@ -4,7 +4,6 @@ import os.path
 import re
 from datetime import datetime
 
-import fastText
 import numpy as np
 import pandas as pd
 
@@ -138,7 +137,7 @@ class FindDoc:
         new_probs = []
         for (i, k) in enumerate(probs):
             # print (k)
-            if k >= 0.65:
+            if k >= 0.5:
                 new_codes.append(codes[i])
                 new_probs.append(probs[i])
 
@@ -187,17 +186,17 @@ class FindDoc:
                 continue
 
         rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
-        # ## if no matched doctors, use general instead
-        # if len(rankings) == 0:
-        #     if age <= 1:
-        #         # print('newborn general')
-        #         rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
-        #     elif age <= 18:
-        #         # print('pediatric general')
-        #         rankings = sorted(self.symptoms_rankings['gp_ped'].items(), key=lambda x: x[1][0], reverse=True)
-        #     elif gender == 'female' and age > 18:
-        #         # print('gynaecology general')
-        #         rankings = sorted(self.symptoms_rankings['gp_gyn'].items(), key=lambda x: x[1][0], reverse=True)
+        ## if no matched doctors, use general instead
+        if len(rankings) == 0:
+            if age <= 1:
+                # print('newborn general')
+                rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
+            elif age <= 18:
+                # print('pediatric general')
+                rankings = sorted(self.symptoms_rankings['gp_ped'].items(), key=lambda x: x[1][0], reverse=True)
+            elif gender == 'female' and age > 18:
+                # print('gynaecology general')
+                rankings = sorted(self.symptoms_rankings['gp_gyn'].items(), key=lambda x: x[1][0], reverse=True)
 
         ## remove '院际会诊' and get id of doctor
         results = []
@@ -208,7 +207,7 @@ class FindDoc:
             else:
                 # print ('remove',name[0])
                 continue
-        return results[0:30]
+        return results[0:10]
 
     # 去掉停用词，并用空格替换
     def remove_stopwords(self, line):
