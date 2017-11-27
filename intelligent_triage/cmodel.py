@@ -22,9 +22,7 @@ class FindDoc:
                  all_symptom_count_file_path="./model/all-symptom-count.data",
                  doctors_distributions_path="./model/doctors_distributions.json",
                  doctors_id_path="./model/doctors_id.txt",
-                 symptoms_distributions_file_dir="",
-                 male_classifier_path="./model/model-hdf-5k-ml.ftz",
-                 female_classifier_path="./model/model-hdf-5k-fm.ftz",
+                 symptoms_distributions_file_dir=""
                  ):
         self.text_config = text_config
 
