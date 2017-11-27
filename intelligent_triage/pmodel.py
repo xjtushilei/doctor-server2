@@ -1,9 +1,9 @@
 import collections
 import re
-from pyltp import Segmentor
 
 import fastText
 import numpy as np
+from pyltp import Segmentor
 
 
 class PredModel:
@@ -63,7 +63,7 @@ class PredModel:
 
         mask_layer = np.ones(len(mask_matrix[0]))
 
-        if age < 1.1:
+        if age < 0.83:
 
             mask_layer[np.where(mask_matrix[5] == 0)] = 0
 
