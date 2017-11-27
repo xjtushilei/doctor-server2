@@ -22,9 +22,7 @@ class FindDoc:
                  all_symptom_count_file_path="./model/all-symptom-count.data",
                  doctors_distributions_path="./model/doctors_distributions.json",
                  doctors_id_path="./model/doctors_id.txt",
-                 symptoms_distributions_file_dir="",
-                 male_classifier_path="./model/model-hdf-5k-ml.ftz",
-                 female_classifier_path="./model/model-hdf-5k-fm.ftz",
+                 symptoms_distributions_file_dir=""
                  ):
         self.text_config = text_config
 
@@ -66,10 +64,6 @@ class FindDoc:
             raise RuntimeError("cannot find model file: " + symptoms_distributions_file_dir)
 
     def load(self):
-
-        # 老大的模型
-        self.male_classifier = fastText.load_model(self.male_classifier_path)
-        self.female_classifier = fastText.load_model(self.female_classifier_path)
 
         # 不继续进行询问诊断的阈值,直接返回诊断结果
         self.NO_CONTINUE = self.text_config["NO_CONTINUE"]
