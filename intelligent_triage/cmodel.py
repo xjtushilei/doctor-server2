@@ -249,12 +249,20 @@ class FindDoc:
         return words_choices, words_no_choices
 
     # 在session中设置all_log，从而保存这个session的所有log,方便一次查看,缺点是会浪费taf的session内存
+    # 同时注意不要被而已用户大量注入垃圾信息，所以设计了+1这样的设置。
     def update_session_log(self, session, all_log):
         if "all_log" not in session:
             session["all_log"] = [all_log]
         else:
-            temp_all_log = session["all_log"]
-            temp_all_log.append(all_log)
+            temp_all_log = []
+            seqno = all_log["seqno"]
+            for log in session["all_log"]:
+                if log["seqno"] < seqno:
+                    temp_all_log.append(log)
+                elif log["seqno"] == seqno:
+                    temp_all_log.append(all_log)
+                elif log["seqno"] == seqno + 1:
+                    temp_all_log.append(all_log)
             session["all_log"] = temp_all_log
 
     # 核心模型、主要的逻辑实现
