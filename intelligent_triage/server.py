@@ -53,6 +53,7 @@ def unknow_error(error):
 def do():
     log_info.setLevel(log_level)
     req = request.get_json()
+    log_info.info(json.dumps(req, ensure_ascii=False))
     if req is None:
         res = upstream_error("错误的请求: 无法解析JSON")
         res = json.dumps(res, ensure_ascii=False)
