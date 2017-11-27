@@ -304,7 +304,17 @@ if __name__ == '__main__':
 
     # ###################文案#################################
     # 获取文案信息
-    text_config = load_config(src_path() + "/conf/text_config.yaml")
+    text_config = {
+        "GREETING_PROMPT": "智能分诊助手帮您找到合适医生",
+        "NO_1_PROMPT": "请问患者哪里不舒服?",
+        "NO_CONTINUE": 0.85,
+        "NO_2_PROMPT": "患者还有其他不适症状吗?",
+        "NO_3_PROMPT": "患者还有其他不适症状吗?",
+        "NO_SYMPTOMS_PROMPT": "以上都没有",
+        "STATUS_OTHER": "非常抱歉，暂不能为您找到合适的医生"
+    }
+
+    # text_config = load_config(src_path() + "/conf/text_config.yaml")
     # 创建session的打招呼用语
     GREETING_PROMPT = text_config["GREETING_PROMPT"]
     # 第1轮的提问文案
