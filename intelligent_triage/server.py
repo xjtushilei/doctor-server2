@@ -292,7 +292,7 @@ def src_path():
 
 # 获取配置文件
 def load_config(yaml_path="app_config.yaml"):
-    with open(yaml_path) as config_file:
+    with open(yaml_path, encoding="utf-8") as config_file:
         return yaml.load(config_file)
 
 
