@@ -157,7 +157,7 @@ class FindDoc:
         rankings = dict()
         symptoms_rankings = {}
         ## diff pediatric and gyna and general
-        if age <= 1:
+        if age <= 0.83:
             symptoms_rankings = self.symptoms_rankings['newborn']
         elif gender == 'male' and age <= 18:
             symptoms_rankings = self.symptoms_rankings['pediatrics']
@@ -188,7 +188,7 @@ class FindDoc:
         rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
         ## if no matched doctors, use general instead
         if len(rankings) == 0:
-            if age <= 1:
+            if age <= 0.83:
                 # print('newborn general')
                 rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
             elif age <= 18:
