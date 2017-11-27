@@ -15,7 +15,6 @@ from flask import Flask
 from flask import request
 
 from cmodel import FindDoc
-from mongolog import Mongo
 
 app = Flask(__name__)
 
@@ -46,7 +45,6 @@ def unknow_error(error):
         "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     }
     log_unkonw_error.error(error_data)
-    mongolog.unknow_error(error_data)
     return "内部错误", 500
 
 
@@ -59,16 +57,13 @@ def do():
         res = upstream_error("错误的请求: 无法解析JSON")
         res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
-        mongolog.error(
-            {"req": req, "res": res, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
         return res, 400
 
     isOk, res = request_sanity_check(req)
     if not isOk:
         res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
-        mongolog.error(
-            {"req": req, "res": res, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
+
         return res, 400
 
     requestUrl = req["requestUrl"]
@@ -77,8 +72,6 @@ def do():
         res = client_error(req, 401, "未授权用户")
         res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
-        mongolog.error(
-            {"req": req, "res": res, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
     elif url.path == CLIENT_API_SESSIONS:
         res = create_session(req)
         res = json.dumps(res, ensure_ascii=False)
@@ -89,8 +82,6 @@ def do():
         res = client_error(req, 404, " 错误的路径: " + url.path)
         res = json.dumps(res, ensure_ascii=False)
         log_error.error(res)
-        mongolog.error(
-            {"req": req, "res": res, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
 
     return res, 200
 
@@ -234,9 +225,6 @@ def info_log(sessionId, status, recommendation, debug, session):
     # 本地文件日志
     log_info.setLevel(log_level)
     log_info.info(json.dumps(data, ensure_ascii=False))
-    # 是否打开芒果日志记录功能
-    if mongolog.active:
-        mongolog.info(data)
 
 
 def find_doctors(req):
@@ -340,11 +328,6 @@ if __name__ == '__main__':
         log_config_path = "./conf/logger.conf"
     # 获取yaml配置文件
     app_config = load_config(config_path)
-    #################### mongodb #################################
-    mongolog = Mongo(host=app_config["mongo"]["host"],
-                     port=app_config["mongo"]["port"],
-                     db_name=app_config["mongo"]["db_name"],
-                     active=app_config["mongo"]["active"])
     ############################API名字############################
     CLIENT_API_SESSIONS = app_config["api"]["CLIENT_API_SESSIONS"]
     CLIENT_API_DOCTORS = app_config["api"]["CLIENT_API_DOCTORS"]
@@ -370,7 +353,7 @@ if __name__ == '__main__':
                  doctors_id_path=app_config["model"]["doctors_id_path"],
                  text_config=text_config,
                  male_classifier_path=app_config["model"]["male_classifier_path"],
-                 female_classifier_path =app_config["model"]["female_classifier_path"],
+                 female_classifier_path=app_config["model"]["female_classifier_path"],
                  symptoms_distributions_file_dir=app_config["model"]["symptoms_distributions_file_dir"]
                  )
     ###############################模型文件加载#########################

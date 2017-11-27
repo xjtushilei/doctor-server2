@@ -65,15 +65,6 @@ class FindDoc:
         else:
             raise RuntimeError("cannot find model file: " + symptoms_distributions_file_dir)
 
-        if os.path.isfile(male_classifier_path):
-                     self.male_classifier_path = male_classifier_path
-        else:
-            raise RuntimeError("cannot find model file: " + male_classifier_path)
-        if os.path.isfile(female_classifier_path):
-            self.female_classifier_path = female_classifier_path
-        else:
-            raise RuntimeError("cannot find model file: " + female_classifier_path)
-
     def load(self):
 
         # 老大的模型
@@ -295,22 +286,6 @@ class FindDoc:
                     "all_log": all_log
                 }
                 return "other", None, recommendation
-            # 老大的bad case处理
-            if age >= 18:
-                all_log["info"].append("年龄大于18岁")
-                words = self.process_sentences([choice_now])
-                all_log["info"].append("第一轮预处理预测-分词结果:" + " ".join(words))
-                if gender == "male":
-                    pred, prob = self.male_classifier.predict(" ".join(words))
-                    all_log["info"].append("第一轮预处理预测-male-pred:" + str(pred))
-                    all_log["info"].append("第一轮预处理预测-male-prob:" + str(prob))
-                else:
-                    pred, prob = self.female_classifier.predict(" ".join(words))
-                    all_log["info"].append("第一轮预处理预测-female-pred:" + str(pred))
-                    all_log["info"].append("第一轮预处理预测-female-prob:" + str(prob))
-                all_log["info"].append("第一轮预处理预测-处理结束")
-
-
             # jingwei的代码，进来先判断3种科室，不在目标科室则继续,有则返回
             dis_out = ['遗传咨询', '男科', '产科', "（非'遗传咨询', '男科', '产科'）[程序继续往下走]"]
             dis_out_id = ['6', '5', '8']
