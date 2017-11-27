@@ -163,10 +163,10 @@ def create_session(req):
     symptoms = cm.get_common_symptoms(age, gender)
     if len(symptoms) >= 5:
         symptoms = symptoms[:5]
-    question = create_question('multiple', 1, GREETING_PROMPT, symptoms)
+    question = create_question('multiple', 1, NO_1_PROMPT, symptoms)
     userRes = {
         'sessionId': sessionId,
-        'greeting': NO_1_PROMPT,
+        'greeting': GREETING_PROMPT,
         'question': question
     }
     session = load_session(req)
