@@ -53,7 +53,6 @@ def unknow_error(error):
 def do():
     log_info.setLevel(log_level)
     req = request.get_json()
-    log_info.info(json.dumps(req, ensure_ascii=False))
     if req is None:
         res = upstream_error("错误的请求: 无法解析JSON")
         res = json.dumps(res, ensure_ascii=False)
@@ -66,8 +65,9 @@ def do():
         log_error.error(res)
 
         return res, 400
-
     requestUrl = req["requestUrl"]
+    log_info.info(requestUrl)
+
     url = urlparse(requestUrl)
     if not url_params_check(url):
         res = client_error(req, 401, "未授权用户")
@@ -76,12 +76,10 @@ def do():
     elif url.path == CLIENT_API_SESSIONS:
         res = create_session(req)
         res = json.dumps(res, ensure_ascii=False)
-        log_info.info(res)
 
     elif url.path == CLIENT_API_DOCTORS:
         res = find_doctors(req)
         res = json.dumps(res, ensure_ascii=False)
-        log_info.info(res)
 
     else:
         res = client_error(req, 404, " 错误的路径: " + url.path)
