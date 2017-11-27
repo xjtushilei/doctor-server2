@@ -54,5 +54,30 @@
     - `python server.py` 或者 `python server.py "配置文件路径" ` （默认配置文件在src/conf/app-config.yaml里有）
 - 容器里
     - `sh script/start.sh`
+    
+    
+#  文案说明
+```
+# 创建session的打招呼用语
+GREETING_PROMPT: "智能分诊助手帮您找到合适医生"
+
+# 第1轮的提问文案
+NO_1_PROMPT: "请问患者哪里不舒服?"
+
+# 不继续进行询问诊断的阈值,直接返回诊断结果
+NO_CONTINUE: 0.85
+
+# 第2轮的提问文案
+NO_2_PROMPT: "患者还有其他不适症状吗?"
+
+# 第3轮的提问文案
+NO_3_PROMPT: "患者还有其他不适症状吗?"
+
+# 第x轮的"没有其他症状"的提示文案
+NO_SYMPTOMS_PROMPT: "以上都没有"
+
+# other状态的文案
+STATUS_OTHER: "非常抱歉，暂不能为您找到合适的医生"
+```
 
 
