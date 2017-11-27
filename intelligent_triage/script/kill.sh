@@ -5,4 +5,4 @@ BASEDIR=`cd "$(dirname "$0")"; cd ..;  pwd `
 ####################补充停止进程需要执行的操作####################
 
 
-killall -9 python
+killall -9 python3.4
