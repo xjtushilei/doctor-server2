@@ -1,10 +1,10 @@
 # -*-coding:utf-8 -*-
 import hashlib
 import json
+import time
 from pprint import pprint
 
 import requests
-import time
 
 
 def get_response(res):
@@ -76,7 +76,6 @@ res = post(create_session_req)
 session = res["sessionDataUpdate"]
 print(3, res["toUserResponse"]["content"])
 
-
 user_input = "肚疼"
 # user_input = input("请问您哪里不舒服？")
 create_session_req = {
@@ -88,4 +87,9 @@ create_session_req = {
 res = post(create_session_req)
 session = res["sessionDataUpdate"]
 print(4, res["toUserResponse"]["content"])
-
+session_json = json.loads(session)
+# print(session_json)
+print("----------1----------")
+print(json.dumps(session_json["log_data"], ensure_ascii=False))
+print("----------2----------")
+print(session_json)
