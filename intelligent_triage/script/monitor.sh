@@ -13,7 +13,7 @@ then
 	cd $BASEDIR/script
 	echo "restart"
 	./start.sh
-	/data/syos/common/smsproxy joecao jerryzliu"intelligent triage start from[$local_ip]"
-	wget -q -O /dev/null -T10  "http://10.198.139.178:8080/SendEmail.do?name=g_td_BPC_BE&msg=intelligent_triage start&"
+	#/data/syos/common/smsproxy joecao jerryzliu"intelligent triage start from[$local_ip]"
+#	wget -q -O /dev/null -T10  "http://10.198.139.178:8080/SendEmail.do?name=g_td_BPC_BE&msg=intelligent_triage start&"
 fi
 echo "exist="$exist
