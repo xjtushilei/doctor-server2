@@ -14,7 +14,7 @@ if [ "$uid" -ne  0 ]; then
 	/bin/bash $BASEDIR/script/kill.sh
 	sleep 1
 	###启动服务
-    nohup $py_bin  $BASEDIR/server.py $BASEDIR/conf/app_config_prod.yaml $BASEDIR/conf/logger_prod.conf &
+    $py_bin  $BASEDIR/server.py $BASEDIR/conf/app_config_prod.yaml $BASEDIR/conf/logger_prod.conf &
 else
     
 	echo "ERROR: root is not allowed to start service!"
