@@ -36,15 +36,15 @@ def test():
 @app.errorhandler(Exception)
 def unknow_error(error):
     """"处理所有未处理的异常"""
-    req = request.get_json()
-    exstr = traceback.format_exc()
-    error_data = {
-        "req": req,
-        "traceback": exstr,
-        "error": str(error),
-        "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    }
-    log_unkonw_error.error(error_data)
+    # req = request.get_json()
+    # exstr = traceback.format_exc()
+    # error_data = {
+    #     "req": req,
+    #     "traceback": exstr,
+    #     "error": str(error),
+    #     "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    # }
+    log_unkonw_error.exception(error)
     return "内部错误", 500
 
 
@@ -218,12 +218,12 @@ def info_log(sessionId, status, recommendation, debug, session):
         "patient": patient,
         "status": status,
         "final_disease": final_disease,
-        "recommendation": recommendation,
+        # "recommendation": recommendation,
         "questions": questions,
-        "all_log": all_log,
+        # "all_log": all_log,
         "debug": debug
     }
-    session["log_data"] = data
+    # session["log_data"] = data
     # 本地文件日志
     log_info.setLevel(log_level)
     log_info.info(json.dumps(data, ensure_ascii=False))
