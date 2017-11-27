@@ -41,5 +41,5 @@ if __name__ == '__main__':
     result = pd.DataFrame(result)
     if not os.path.exists("excel/"):
         os.makedirs("excel/")
-    result.to_excel("excel/" + str(log_path) + '.xlsx', index=False, header=False)
-    print("输出文件位置:", "excel/" + str(log_path) + '.xlsx')
+    result.to_excel("excel/" + str(log_path.split("/")[-1]) + '.xlsx', index=False, header=False)
+    print("输出文件位置:", "excel/" + str(log_path.split("/")[-1]) + '.xlsx')
