@@ -6,7 +6,6 @@ import os
 import random
 import sys
 import time
-import traceback
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 
@@ -37,14 +36,8 @@ def test():
 def unknow_error(error):
     """"处理所有未处理的异常"""
     req = request.get_json()
-    exstr = traceback.format_exc()
-    error_data = {
-        "req": req,
-        "traceback": exstr,
-        "error": str(error),
-        "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    }
-    log_unkonw_error.error(error_data)
+    log_unkonw_error.error(req)
+    log_unkonw_error.exception(error)
     return "内部错误", 500
 
 
@@ -56,14 +49,11 @@ def do():
     if req is None:
         res = upstream_error("错误的请求: 无法解析JSON")
         res = json.dumps(res, ensure_ascii=False)
-        log_error.error(res)
         return res, 400
 
     isOk, res = request_sanity_check(req)
     if not isOk:
         res = json.dumps(res, ensure_ascii=False)
-        log_error.error(res)
-
         return res, 400
     requestUrl = req["requestUrl"]
     log_info.info(requestUrl)
@@ -72,19 +62,15 @@ def do():
     if not url_params_check(url):
         res = client_error(req, 401, "未授权用户")
         res = json.dumps(res, ensure_ascii=False)
-        log_error.error(res)
     elif url.path == CLIENT_API_SESSIONS:
         res = create_session(req)
         res = json.dumps(res, ensure_ascii=False)
-
     elif url.path == CLIENT_API_DOCTORS:
         res = find_doctors(req)
         res = json.dumps(res, ensure_ascii=False)
-
     else:
         res = client_error(req, 404, " 错误的路径: " + url.path)
         res = json.dumps(res, ensure_ascii=False)
-        log_error.error(res)
     return res, 200
 
 
@@ -224,10 +210,10 @@ def info_log(sessionId, status, recommendation, debug, session):
         "all_log": all_log,
         "debug": debug
     }
-    # session["log_data"] = data
+    session["log_data"] = data
     # 本地文件日志
     log_info.setLevel(log_level)
-    # log_info.info(json.dumps(data, ensure_ascii=False))
+    log_info.info(json.dumps(data, ensure_ascii=False))
 
 
 def find_doctors(req):

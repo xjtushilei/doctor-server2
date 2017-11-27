@@ -20,7 +20,7 @@ if __name__ == '__main__':
     result.append(["sessionId", "出生日期", "姓名", "性别", "就诊卡号", "回答轮数", "每一轮的问题和用户选择", "诊断结果", "开发人员每一轮的debug信息"])
     for x in all_lines[0:]:
         time, log_info, python_file, python_fun, python_line, content = x.split("---")
-        if python_fun == "do":
+        if python_fun == "info_log":
             content_json = json.loads(content)
             sessionId = content_json["sessionId"]
 
