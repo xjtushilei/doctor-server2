@@ -107,7 +107,7 @@ def core_method(l3sym_dict, disease_rate_list=None, input_list=None, no_use_inpu
                                        "top1": obj["top1"],
                                        "suffer_sym_dic": suffer_sym_dic,
                                        "rate": 0.0})
-    result = {"normal_recommendation": normal_recommendation, "recommend_sym_list": [], "diagnosis_list": []}
+    result = {"normal_recommendation": normal_recommendation, "recommend_sym_list": []}
     # 如果第一轮，直接推荐5个疾病中的top1
     if seq == 1:
         # recommend_set用来去重，避免推荐的症状中出现重复
