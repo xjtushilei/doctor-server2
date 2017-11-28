@@ -10,7 +10,7 @@ def post(content):
         "userId": "jerryz"
     }
     try:
-        resp = requests.post("http://100.115.147.209:8802/nlu", json=body, timeout=0.25).json()
+        resp = requests.post("http://walleai_nlu.ext.wsd.com/nlu", json=body, timeout=0.25).json()
         nerList = resp["reply"]["ner_norms"]
         slots = resp["reply"]["slots"]
         result = []
