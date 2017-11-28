@@ -126,90 +126,100 @@ class FindDoc:
 
     # 医生模型的获取医生信息
     def get_common_doctors(self, codes, probs, age, gender):
-        # input: icd10 code: list; probs: list
         # get_common_doctors(['D39', 'L01'],[0.877,0.876,0.875,0.86],[0.557,0.556,0.555,0.55],gender='male',age=30)
         # sort input
-        probs = [y for y, x in sorted(zip(probs, codes), reverse=True)]
-        codes = [x for y, x in sorted(zip(probs, codes), reverse=True)]
-
+        probs1 = [y for y, x in sorted(zip(probs, codes), reverse=True)]
+        codes1 = [x for y, x in sorted(zip(probs, codes), reverse=True)]
+        codes, probs = codes1, probs1
         # filter codes when prob < 0.65
         new_codes = []
         new_probs = []
         for (i, k) in enumerate(probs):
-            # print (k)
-            if k >= 0.5:
+            if k >= 0.2:
                 new_codes.append(codes[i])
                 new_probs.append(probs[i])
 
-        # remove other codes when gradient > 0.01
-        x_stop = len(new_probs)
-        # diff = -np.diff(new_probs)
-        # for ii in range(len(diff)):
-        #     if diff[ii] > 0.01:
-        #         x_stop = ii
-        #         break
+        ## remove other codes when gradient > 0.01
+        diff = -np.diff(new_probs)
+        x_stop = len(diff)
+        for ii in range(len(diff)):
+            if diff[ii] > 0.01:
+                x_stop = ii
+                break
 
-        codes = new_codes[0:x_stop + 1]
-        probs = new_probs[0:x_stop + 1]
+        new_codes = new_codes[0:x_stop + 1]
+        new_probs = new_probs[0:x_stop + 1]
 
-        # print(codes)
-        # print(probs)
-        rankings = dict()
-        symptoms_rankings = {}
+        doctors_rankings = {}
         ## diff pediatric and gyna and general
         if age <= 0.083:
-            symptoms_rankings = self.symptoms_rankings['newborn']
+            doctors_rankings = self.symptoms_rankings['newborn']
         elif gender == 'male' and age <= 18:
-            symptoms_rankings = self.symptoms_rankings['pediatrics']
+            doctors_rankings = self.symptoms_rankings['pediatrics']
         elif gender == 'female' and age <= 12:
-            symptoms_rankings = self.symptoms_rankings['pediatrics']
+            doctors_rankings = self.symptoms_rankings['pediatrics']
         elif gender == 'female' and age > 18:
             count = 0
             for item in ['N46', 'Q96', 'Z31', 'E28', 'N97', 'E16', 'L70']:
                 if item in codes:
                     count += 1
             if count >= len(codes) / 2:
-                symptoms_rankings = self.symptoms_rankings['reproductive']
+                doctors_rankings = self.symptoms_rankings['reproductive']
             else:
-                symptoms_rankings = self.symptoms_rankings['gynaecology']
+                doctors_rankings = self.symptoms_rankings['gynaecology']
         elif gender == 'female':
-            symptoms_rankings = self.symptoms_rankings['general']
-
-        for i, code in enumerate(codes):
-            if code in symptoms_rankings:
-                for name, prob in symptoms_rankings[code]:
-                    if code in rankings:
-                        # rankings[name] += prob / self.symptoms_rankings['doc_case_num'][name]
-                        rankings[name] += prob
-                    else:
-                        rankings[name] = prob
-                        # rankings[name] = prob / self.symptoms_rankings['doc_case_num'][name]
-            else:
-                continue
-
-        rankings = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
+            doctors_rankings = self.symptoms_rankings['general']
+        #
+        # for i, code in enumerate(codes):
+        #     if code in symptoms_rankings:
+        #         for name, prob in symptoms_rankings[code]:
+        #             if code in rankings:
+        #                 # rankings[name] += prob / symptoms_rankings['doc_case_num'][name]
+        #                 rankings[name] += prob
+        #             else:
+        #                 rankings[name] = prob
+        #                 # rankings[name] = prob / symptoms_rankings['doc_case_num'][name]
+        #     else:
+        #         continue
+        rankings1 = []
+        for ii in range(3):
+            for code in new_codes:
+                temp = doctors_rankings[code]
+                j = 0
+                for tem in temp:
+                    if (tem[0] not in set(rankings1)) and (j < 2):
+                        rankings1.append(tem[0])
+                        j += 1
+        for ii in range(5):
+            for code in codes:
+                temp = doctors_rankings[code]
+                j = 0
+                for tem in temp:
+                    if (tem[0] not in set(rankings1)) and (j < 1):
+                        rankings1.append(tem[0])
+                        j += 1
+        # rankings1 = sorted(rankings.items(), key=lambda x: x[1], reverse=True)
         ## if no matched doctors, use general instead
-        if len(rankings) == 0:
+        if len(rankings1) < 20:
             if age <= 0.082:  # 3 months
-                # print('newborn general')
-                rankings = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
+                rankings2 = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
             elif age <= 18:
-                # print('pediatric general')
-                rankings = sorted(self.symptoms_rankings['gp_ped'].items(), key=lambda x: x[1][0], reverse=True)
+                rankings2 = sorted(self.symptoms_rankings['gp_ped'].items(), key=lambda x: x[1][0], reverse=True)
             elif gender == 'female' and age > 18:
-                # print('gynaecology general')
-                rankings = sorted(self.symptoms_rankings['gp_gyn'].items(), key=lambda x: x[1][0], reverse=True)
-
+                rankings2 = sorted(self.symptoms_rankings['gp_gyn'].items(), key=lambda x: x[1][0], reverse=True)
+            for item in rankings2:
+                if item[0] not in rankings1 and (len(rankings1) < 20):
+                    rankings1.append(item[0])
         ## remove '院际会诊' and get id of doctor
         results = []
-        for name in rankings:
-            if name[0] in self.doctors_id_map.keys():
+        for name in rankings1:
+            if name in self.doctors_id_map:
                 # if name[0] in doctors_id_map.keys() and '会诊' not in name[0]:
-                results.append(self.doctors_id_map[name[0]])
+                results.append(self.doctors_id_map[name])
             else:
-                # print ('remove',name[0])
                 continue
-        return results[0:30]
+        # return results[0:30]
+        return results
 
     # 去掉停用词，并用空格替换
     def remove_stopwords(self, line):
