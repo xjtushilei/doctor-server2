@@ -1,4 +1,4 @@
-# -*-coding:utf-8 -*-
+# coding=utf-8
 
 import json
 import logging.config
@@ -14,6 +14,8 @@ from flask import Flask
 from flask import request
 
 from cmodel import FindDoc
+
+
 
 app = Flask(__name__)
 

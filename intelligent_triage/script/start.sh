@@ -6,6 +6,8 @@ BASEDIR=`cd "$(dirname "$0")"; cd ..;  pwd `
 py_bin="/usr/bin/python3.4"
 
 APP="sl_guangdu_tongji"
+locale
+
 
 uid=`id -u`
 if [ "$uid" -ne  0 ]; then
