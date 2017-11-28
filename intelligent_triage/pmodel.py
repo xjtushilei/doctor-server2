@@ -264,7 +264,7 @@ class PredModel:
         x_stop = k_disease
         for ii in range(len(diff)):
 
-            if diff[ii] > 1 and val[0] > 0.84:
+            if diff[ii] > 100 and val[0] > 0.84:
                 x_stop = ii
 
                 break
