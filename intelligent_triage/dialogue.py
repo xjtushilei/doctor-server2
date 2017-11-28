@@ -114,25 +114,26 @@ def core_method(l3sym_dict, disease_rate_list=None, input_list=None, no_use_inpu
         recommend_set = set()
         for i in range(5):
             for d_name in disease_rate_dict.keys():
-                if len(l3sym_dict[d_name]["top2"]) >= i + 1:
-                    top2 = l3sym_dict[d_name]["top2"]
-                    sym_key = list(top2.keys())[i]
-                    # input_list 是京伟的识别结果，choice_history_words是原始输入的分词结果
-                    if sym_key in recommend_set or sym_key in input_list or sym_key in choice_history_words or sym_key in no_use_input_list:
-                        continue
-                    recommend_set.add(sym_key)
-                    # 给增加的症状添加概率
-                    if sym_key in all_sym_count:
-                        sym_value = all_sym_count[sym_key]
-                    else:
-                        sym_value = 0
-                    result["recommend_sym_list"].append(
-                        {
-                            "name": sym_key,
-                            "rate": sym_value
-                        })
-                    if len(result["recommend_sym_list"]) >= len(disease_rate_dict):
-                        break
+                if d_name in l3sym_dict:
+                    if len(l3sym_dict[d_name]["top2"]) >= i + 1:
+                        top2 = l3sym_dict[d_name]["top2"]
+                        sym_key = list(top2.keys())[i]
+                        # input_list 是京伟的识别结果，choice_history_words是原始输入的分词结果
+                        if sym_key in recommend_set or sym_key in input_list or sym_key in choice_history_words or sym_key in no_use_input_list:
+                            continue
+                        recommend_set.add(sym_key)
+                        # 给增加的症状添加概率
+                        if sym_key in all_sym_count:
+                            sym_value = all_sym_count[sym_key]
+                        else:
+                            sym_value = 0
+                        result["recommend_sym_list"].append(
+                            {
+                                "name": sym_key,
+                                "rate": sym_value
+                            })
+                        if len(result["recommend_sym_list"]) >= len(disease_rate_dict):
+                            break
             if len(result["recommend_sym_list"]) >= len(disease_rate_dict):
                 break
         result["recommend_sym_list"].sort(key=lambda s: s["rate"], reverse=True)

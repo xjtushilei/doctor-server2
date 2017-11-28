@@ -369,9 +369,13 @@ class FindDoc:
             # wangmeng推荐算法
             ner_words, resp = ner.post(choice_now)
             if "ner" not in session:
+
                 session["ner"] = ner_words
             else:
-                session["ner"].extend(ner_words)
+                temp_ner = session["ner"]
+                temp_ner.extend(ner_words)
+                temp_ner = list(set(temp_ner))
+                session["ner"] = temp_ner
             all_log["nlu历史记录"] = session["ner"]
             all_log["nlu输入"] = choice_now
             all_log["nlu-response"] = resp
@@ -427,7 +431,10 @@ class FindDoc:
                 if "ner" not in session:
                     session["ner"] = ner_words
                 else:
-                    session["ner"].extend(ner_words)
+                    temp_ner = session["ner"]
+                    temp_ner.extend(ner_words)
+                    temp_ner = list(set(temp_ner))
+                    session["ner"] = temp_ner
                 all_log["nlu历史记录"] = session["ner"]
                 all_log["nlu输入"] = choice_now
                 all_log["nlu-response"] = resp
@@ -476,7 +483,10 @@ class FindDoc:
                 if "ner" not in session:
                     session["ner"] = ner_words
                 else:
-                    session["ner"].extend(ner_words)
+                    temp_ner = session["ner"]
+                    temp_ner.extend(ner_words)
+                    temp_ner = list(set(temp_ner))
+                    session["ner"] = temp_ner
                 all_log["nlu历史记录"] = session["ner"]
                 all_log["nlu输入"] = choice_now
                 all_log["nlu-response"] = resp
