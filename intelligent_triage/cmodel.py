@@ -185,6 +185,8 @@ class FindDoc:
         for ii in range(3):
             for code in new_codes:
                 temp = doctors_rankings[code]
+                temp = sorted(temp, key=lambda x: x[1] / (self.symptoms_rankings['doc_case_num'][x[0].strip()]),
+                              reverse=True)
                 j = 0
                 for tem in temp:
                     if (tem[0] not in set(rankings1)) and (j < 2):

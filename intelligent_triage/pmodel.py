@@ -66,26 +66,24 @@ class PredModel:
         mask_layer = np.ones(len(mask_matrix[0]))
 
         if age <= 1:
-
-            mask_layer[np.where(mask_matrix[5] == 0)] = 0
+            mask_layer[np.where(mask_matrix[6] == 0)] = 0
 
         elif age <= 12:
-
-            mask_layer[np.where(mask_matrix[4] == 0)] = 0
+            mask_layer[np.where(mask_matrix[5] == 0)] = 0
 
         elif age <= 18:
+            mask_layer[np.where(mask_matrix[4] == 0)] = 0
 
+        elif age <= 40:
             mask_layer[np.where(mask_matrix[3] == 0)] = 0
 
         else:
             mask_layer[np.where(mask_matrix[2] == 0)] = 0
 
         if gender in ['M', 'm', 'male', 'Male', '男', '男性', '男孩']:
-
             mask_layer[np.where(mask_matrix[0] == 0)] = 0
 
         else:
-
             if gender in ['F', 'f', 'Female', 'female', '女', '女性', '女孩']:
                 mask_layer[np.where(mask_matrix[1] == 0)] = 0
 
