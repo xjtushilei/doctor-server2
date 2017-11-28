@@ -7,7 +7,7 @@ py_bin="/usr/bin/python3.4"
 
 APP="sl_guangdu_tongji"
 locale
-
+export LC_ALL="en_US.UTF-8"
 
 uid=`id -u`
 if [ "$uid" -ne  0 ]; then
