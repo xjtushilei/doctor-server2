@@ -41,7 +41,7 @@ class FindDoc:
         if os.path.isfile(dict_var_path):
             self.dict_var_path = dict_var_path
         else:
-            raise RuntimeError("cannot find model file: " + seg_model_path)
+            raise RuntimeError("cannot find model file: " + dict_var_path)
         if os.path.isfile(disease_symptom_file_dir):
             self.disease_symptom_file_dir = disease_symptom_file_dir
         else:
