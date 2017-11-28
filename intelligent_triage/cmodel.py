@@ -79,7 +79,7 @@ class FindDoc:
                                                                          self.all_symptom_count_file_path)
 
         # 读医生模型给的doctor两个字典存到内存
-        with open(self.doctors_distributions_path, 'r') as fp:
+        with open(self.doctors_distributions_path, 'r', encoding='utf-8') as fp:
             self.symptoms_rankings = json.load(fp)
 
         self.doctors_id_map = {}
@@ -92,7 +92,7 @@ class FindDoc:
                 "label": line[2]
             }
 
-        with open(self.symptoms_distributions_file_dir, 'r') as fp:
+        with open(self.symptoms_distributions_file_dir, 'r', encoding='utf-8') as fp:
             self.symptoms_dist = json.load(fp)
 
     # 医生模型的首轮推荐症状
