@@ -160,7 +160,7 @@ class FindDoc:
             doctors_rankings = self.symptoms_rankings['pediatrics']
         elif gender == 'female' and age > 18:
             count = 0
-            for item in ['N46', 'Q96', 'Z31', 'E28', 'N97', 'E16', 'L70']:
+            for item in ['N46', 'Q96', 'Z31', 'E28', 'N97', 'E16', 'L70', 'N92']:
                 if item in codes:
                     count += 1
             if count >= len(codes) / 2:
@@ -189,10 +189,10 @@ class FindDoc:
                               reverse=True)
                 j = 0
                 for tem in temp:
-                    if (tem[0] not in set(rankings1)) and (j < 2):
+                    if (tem[0] not in set(rankings1)) and (j < 3):
                         rankings1.append(tem[0])
                         j += 1
-        for ii in range(5):
+        for ii in range(6):
             for code in codes:
                 temp = doctors_rankings[code]
                 j = 0
