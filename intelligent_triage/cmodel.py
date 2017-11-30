@@ -182,19 +182,21 @@ class FindDoc:
         #     else:
         #         continue
         rankings1 = []
-        for ii in range(3):
+        for ii in range(2):
             for code in new_codes:
                 temp = doctors_rankings[code]
                 temp = sorted(temp, key=lambda x: x[1] / (self.symptoms_rankings['doc_case_num'][x[0].strip()]),
                               reverse=True)
                 j = 0
                 for tem in temp:
-                    if (tem[0] not in set(rankings1)) and (j < 3):
+                    if (tem[0] not in set(rankings1)) and (j < 2):
                         rankings1.append(tem[0])
                         j += 1
         for ii in range(6):
             for code in codes:
                 temp = doctors_rankings[code]
+                temp = sorted(temp, key=lambda x: x[1] / (self.symptoms_rankings['doc_case_num'][x[0].strip()]),
+                              reverse=True)
                 j = 0
                 for tem in temp:
                     if (tem[0] not in set(rankings1)) and (j < 1):
@@ -221,7 +223,7 @@ class FindDoc:
             else:
                 continue
         # return results[0:30]
-        return results
+        return results[0:10]
 
     # 去掉停用词，并用空格替换
     def remove_stopwords(self, line):
