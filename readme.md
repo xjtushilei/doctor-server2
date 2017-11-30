@@ -8,7 +8,7 @@
 
 - `text_config.yaml`
 
-    所有文案的配置，在这里进行修改。
+    所有文案的配置，在这里进行修改。（中间跳服务器bug，也不再使用，在server的主函数里进行配置。）
 - `app_config_prod.yaml`和`logger_prod.conf`两个文件，这里配置不生效，配置在[米格云控](http://sumeru.wsd.com)的配置文件里进行,之后不用idc我们人工启动后，除了`text_config.yaml`还有用，其他的都不在使用
 
 # 文件离线处理
