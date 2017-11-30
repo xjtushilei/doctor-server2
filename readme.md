@@ -31,11 +31,16 @@
     
     - 用户使用日志
         - idc info 日志处理
-            1. 处理文件位置`/home/script/PycharmProjects/tencent-server2/intelligent_triage/utils/log_to_excel/get_info_log_to_excel.py`
-            2. 放到服务器，ｉｄｃ服务器里，在`/tvm/`任何目录下，运行即可。命令行参数是`logging_info1.log`　，例如
-            ```
-            python get_info_log_to_excel.py　xxx目录/logging_info.log
-            ```
+            - 1 单个处理
+                1. 处理文件位置`/home/script/PycharmProjects/tencent-server2/intelligent_triage/utils/log_to_excel/get_info_log_to_excel.py`
+                2. 放到服务器，ｉｄｃ服务器里，在`/tvm/`任何目录下，运行即可。命令行参数是`logging_info1.log`　，例如
+                ```
+                python get_info_log_to_excel.py　xxx目录/logging_info.log
+                ```
+            - 2 批处理
+                1. 处理文件位置`/home/script/PycharmProjects/tencent-server2/intelligent_triage/utils/log_to_excel/get_info_log_to_excel_to_doctor.py`
+                2. 放在本地吧，然后从服务器scp下来日志包，然后把这个文件和一堆日志文件放一起，运行这个文件，不需要参数
+
         - 腾讯mysql集群中的日志
             - 暂时没有写访问方式
 
