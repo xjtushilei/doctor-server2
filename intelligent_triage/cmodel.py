@@ -283,6 +283,10 @@ class FindDoc:
     def find_doctors(self, session, seqno, choice_now, age, gender, debug=False):
         # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
         choice_now = choice_now.replace(self.NO_SYMPTOMS_PROMPT, " ")
+        if "cardNo" in session["patient"]:
+            userID=session["patient"]["cardNo"]
+        else:
+            userID="没有从上游获取到"
         all_log = {"info": []}
         # 得到用户选择的症状和没有选择的症状
         all_log["choice_now"] = choice_now
@@ -379,7 +383,7 @@ class FindDoc:
             # 记住jingwei的诊断结果,wangmeng下一轮使用
             session["diagnosis_disease_rate_list"] = diagnosis_disease_rate_list
             # wangmeng推荐算法
-            ner_words, resp = ner.post(choice_now)
+            ner_words, resp = ner.post(choice_now,userID)
             if "ner" not in session:
 
                 session["ner"] = ner_words
@@ -439,7 +443,7 @@ class FindDoc:
                 all_log["本轮为止,用户没有选择的所有症状"] = symptoms_no_chioce
                 all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
                     [question["choice"] for question in session["questions"]])
-                ner_words, resp = ner.post(choice_now)
+                ner_words, resp = ner.post(choice_now,userID)
                 if "ner" not in session:
                     session["ner"] = ner_words
                 else:
@@ -491,7 +495,7 @@ class FindDoc:
                 # jingwei识别的疾病记录到session中
                 session["diagnosis_disease_rate_list"] = diagnosis_disease_rate_list
 
-                ner_words, resp = ner.post(choice_now)
+                ner_words, resp = ner.post(choice_now,userID)
                 if "ner" not in session:
                     session["ner"] = ner_words
                 else:

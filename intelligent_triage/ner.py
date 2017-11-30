@@ -3,11 +3,11 @@
 import requests
 
 
-def post(content):
+def post(content, userID="jerryz"):
     body = {
         "version": '1.0',
         "text": content,
-        "userId": "jerryz"
+        "userId": userID
     }
     try:
         resp = requests.post("http://walleai_nlu.ext.wsd.com/nlu", json=body, timeout=0.25).json()
