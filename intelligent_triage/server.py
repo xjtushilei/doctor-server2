@@ -4,6 +4,7 @@ import json
 import logging.config
 import os
 import random
+import re
 import sys
 import time
 from datetime import datetime
@@ -14,8 +15,6 @@ from flask import Flask
 from flask import request
 
 from cmodel import FindDoc
-
-
 
 app = Flask(__name__)
 
@@ -64,6 +63,7 @@ def do():
     if not url_params_check(url):
         res = client_error(req, 401, "未授权用户")
         res = json.dumps(res, ensure_ascii=False)
+        log_error.error(res)
     elif url.path == CLIENT_API_SESSIONS:
         res = create_session(req)
         res = json.dumps(res, ensure_ascii=False)
@@ -73,6 +73,7 @@ def do():
     else:
         res = client_error(req, 404, " 错误的路径: " + url.path)
         res = json.dumps(res, ensure_ascii=False)
+        log_error.error(res)
     return res, 200
 
 
@@ -241,8 +242,13 @@ def find_doctors(req):
         debug = False
     session = update_session(session, seqno, choice)
     dob = session["patient"]["dob"]
-    age = get_age_from_dob(dob)
+    dob_re = re.compile(r'\d{4}-\d{2}-\d{2}')
     sex = session["patient"]["sex"]
+    if not (dob_re.match(dob) and len(dob) == 10):
+        return client_error(req, "400", "错误的请求: 错误的数据格式(出生年月不对)")
+    if not (sex == "male" or sex == "female"):
+        return client_error(req, "400", "错误的请求: 错误的数据格式(sex格式不对)")
+    age = get_age_from_dob(dob)
     status, question, recommendation = cm.find_doctors(session, seqno, choice, age, sex, debug)
     if status == "followup":
         userRes = {
