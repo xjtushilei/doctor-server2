@@ -149,8 +149,13 @@ def create_session(req):
     clientSessionReq = json.loads(requestBody)
     patient = clientSessionReq["patient"]
     dob = patient["dob"]
-    age = get_age_from_dob(dob)
+    dob_re = re.compile(r'\d{4}-\d{2}-\d{2}')
     gender = patient["sex"]
+    if not (dob_re.match(dob) and len(dob) == 10):
+        return client_error(req, "400", "错误的请求: 错误的数据格式(出生年月不对)")
+    if not (gender == "male" or gender == "female"):
+        return client_error(req, "400", "错误的请求: 错误的数据格式(sex格式不对)")
+    age = get_age_from_dob(dob)
     symptoms = cm.get_common_symptoms(age, gender)
     if len(symptoms) >= 5:
         symptoms = symptoms[:5]
@@ -242,12 +247,7 @@ def find_doctors(req):
         debug = False
     session = update_session(session, seqno, choice)
     dob = session["patient"]["dob"]
-    dob_re = re.compile(r'\d{4}-\d{2}-\d{2}')
     sex = session["patient"]["sex"]
-    if not (dob_re.match(dob) and len(dob) == 10):
-        return client_error(req, "400", "错误的请求: 错误的数据格式(出生年月不对)")
-    if not (sex == "male" or sex == "female"):
-        return client_error(req, "400", "错误的请求: 错误的数据格式(sex格式不对)")
     age = get_age_from_dob(dob)
     status, question, recommendation = cm.find_doctors(session, seqno, choice, age, sex, debug)
     if status == "followup":
