@@ -4,7 +4,6 @@ import json
 import logging.config
 import os
 import random
-import re
 import sys
 import time
 from datetime import datetime
@@ -143,16 +142,24 @@ def create_client_response(code, sessionId, userRes, session):
     }
 
 
+def is_valid_date(strdate):
+    '''''判断是否是一个有效的日期字符串'''
+    try:
+        time.strptime(strdate, "%Y-%m-%d")
+        return True
+    except:
+        return False
+
+
 def create_session(req):
     sessionId = req["sessionId"]
     requestBody = req["requestBody"]
     clientSessionReq = json.loads(requestBody)
     patient = clientSessionReq["patient"]
     dob = patient["dob"]
-    dob_re = re.compile(r'\d{4}-\d{2}-\d{2}')
     gender = patient["sex"]
-    if not (dob_re.match(dob) and len(dob) == 10):
-        return client_error(req, "400", "错误的请求: 错误的数据格式(出生年月不对)")
+    if not (is_valid_date(dob) and len(dob) == 10):
+        return client_error(req, "400", "错误的请求: 错误的数据格式(出生年月格式不对)")
     if not (gender == "male" or gender == "female"):
         return client_error(req, "400", "错误的请求: 错误的数据格式(sex格式不对)")
     age = get_age_from_dob(dob)
@@ -174,19 +181,19 @@ def create_session(req):
 
 
 def update_session(session, seqno, choice):
-    questions = session["questions"]
-    # print(questions)
-    updatedQuestions = []
-    for question in questions:
-        if "seqno" in question:
-            if question["seqno"] < seqno:
-                updatedQuestions.append(question)
-            elif question["seqno"] == seqno:
-                question["choice"] = choice
-                updatedQuestions.append(question)
-    session["questions"] = updatedQuestions
-    # print(session["questions"])
-
+    if "questions" in session:
+        questions = session["questions"]
+        # print(questions)
+        updatedQuestions = []
+        for question in questions:
+            if "seqno" in question:
+                if question["seqno"] < seqno:
+                    updatedQuestions.append(question)
+                elif question["seqno"] == seqno:
+                    question["choice"] = choice
+                    updatedQuestions.append(question)
+        session["questions"] = updatedQuestions
+        # print(session["questions"])
     return session
 
 
