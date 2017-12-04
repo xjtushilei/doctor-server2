@@ -2,10 +2,10 @@
 
 import collections
 import re
+from pyltp import Segmentor
 
 import fastText
 import numpy as np
-from pyltp import Segmentor
 
 
 class PredModel:
@@ -23,7 +23,7 @@ class PredModel:
         self.prog = re.compile("[\.|\,|\?|\!|。|，|？|！|\s]")
         self.wv_dim = 250
         self.name_weight = 0.333
-        self.th_word_mask = 0.06
+        self.th_word_mask = 0.04
 
 
 
