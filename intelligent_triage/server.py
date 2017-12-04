@@ -4,6 +4,7 @@ import json
 import logging.config
 import os
 import random
+import re
 import sys
 import time
 from datetime import datetime
@@ -231,6 +232,23 @@ def info_log(sessionId, status, recommendation, debug, session):
     log_info.info(json.dumps(data, ensure_ascii=False))
 
 
+sql_key = ["select", "in", "from", "between", "aliases", "join", "union", "create", "null",
+           "unique", "alter", "nulls", "avg", "sum", "max", "min", "len", "like", "where",
+           "and", "order", "insert", "delete", "update", "top"]
+
+
+def xss_defense_check(input):
+    dr = re.compile(r'<[^>]+>', re.S)
+    dd = dr.sub('', input)
+    if len(dd) != len(input):
+        return False, "请求字段包含html标签"
+    input = input.lower()
+    for key in sql_key:
+        if key in input:
+            return False, "请求字段包含SQL常见关键字"
+    return True, None
+
+
 def find_doctors(req):
     sessionId = req["sessionId"]
     requestUrl = req["requestUrl"]
@@ -246,6 +264,9 @@ def find_doctors(req):
         choice = " "
     else:
         choice = params["choice"][0]
+        xss_status, xss_desc = xss_defense_check(choice)
+        if not xss_status:
+            return client_error(req, "400", "错误的请求:" + xss_desc)
         choice = choice.replace(NO_SYMPTOMS_PROMPT, " ")
     # 是否在测试页面展示debug信息
     if "debug" in params:
