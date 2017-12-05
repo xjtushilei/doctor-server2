@@ -26,8 +26,6 @@ class PredModel:
         self.th_word_mask = 0.04
 
 
-
-
         # self.segmentor = CustomizedSegmentor()
         # #segmentor.load("/home/dev/workspace/ltp/ltp_data_v3.4.0/cws.model")
         # #segmentor.load_with_lexicon("/home/dev/workspace/ltp/ltp_data_v3.3.1/cws.model", 'data/meddict.txt')

@@ -177,22 +177,22 @@ class FindDoc:
             #               reverse=True)
             j = 0
             for tem in temp:
-                if (tem[0] not in set(rankings1)) and (j < 8):
+                if (tem[0] not in set(rankings1)) and (j < 10):
                     rankings1.append(tem[0])
                     j += 1
-        ## Find 6 doctors for the first disease
-        if len(codes) > 1:
-            for code in codes[1:-1]:
-                if code == 'J11':
-                    code = 'J06'
-                temp = doctors_rankings[code]
-                # temp = sorted(temp, key=lambda x: x[1] / (self.symptoms_rankings['doc_case_num'][x[0].strip()]),
-                #               reverse=True)
-                j = 0
-                for tem in temp:
-                    if (tem[0] not in set(rankings1)) and (j < 5) and len(rankings1) < 10:
-                        rankings1.append(tem[0])
-                        j += 1
+        # ## Find 6 doctors for the first disease
+        # if len(codes) > 1:
+        #     for code in codes[1:-1]:
+        #         if code == 'J11':
+        #             code = 'J06'
+        #         temp = doctors_rankings[code]
+        #         # temp = sorted(temp, key=lambda x: x[1] / (self.symptoms_rankings['doc_case_num'][x[0].strip()]),
+        #         #               reverse=True)
+        #         j = 0
+        #         for tem in temp:
+        #             if (tem[0] not in set(rankings1)) and (j < 5) and len(rankings1) < 10:
+        #                 rankings1.append(tem[0])
+        #                 j += 1
 
         ## if no matched doctors, use general instead
         # if len(rankings1) < 20:
