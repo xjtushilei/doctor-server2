@@ -11,16 +11,19 @@ def get_questions(content_json):
     koushu = ""
     sanlunwenti = ""
     huidalunshu = len(content_json["questions"])
-    for q in content_json["questions"]:
+    for index, q in enumerate(content_json["questions"]):
         seqno = q["seqno"]
         choices = q["choices"]
-        choice = q["choice"]
+        if "choice" in q:
+            choice = q["choice"]
+        else:
+            choice = ""
         if seqno == 1:
             koushu = choice
             sanlunwenti = sanlunwenti + str(choices) + "\n"
         else:
             sanlunwenti = sanlunwenti + str(choices) + "\n"
-            yonghuhouxushuru = yonghuhouxushuru + str(choice) + "，"
+            yonghuhouxushuru = yonghuhouxushuru + str(index) + ":" + str(choice) + "\n"
 
     return huidalunshu, koushu, yonghuhouxushuru, sanlunwenti
 
@@ -64,6 +67,8 @@ def deal_one_log_file(result, log_path):
                 one_line.append(content_json["status"])
                 one_line.append(content_json["patient"]["dob"])
                 one_line.append(get_sex(content_json["patient"]["sex"]))
+                if len("020000000322") != len(content_json["patient"]["cardNo"]):
+                    continue
                 one_line.append(content_json["patient"]["cardNo"])
                 huidalunshu, koushu, yonghuhouxushuru, sanlunwenti = get_questions(content_json)
                 one_line.append(huidalunshu)
