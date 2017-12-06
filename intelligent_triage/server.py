@@ -50,11 +50,13 @@ def do():
     if req is None:
         res = upstream_error("错误的请求: 无法解析JSON")
         res = json.dumps(res, ensure_ascii=False)
+        log_error.info(res)
         return res, 400
 
     isOk, res = request_sanity_check(req)
     if not isOk:
         res = json.dumps(res, ensure_ascii=False)
+        log_error.info(res)
         return res, 400
     requestUrl = req["requestUrl"]
     log_info.info(requestUrl)
@@ -153,6 +155,7 @@ def is_valid_date(strdate):
 
 
 def create_session(req):
+    log_info.info(json.dumps(req, ensure_ascii=False))
     sessionId = req["sessionId"]
     requestBody = req["requestBody"]
     clientSessionReq = json.loads(requestBody)
@@ -257,6 +260,7 @@ def find_doctors(req):
     session = load_session(req)
 
     if not ("seqno" in params and "query" in params and len(params["seqno"]) > 0):
+        log_error.info(req)
         return client_error(req, "400", "错误的请求: 错误的数据格式")
 
     seqno = int(params["seqno"][0])
@@ -266,6 +270,7 @@ def find_doctors(req):
         choice = params["choice"][0]
         xss_status, xss_desc = xss_defense_check(choice)
         if not xss_status:
+            log_error.info(req)
             return client_error(req, "400", "错误的请求:" + xss_desc)
         choice = choice.replace(NO_SYMPTOMS_PROMPT, " ")
     # 是否在测试页面展示debug信息
