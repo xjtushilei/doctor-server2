@@ -14,8 +14,10 @@ class PredModel:
 
 
 
-    def __init__(self, seg_model_path="./model/cws.model", pos_model_path="./model/pos.model",
-                 w2v_model_path="./model/model-webqa-hdf-2c.bin", dict_var_path="./val/dict_var.npy"):
+    def __init__(self, seg_model_path="/tvm/mdata/jerryzchen/model/cws.model",
+                 pos_model_path="/tvm/mdata/jerryzchen/model/pos.model",
+                 w2v_model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
+                 dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy"):
         self.segmentor = Segmentor()
         self.postagger = Postagger()
         self.segmentor.load(seg_model_path)
@@ -107,7 +109,7 @@ class PredModel:
         dim = self.wv_dim
         sent_vec = []
         word_bag = []
-        word_vec_bag =[]
+        word_vec_bag = []
         prob_max = 0
         for chunk in self.split_into_chunks(input):
             chunk = chunk.strip()
@@ -115,10 +117,10 @@ class PredModel:
                 continue
             words = self.segment(chunk)
             chunk_wv = []
-            word_bag_tmp =[]
+            word_bag_tmp = []
             for word in words:
                 wv = self.ft.get_word_vector(word)
-                #wv = self.ft[word]
+                # wv = self.ft[word]
                 chunk_wv.append(wv)
                 word_bag_tmp.append(word)
 
@@ -159,7 +161,7 @@ class PredModel:
         input_vec = np.reshape(input_vec, [1, dim])
         pre_sim = []
         if age < 19:
-            Label = 3  #进入后面的判断
+            Label = 3  # 进入后面的判断
 
         else:
 
@@ -196,17 +198,17 @@ class PredModel:
 
                 elif pre_sim[2] > 0.8:
 
-                    Label = 2  #产科
+                    Label = 2  # 产科
                 else:
                     Label = 3
 
         return Label, prob_max
 
     def predict(self, input, age, gender, k_disease, k_symptom):
-        seg_bag = self.dict[0]   #
+        seg_bag = self.dict[0]  #
         symp_wv = self.dict[1]
         seg_matrix = self.dict[2]
-        #coeff_num_wordcut = self.dict[3]
+        # coeff_num_wordcut = self.dict[3]
         disease_name_vec = self.dict[4]
         diseases = self.dict[5]
         index = self.dict[6]
@@ -216,11 +218,10 @@ class PredModel:
 
         mask_layer = self.Masking(mask_matrix, age, gender)
 
-
         dim = self.wv_dim
         sent_vec = []
         word_bag = []
-        word_vec_bag=[]
+        word_vec_bag = []
 
         for chunk in self.split_into_chunks(input):
             chunk = chunk.strip()
@@ -231,16 +232,18 @@ class PredModel:
             chunk_wv = []
             word_bag_tmp = []
             count = 0
+            coef = np.zeros(len(words))
             for word in words:
                 wv = self.ft.get_word_vector(word)
 
                 # wv = self.ft[word]
                 if pos_cut[count] == 'n':
-                    coef = 5
+                    coef[count] = 5
                 else:
-                    coef = 1
+                    coef[count] = 1
                 chunk_wv.append(self.unitvec(wv))
                 word_bag_tmp.append(word)
+                count = count + 1
 
                 # if word in ['不','不是','没有','没','无']:
                 #     chunk_wv = []
@@ -253,7 +256,7 @@ class PredModel:
                 chunk_matrix = np.reshape(chunk_wv, [len(chunk_wv), dim])
                 chunk_sim = np.dot(chunk_matrix, symp_wv.T)
                 chunk_std = np.std(chunk_sim, axis=1)
-                chunk_max = np.max(chunk_sim, axis = 1)
+                chunk_max = np.max(chunk_sim, axis=1)
 
                 for jj in range(len(chunk_std)):
                     if chunk_std[len(chunk_std) - 1 - jj] < self.th_word_mask or chunk_max[
@@ -264,28 +267,24 @@ class PredModel:
 
                     else:
 
-                        chunk_wv[len(chunk_std) - 1 - jj] = coef * chunk_wv[len(chunk_std) - 1 - jj]
+                        chunk_wv[len(chunk_std) - 1 - jj] = coef[len(chunk_std) - 1 - jj] * chunk_wv[
+                            len(chunk_std) - 1 - jj]
                 if len(word_bag_tmp) > 0:
                     word_bag.append(word_bag_tmp)
                     word_vec_bag.append(chunk_wv)
                     sent_vec.append(self.unitvec(np.sum(chunk_wv, axis=0)))
 
-
-
-
-
         if len(sent_vec) == 0:
-
             # print(input)
             # print('没有找到匹配的疾病，请具体描述您的症状')
             # assert(False)
             return None, None, None, None, None
 
         # Dis_vec_HX = self.unitvec(np.sum(symp_wv,axis =0))
-        #Dis_vec_all = np.reshape(Dis_mask_vec.append(Dis_vec_HX),[4,dim])
+        # Dis_vec_all = np.reshape(Dis_mask_vec.append(Dis_vec_HX),[4,dim])
 
         input_vec = self.unitvec(np.sum(sent_vec, axis=0))
-        #input_vec = np.reshape(input_vec, [1, dim])
+        # input_vec = np.reshape(input_vec, [1, dim])
         # symtom_dis = np.dot(input_vec, symp_wv.T)
         # name_dis = np.dot(input_vec, disease_name_vec.T)[0]
         # combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]*mask_layer*mask_vec[0]
@@ -293,29 +292,26 @@ class PredModel:
         # val, pos = self.top_k(combined_dis, k_disease)
         combined_dis = []
         for ll in range(len(sent_vec)):
-            dis_tmp = np.reshape(sent_vec[ll],[1,dim])
+            dis_tmp = np.reshape(sent_vec[ll], [1, dim])
             symtom_dis = np.dot(dis_tmp, symp_wv.T)
             name_dis = np.dot(dis_tmp, disease_name_vec.T)[0]
             name_dis = name_dis * name_dis
             combined_dis_tmp = (self.name_weight * name_dis * 2 + (1 - self.name_weight) * symtom_dis)[0] * mask_layer * \
                                mask_vec[0]
             combined_dis.append(combined_dis_tmp * combined_dis_tmp)
-        combined_dis_out = np.sqrt(np.mean(combined_dis, axis = 0))
+        combined_dis_out = np.sqrt(np.mean(combined_dis, axis=0))
         val, pos = self.top_k(combined_dis_out, k_disease)
         diff = -100 * np.diff(val)
         x_stop = k_disease
         for ii in range(len(diff)):
 
-            if diff[ii] > 30 and val[0]>0.84:
-
+            if diff[ii] > 30 and val[0] > 0.84:
                 x_stop = ii
 
                 break
 
         pos = pos[0:x_stop + 1]
-        val = val[0:x_stop+1]
-
-
+        val = val[0:x_stop + 1]
 
         # coeff_mask = np.zeros([1,len(pos)])
         # coeff_mask[0][pos[0:10]] = 1
@@ -364,7 +360,7 @@ class PredModel:
             vec_list_all[ii] = seg_vec_bag[index_sym_list]
 
         sent_vec = np.reshape(sent_vec, [len(sent_vec), dim])
-        Coeff_sim = np.dot(sent_vec, vec_list_all.T)  #每个段落和每个症状的匹配程度
+        Coeff_sim = np.dot(sent_vec, vec_list_all.T)  # 每个段落和每个症状的匹配程度
 
         symp_out = []
         Coeff_symp_out = []
@@ -387,5 +383,7 @@ class PredModel:
         K_symp = min([len(symp_out_fin), k_symptom])
         val_simp, pos_simp = self.top_k(Coeff_sim_out, K_symp)
         symp_out_fin = np.array(symp_out_fin)[pos_simp]
+
+        # return np.array(diseases)[pos], np.array(index)[pos], val, symp_out_fin, val_simp,word_bag
 
         return np.array(diseases)[pos], np.array(index)[pos], val, symp_out_fin, val_simp

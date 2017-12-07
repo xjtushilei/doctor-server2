@@ -348,7 +348,7 @@ if __name__ == '__main__':
     text_config = {
         "GREETING_PROMPT": "智能分诊助手帮您找到合适医生",
         "NO_1_PROMPT": "请问患者哪里不舒服?",
-        "NO_CONTINUE": 2,  # 0.85,
+        "NO_CONTINUE": 3,  # 0.85,
         "NO_2_PROMPT": "患者还有其他不适症状吗?",
         "NO_3_PROMPT": "患者还有其他不适症状吗?",
         "NO_SYMPTOMS_PROMPT": "以上都没有",

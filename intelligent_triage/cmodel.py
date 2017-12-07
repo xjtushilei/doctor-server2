@@ -294,18 +294,19 @@ class FindDoc:
                 self.update_session_log(session, all_log)
                 return "department", None, recommendation
 
-                # if gender == "male" and age >= 18:
-                #     all_log["info"].append("gender == 'male' and age >= 18,并且没有识别出是‘遗传咨询’,返回男科")
-                #     recommendation = {
-                #         "department":
-                #             {
-                #                 'name': "男科",
-                #                 'id': "5"
-                #             }
-                #     }
-                #     if debug:
-                #         recommendation["all_log"] = all_log
-                #     self.update_session_log(session, all_log)
+            # if gender == "male" and age >= 18:
+            #     all_log["info"].append("gender == 'male' and age >= 18,并且没有识别出是‘遗传咨询’,返回男科")
+            #     recommendation = {
+            #         "department":
+            #             {
+            #                 'name': "男科",
+            #         'id': "5"
+            #             }
+            #     }
+            #     if debug:
+            #         recommendation["all_log"] = all_log
+            #     self.update_session_log(session, all_log)
+
             if gender == "male" and age >= 18:
                 all_log["info"].append("gender == 'male' and age >= 18,并且没有识别出是‘遗传咨询’,返回男科")
                 self.update_session_log(session, all_log)
