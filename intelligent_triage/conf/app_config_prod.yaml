@@ -9,6 +9,7 @@ api:
 model:
     model_path: "/ceph/10646/intelligent_triage/model/model-webqa-hdf-2c.bin"
     seg_model_path: "/ceph/10646/intelligent_triage/model/cws.model"
+    pos_model_path: "/ceph/10646/intelligent_triage/model/pos.model"
     dict_var_path: "/ceph/10646/intelligent_triage/model/dict_var.npy"
     all_symptom_count_file_path: "/ceph/10646/intelligent_triage/model/all-symptom-count.data"
     disease_symptom_file_dir: "/ceph/10646/intelligent_triage/model/disease-symptom3.data"
