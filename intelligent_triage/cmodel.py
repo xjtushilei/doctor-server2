@@ -15,7 +15,9 @@ sws = "[！|“|”|‘|’|…|′|｜|、|，|。|〈|〉:：|《|》|「|」|
 
 
 class FindDoc:
-    def __init__(self, text_config, model_path='./model/model-wiki-hdf-5k.bin', seg_model_path="model/cws.model",
+    def __init__(self, text_config, model_path='./model/model-wiki-hdf-5k.bin',
+                 seg_model_path="./model/cws.model",
+                 pos_model_path="./model/pos.model",
                  dict_var_path="./model/dict_var.npy",
                  disease_symptom_file_dir="./model/disease-symptom3.data",
                  all_symptom_count_file_path="./model/all-symptom-count.data",
@@ -38,6 +40,12 @@ class FindDoc:
             self.seg_model_path = seg_model_path
         else:
             raise RuntimeError("cannot find model file: " + seg_model_path)
+
+        if os.path.isfile(pos_model_path):
+            self.pos_model_path = pos_model_path
+        else:
+            raise RuntimeError("cannot find model file: " + pos_model_path)
+
         if os.path.isfile(dict_var_path):
             self.dict_var_path = dict_var_path
         else:
@@ -73,7 +81,7 @@ class FindDoc:
         # 第x轮的"没有其他症状"的文案
         self.NO_SYMPTOMS_PROMPT = self.text_config["NO_SYMPTOMS_PROMPT"]
 
-        self.p_model = PredModel(self.seg_model_path, self.model_path, self.dict_var_path)
+        self.p_model = PredModel(self.seg_model_path, self.pos_model_path, self.model_path, self.dict_var_path)
         self.segmentor = self.p_model.segmentor
         self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
                                                                          self.all_symptom_count_file_path)
@@ -125,26 +133,12 @@ class FindDoc:
         return [item[0] for item in self.symptoms_dist[index]][0:5]
 
     # 医生模型的获取医生信息
-    def get_common_doctors(self, codes, probs, age, gender):
-        # get_common_doctors(['D39', 'L01'],[0.877,0.876,0.875,0.86],[0.557,0.556,0.555,0.55],gender='male',age=30)
+    def get_doctors(self, codes, probs, age, gender):
+        # get_doctors(['D39', 'L01'],[0.877,0.876,0.875,0.86],[0.557,0.556,0.555,0.55],gender='male',age=30)
         # sort input
         probs1 = [y for y, x in sorted(zip(probs, codes), reverse=True)]
         codes1 = [x for y, x in sorted(zip(probs, codes), reverse=True)]
         codes, probs = codes1, probs1
-
-        # ## filter codes with prob < 0.6
-        # if min(np.array(probs)) > 0.5 :
-        #     x_stop1 = np.where(np.array(probs) > 0.5)[0][-1]
-        # else :
-        #     x_stop1 = 0
-        # new_codes1 = codes1[:x_stop1+1]
-        # # new_probs1 = probs1[:x_stop1+1]
-
-        # ## filter codes with gradient > 0.01
-        # diff = -np.diff(new_probs)
-        # x_stop1 = np.where(np.array(diff) > 0.2)[0][-1]
-        # new_codes2 = new_codes1[:x_stop1+1]
-        # new_probs2 = new_probs1[:x_stop1+1]
 
         doctors_rankings = {}
         ## diff pediatric and gyna and general
@@ -168,7 +162,7 @@ class FindDoc:
 
         rankings1 = []
         ## Find 6 doctors for the first disease
-        if len(codes) > 1:
+        if len(codes) > 0:
             code = codes[0]
             if code == 'J11':
                 code = 'J06'
@@ -180,31 +174,6 @@ class FindDoc:
                 if (tem[0] not in set(rankings1)) and (j < 10):
                     rankings1.append(tem[0])
                     j += 1
-        # ## Find 6 doctors for the first disease
-        # if len(codes) > 1:
-        #     for code in codes[1:-1]:
-        #         if code == 'J11':
-        #             code = 'J06'
-        #         temp = doctors_rankings[code]
-        #         # temp = sorted(temp, key=lambda x: x[1] / (self.symptoms_rankings['doc_case_num'][x[0].strip()]),
-        #         #               reverse=True)
-        #         j = 0
-        #         for tem in temp:
-        #             if (tem[0] not in set(rankings1)) and (j < 5) and len(rankings1) < 10:
-        #                 rankings1.append(tem[0])
-        #                 j += 1
-
-        ## if no matched doctors, use general instead
-        # if len(rankings1) < 20:
-        #     if age <= 0.082:  # 3 months
-        #         rankings2 = sorted(self.symptoms_rankings['gp_nb'].items(), key=lambda x: x[1][0], reverse=True)
-        #     elif age <= 18:
-        #         rankings2 = sorted(self.symptoms_rankings['gp_ped'].items(), key=lambda x: x[1][0], reverse=True)
-        #     elif gender == 'female' and age > 18:
-        #         rankings2 = sorted(self.symptoms_rankings['gp_gyn'].items(), key=lambda x: x[1][0], reverse=True)
-        #     for item in rankings2:
-        #         if item[0] not in rankings1 and (len(rankings1) < 20):
-        #             rankings1.append(item[0])
 
         ## remove '院际会诊' and get id of doctor
         results = []
@@ -325,19 +294,25 @@ class FindDoc:
                 self.update_session_log(session, all_log)
                 return "department", None, recommendation
 
+                # if gender == "male" and age >= 18:
+                #     all_log["info"].append("gender == 'male' and age >= 18,并且没有识别出是‘遗传咨询’,返回男科")
+                #     recommendation = {
+                #         "department":
+                #             {
+                #                 'name': "男科",
+                #                 'id': "5"
+                #             }
+                #     }
+                #     if debug:
+                #         recommendation["all_log"] = all_log
+                #     self.update_session_log(session, all_log)
             if gender == "male" and age >= 18:
                 all_log["info"].append("gender == 'male' and age >= 18,并且没有识别出是‘遗传咨询’,返回男科")
-                recommendation = {
-                    "department":
-                        {
-                            'name': "男科",
-                            'id': "5"
-                        }
-                }
-                if debug:
-                    recommendation["all_log"] = all_log
                 self.update_session_log(session, all_log)
-                return "department", None, recommendation
+                recommendation = {
+                    "all_log": all_log
+                }
+                return "other", None, recommendation
 
             # 进入jingwei的正常判断
             all_log["jingwei首轮模型输入"] = ",".join(self.get_all_choice_from_session_questions(session))
@@ -372,7 +347,7 @@ class FindDoc:
             if probs[0] >= self.NO_CONTINUE:
                 all_log["医生模型输入"] = [codes, probs, age, gender]
                 recommendation = {
-                    "doctors": self.get_common_doctors(codes=codes, probs=probs, age=age, gender=gender)
+                    "doctors": self.get_doctors(codes=codes, probs=probs, age=age, gender=gender)
                 }
                 if debug:
                     recommendation["all_log"] = all_log
@@ -481,7 +456,7 @@ class FindDoc:
                 if probs[0] >= self.NO_CONTINUE:
                     all_log["医生模型输入"] = [codes, probs, age, gender]
                     recommendation = {
-                        "doctors": self.get_common_doctors(codes=codes, probs=probs, age=age, gender=gender)
+                        "doctors": self.get_doctors(codes=codes, probs=probs, age=age, gender=gender)
                     }
                     if debug:
                         recommendation["all_log"] = all_log
@@ -556,7 +531,7 @@ class FindDoc:
                 probs.append(v[1])
             all_log["医生模型输入"] = [codes, probs, age, gender]
             recommendation = {
-                "doctors": self.get_common_doctors(codes=codes, probs=probs, age=age, gender=gender)
+                "doctors": self.get_doctors(codes=codes, probs=probs, age=age, gender=gender)
             }
             if debug:
                 recommendation["all_log"] = all_log

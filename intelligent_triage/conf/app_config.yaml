@@ -9,6 +9,7 @@ api:
 model:
     model_path: "/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin"
     seg_model_path: "/tvm/mdata/jerryzchen/model/cws.model"
+    pos_model_path: "/tvm/mdata/jerryzchen/model/pos.model"
     dict_var_path: "/tvm/mdata/jerryzchen/model/dict_var.npy"
     all_symptom_count_file_path: "/tvm/mdata/jerryzchen/model/all-symptom-count.data"
     disease_symptom_file_dir: "/tvm/mdata/jerryzchen/model/disease-symptom3.data"

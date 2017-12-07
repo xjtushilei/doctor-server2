@@ -296,21 +296,13 @@ def find_doctors(req):
             'status': status,
             'recommendation': recommendation
         }
-        # 患者口述有疾病和症状，可以分到ICD10，但是不在医院诊疗范围,那么丽娟返回的doctor就是空
-        if status == "doctors" and len(recommendation["doctors"]) == 0:
-            userRes = {
-                'sessionId': sessionId,
-                'status': 'other',
-                'recommendation': {
-                    "other": STATUS_DOCTOR_0
-                }
-            }
         # 记录芒果db的日志
         info_log(sessionId=sessionId,
                  status=status,
                  recommendation=recommendation,
                  debug=debug,
                  session=session)
+        # 文件日志记录日志
 
     else:
         userRes = {
@@ -356,12 +348,11 @@ if __name__ == '__main__':
     text_config = {
         "GREETING_PROMPT": "智能分诊助手帮您找到合适医生",
         "NO_1_PROMPT": "请问患者哪里不舒服?",
-        "NO_CONTINUE": 0.85,
+        "NO_CONTINUE": 2,  # 0.85,
         "NO_2_PROMPT": "患者还有其他不适症状吗?",
         "NO_3_PROMPT": "患者还有其他不适症状吗?",
         "NO_SYMPTOMS_PROMPT": "以上都没有",
-        "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请咨询400-028-7028",
-        "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请咨询400-028-7028"
+        "STATUS_OTHER": "非常抱歉，暂不能为您找到合适的医生"
     }
 
     # text_config = load_config(src_path() + "/conf/text_config.yaml")
@@ -373,8 +364,6 @@ if __name__ == '__main__':
     NO_SYMPTOMS_PROMPT = text_config["NO_SYMPTOMS_PROMPT"]
     # other状态的文案
     STATUS_OTHER = text_config["STATUS_OTHER"]
-    # other状态的文案
-    STATUS_DOCTOR_0 = text_config["STATUS_DOCTOR_0"]
     ######################其他配置文件加载##################################
     # 获取配置文件
     # 获取命令行参数
@@ -406,6 +395,7 @@ if __name__ == '__main__':
     # 配置核心模型
     cm = FindDoc(model_path=app_config["model"]["model_path"],
                  seg_model_path=app_config["model"]["seg_model_path"],
+                 pos_model_path=app_config["model"]["pos_model_path"],
                  dict_var_path=app_config["model"]["dict_var_path"],
                  all_symptom_count_file_path=app_config["model"]["all_symptom_count_file_path"],
                  disease_symptom_file_dir=app_config["model"]["disease_symptom_file_dir"],
