@@ -296,6 +296,15 @@ def find_doctors(req):
             'status': status,
             'recommendation': recommendation
         }
+        # 患者口述有疾病和症状，可以分到ICD10，但是不在医院诊疗范围,那么丽娟返回的doctor就是空
+        if status == "doctors" and len(recommendation["doctors"]) == 0:
+            userRes = {
+                'sessionId': sessionId,
+                'status': 'other',
+                'recommendation': {
+                    "other": STATUS_DOCTOR_0
+                }
+            }
         # 记录芒果db的日志
         info_log(sessionId=sessionId,
                  status=status,
@@ -352,7 +361,8 @@ if __name__ == '__main__':
         "NO_2_PROMPT": "患者还有其他不适症状吗?",
         "NO_3_PROMPT": "患者还有其他不适症状吗?",
         "NO_SYMPTOMS_PROMPT": "以上都没有",
-        "STATUS_OTHER": "非常抱歉，暂不能为您找到合适的医生"
+        "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请咨询400-028-7028",
+        "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请咨询400-028-7028"
     }
 
     # text_config = load_config(src_path() + "/conf/text_config.yaml")
@@ -364,6 +374,8 @@ if __name__ == '__main__':
     NO_SYMPTOMS_PROMPT = text_config["NO_SYMPTOMS_PROMPT"]
     # other状态的文案
     STATUS_OTHER = text_config["STATUS_OTHER"]
+    # 不在就诊范围的文案
+    STATUS_DOCTOR_0 = text_config["STATUS_DOCTOR_0"]
     ######################其他配置文件加载##################################
     # 获取配置文件
     # 获取命令行参数
