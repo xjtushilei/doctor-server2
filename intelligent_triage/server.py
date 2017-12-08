@@ -47,12 +47,14 @@ def unknow_error(error):
 def do():
     log_info.setLevel(log_level)
     req = request.get_json()
+    # 检查上游数据是否为空
     if req is None:
         res = upstream_error("错误的请求: 无法解析JSON")
         res = json.dumps(res, ensure_ascii=False)
         log_error.info(res)
         return res, 400
 
+    # 检查上游发送的json字段是否全了
     isOk, res = request_sanity_check(req)
     if not isOk:
         res = json.dumps(res, ensure_ascii=False)
@@ -139,7 +141,6 @@ def create_client_response(code, sessionId, userRes, session):
             'content': json.dumps(userRes, ensure_ascii=False)
             # 'content': userRes  这里一定要这个格式。taf那边写死了
         },
-        # 'sessionDataUpdate': session
         'sessionDataUpdate': json.dumps(session, ensure_ascii=False)
         # 'content': userRes  这里一定要这个格式。taf那边写死了
     }
@@ -163,9 +164,9 @@ def create_session(req):
     dob = patient["dob"]
     gender = patient["sex"]
     if not (is_valid_date(dob) and len(dob) == 10):
-        return client_error(req, "400", "错误的请求: 错误的数据格式(出生年月格式不对)")
+        return client_error(req, 400, "错误的请求: 错误的数据格式(出生年月格式不对)")
     if not (gender == "male" or gender == "female"):
-        return client_error(req, "400", "错误的请求: 错误的数据格式(sex格式不对)")
+        return client_error(req, 400, "错误的请求: 错误的数据格式(sex格式不对)")
     age = get_age_from_dob(dob)
     symptoms = cm.get_common_symptoms(age, gender)
     if len(symptoms) >= 5:
