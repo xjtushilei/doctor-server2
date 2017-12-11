@@ -359,15 +359,16 @@ class FindDoc:
             # 记住jingwei的诊断结果,wangmeng下一轮使用
             session["diagnosis_disease_rate_list"] = diagnosis_disease_rate_list
             # wangmeng推荐算法
-            ner_words, resp = ner.post(choice_now, userID)
+            ner_words, resp, ner_time = ner.post(choice_now, userID)
             if "ner" not in session:
-
+                session["ner_time"] = [ner_time]
                 session["ner"] = ner_words
             else:
                 temp_ner = session["ner"]
                 temp_ner.extend(ner_words)
                 temp_ner = list(set(temp_ner))
                 session["ner"] = temp_ner
+                session["ner_time"].append(ner_time)
             all_log["nlu历史记录"] = session["ner"]
             all_log["nlu输入"] = choice_now
             all_log["nlu-response"] = resp
@@ -419,14 +420,16 @@ class FindDoc:
                 all_log["本轮为止,用户没有选择的所有症状"] = symptoms_no_chioce
                 all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
                     self.get_all_choice_from_session_questions(session))
-                ner_words, resp = ner.post(choice_now, userID)
+                ner_words, resp, ner_time = ner.post(choice_now, userID)
                 if "ner" not in session:
+                    session["ner_time"] = [ner_time]
                     session["ner"] = ner_words
                 else:
                     temp_ner = session["ner"]
                     temp_ner.extend(ner_words)
                     temp_ner = list(set(temp_ner))
                     session["ner"] = temp_ner
+                    session["ner_time"].append(ner_time)
                 all_log["nlu历史记录"] = session["ner"]
                 all_log["nlu输入"] = choice_now
                 all_log["nlu-response"] = resp
@@ -471,14 +474,17 @@ class FindDoc:
                 # jingwei识别的疾病记录到session中
                 session["diagnosis_disease_rate_list"] = diagnosis_disease_rate_list
 
-                ner_words, resp = ner.post(choice_now, userID)
+                ner_words, resp, ner_time = ner.post(choice_now, userID)
                 if "ner" not in session:
+                    session["ner_time"] = [ner_time]
                     session["ner"] = ner_words
                 else:
                     temp_ner = session["ner"]
                     temp_ner.extend(ner_words)
                     temp_ner = list(set(temp_ner))
                     session["ner"] = temp_ner
+                    session["ner_time"].append(ner_time)
+
                 all_log["nlu历史记录"] = session["ner"]
                 all_log["nlu输入"] = choice_now
                 all_log["nlu-response"] = resp

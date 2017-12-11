@@ -3,7 +3,6 @@
 import json
 import logging.config
 import os
-import random
 import re
 import sys
 import time
@@ -14,6 +13,7 @@ import yaml
 from flask import Flask
 from flask import request
 
+from Logstat import logstat
 from cmodel import FindDoc
 
 app = Flask(__name__)
@@ -25,26 +25,20 @@ def index():
     return "OK", 200
 
 
-# 内部测试错误api
-@app.route("/test/", methods=['Get'])
-def test():
-    if random.randint(1, 10) > 5:
-        1 / 0
-    return "内部错误测试api"
-
-
 @app.errorhandler(Exception)
 def unknow_error(error):
     """"处理所有未处理的异常"""
     req = request.get_json()
     log_unkonw_error.error(req)
     log_unkonw_error.exception(error)
+    log_stat_api("error", "error", "error", "error")
     return "内部错误", 500
 
 
 # main handler
 @app.route('/v1/engine', methods=['POST'])
 def do():
+    start_time = time.time()
     log_info.setLevel(log_level)
     req = request.get_json()
     # 检查上游数据是否为空
@@ -71,6 +65,7 @@ def do():
     elif url.path == CLIENT_API_SESSIONS:
         res = create_session(req)
         res = json.dumps(res, ensure_ascii=False)
+        log_stat_api("1", str(1000 * (time.time() - start_time)).split('.')[0], "session", "session")
     elif url.path == CLIENT_API_DOCTORS:
         res = find_doctors(req)
         res = json.dumps(res, ensure_ascii=False)
@@ -202,6 +197,12 @@ def update_session(session, seqno, choice):
     return session
 
 
+def log_stat_api(api_status, time, status, ner_time):
+    if logstat_active:
+        slog.send('find_doctor_python_server',
+                  str(api_status) + '|' + str(time) + '|' + str(status) + '|' + str(ner_time))
+
+
 def info_log(sessionId, status, recommendation, debug, session):
     if "patient" in session:
         patient = session['patient']
@@ -219,6 +220,10 @@ def info_log(sessionId, status, recommendation, debug, session):
         all_log = session["all_log"]
     else:
         all_log = []
+    if "ner_time" in session:
+        ner_time = session["ner_time"]
+    else:
+        ner_time = []
     data = {
         "sessionId": sessionId,
         "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
@@ -228,7 +233,8 @@ def info_log(sessionId, status, recommendation, debug, session):
         "recommendation": recommendation,
         "questions": questions,
         "all_log": all_log,
-        "debug": debug
+        "debug": debug,
+        "ner_time": ner_time
     }
     session["log_data"] = data
     # 本地文件日志
@@ -254,6 +260,7 @@ def xss_defense_check(input):
 
 
 def find_doctors(req):
+    start_time = time.time()
     sessionId = req["sessionId"]
     requestUrl = req["requestUrl"]
     url = urlparse(requestUrl)
@@ -328,11 +335,15 @@ def find_doctors(req):
                  status=status,
                  recommendation={},
                  debug=debug,
-                 session=session
-                 )
+                 session=session)
         if debug:
             userRes["debug"] = recommendation
     res = create_client_response(200, sessionId, userRes, session)
+    if "ner_time" in session and len(session["ner_time"]) > 0:
+        ner_time = session["ner_time"][-1]
+    else:
+        ner_time = 0
+    log_stat_api("1", str(1000 * (time.time() - start_time)).split('.')[0], userRes["status"], ner_time)
     return res
 
 
@@ -390,6 +401,12 @@ if __name__ == '__main__':
         log_config_path = src_path() + "/conf/logger.conf"
     # 获取yaml配置文件
     app_config = load_config(config_path)
+    ############################启用上报日志############################
+    if "logstat" in app_config and app_config["logstat"] == False:
+        logstat_active = False
+    else:
+        logstat_active = True
+        slog = logstat()
     ############################API名字############################
     CLIENT_API_SESSIONS = app_config["api"]["CLIENT_API_SESSIONS"]
     CLIENT_API_DOCTORS = app_config["api"]["CLIENT_API_DOCTORS"]
