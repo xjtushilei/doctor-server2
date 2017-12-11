@@ -250,6 +250,7 @@ class FindDoc:
 
     # 核心模型、主要的逻辑实现
     def find_doctors(self, session, seqno, choice_now, age, gender, debug=False):
+
         # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
         choice_now = choice_now.replace(self.NO_SYMPTOMS_PROMPT, " ")
         if "cardNo" in session["patient"]:

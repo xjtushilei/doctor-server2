@@ -151,6 +151,7 @@ def is_valid_date(strdate):
 
 
 def create_session(req):
+    start_time = time.time()
     log_info.info(json.dumps(req, ensure_ascii=False))
     sessionId = req["sessionId"]
     requestBody = req["requestBody"]
@@ -176,6 +177,8 @@ def create_session(req):
     session['patient'] = patient
     session['wechatOpenId'] = clientSessionReq["wechatOpenId"]
     session['questions'] = [question]
+    session["main_time"] = [str(1000 * (time.time() - start_time)).split('.')[0] + '-session-0']
+
     res = create_client_response(200, sessionId, userRes, session)
     return res
 
@@ -224,6 +227,10 @@ def info_log(sessionId, status, recommendation, debug, session):
         ner_time = session["ner_time"]
     else:
         ner_time = []
+    if "main_time" in session:
+        main_time = session["main_time"]
+    else:
+        main_time = []
     data = {
         "sessionId": sessionId,
         "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
@@ -234,7 +241,8 @@ def info_log(sessionId, status, recommendation, debug, session):
         "questions": questions,
         "all_log": all_log,
         "debug": debug,
-        "ner_time": ner_time
+        "ner_time": ner_time,
+        "main_time": main_time
     }
     session["log_data"] = data
     # 本地文件日志
@@ -291,6 +299,9 @@ def find_doctors(req):
     sex = session["patient"]["sex"]
     age = get_age_from_dob(dob)
     status, question, recommendation = cm.find_doctors(session, seqno, choice, age, sex, debug)
+    # 统计主要逻辑的运行时间
+    session["main_time"].append(str(1000 * (time.time() - start_time)).split('.')[0] + '-' + status + '-' + str(seqno))
+
     if status == "followup":
         userRes = {
             'sessionId': sessionId,
