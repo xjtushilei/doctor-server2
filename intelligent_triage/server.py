@@ -202,8 +202,11 @@ def update_session(session, seqno, choice):
 
 def log_stat_api(api_status, time, status, ner_time):
     if logstat_active:
-        slog.send('find_doctor_python_server',
-                  str(api_status) + '|' + str(time) + '|' + str(status) + '|' + str(ner_time))
+        if log_model_test_active:
+            log_server_name = 'mig_python_server_find_doctor_test'
+        else:
+            log_server_name = 'mig_python_server_find_doctor'
+        slog.send(log_server_name, str(api_status) + '|' + str(time) + '|' + str(status) + '|' + str(ner_time))
 
 
 def info_log(sessionId, status, recommendation, debug, session):
@@ -412,6 +415,11 @@ if __name__ == '__main__':
         log_config_path = src_path() + "/conf/logger.conf"
     # 获取yaml配置文件
     app_config = load_config(config_path)
+    ###########################检测测试服还是正式服############################
+    if "model" in app_config["app"] and app_config["app"]["model"] == "test":
+        log_model_test_active = True
+    else:
+        log_model_test_active = False
     ############################启用上报日志############################
     if "logstat" in app_config and app_config["logstat"] == False:
         logstat_active = False
