@@ -311,7 +311,7 @@ class PredModel:
         x_stop = k_disease
         for ii in range(len(diff)):
 
-            if diff[ii] > 30 and val[0]>0.84:
+            if diff[ii] > 80 and val[0] > 0.84:
 
                 x_stop = ii
 
@@ -390,7 +390,6 @@ class PredModel:
             Coeff_sim_out.append(Coeff_symp_out[index_sym_out_list])
 
         K_symp = min([len(symp_out_fin), k_symptom])
-        print((Coeff_sim_out, K_symp))
         if Coeff_sim_out == []:
             return None, None, None, None, None
         val_simp, pos_simp = self.top_k(Coeff_sim_out, K_symp)
