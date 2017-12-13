@@ -14,8 +14,10 @@ class PredModel:
 
 
 
-    def __init__(self, seg_model_path="./model/cws.model", pos_model_path="./model/pos.model",
-                 w2v_model_path="./model/model-webqa-hdf-2c.bin", dict_var_path="./val/dict_var.npy"):
+    def __init__(self, seg_model_path="/tvm/mdata/jerryzchen/model/cws.model",
+                 pos_model_path="/tvm/mdata/jerryzchen/model/pos.model",
+                 w2v_model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
+                 dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy"):
         self.segmentor = Segmentor()
         self.postagger = Postagger()
         self.segmentor.load(seg_model_path)
@@ -388,6 +390,9 @@ class PredModel:
             Coeff_sim_out.append(Coeff_symp_out[index_sym_out_list])
 
         K_symp = min([len(symp_out_fin), k_symptom])
+        print((Coeff_sim_out, K_symp))
+        if Coeff_sim_out == []:
+            return None, None, None, None, None
         val_simp, pos_simp = self.top_k(Coeff_sim_out, K_symp)
         symp_out_fin = np.array(symp_out_fin)[pos_simp]
 
