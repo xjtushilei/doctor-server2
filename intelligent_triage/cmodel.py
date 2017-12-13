@@ -162,7 +162,7 @@ class FindDoc:
 
         rankings1 = []
         ## Find 6 doctors for the first disease
-        if len(codes) > 0:
+        if (len(codes) > 0) and (probs[0] >= 0.7):
             code = codes[0]
             if code == 'J11':
                 code = 'J06'
