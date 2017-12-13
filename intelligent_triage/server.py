@@ -206,7 +206,11 @@ def log_stat_api(api_status, time, status, ner_time):
             log_server_name = 'mig_python_server_find_doctor_test'
         else:
             log_server_name = 'mig_python_server_find_doctor'
-        slog.send(log_server_name, str(api_status) + '|' + str(time) + '|' + str(status) + '|' + str(ner_time))
+        try:
+            slog.send(log_server_name, str(api_status) + '|' + str(time) + '|' + str(status) + '|' + str(ner_time))
+        except:
+            log_error.info(
+                "发送监控日志网络传输错误：" + str(api_status) + '|' + str(time) + '|' + str(status) + '|' + str(ner_time))
 
 
 def info_log(sessionId, status, recommendation, debug, session):
