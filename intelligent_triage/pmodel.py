@@ -389,6 +389,8 @@ class PredModel:
             Coeff_sim_out.append(Coeff_symp_out[index_sym_out_list])
 
         K_symp = min([len(symp_out_fin), k_symptom])
+        if Coeff_sim_out == []:
+            return None, None, None, None, None
         val_simp, pos_simp = self.top_k(Coeff_sim_out, K_symp)
         symp_out_fin = np.array(symp_out_fin)[pos_simp]
 
