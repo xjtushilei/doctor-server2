@@ -452,9 +452,20 @@ class FindDoc:
                     age=age,
                     gender=gender
                 )
+
+                # 如果jingwei返回了空,则表示输入的东西无意义,直接返回
+                if diagnosis_disease_rate_list is None:
+                    all_log["info"].append("jingwei识别出输入的东西无意义,直接返回")
+                    self.update_session_log(session, all_log)
+                    recommendation = {
+                        "all_log": all_log
+                    }
+                    return "other", None, recommendation
+
                 # 如果阈值大于 NO_CONTINUE ,则直接返回诊断结果,不进行下一轮
                 codes = []
                 probs = []
+
                 for v in diagnosis_disease_rate_list:
                     codes.append(v[2])
                     probs.append(v[1])
@@ -530,6 +541,15 @@ class FindDoc:
 
             all_log["jingwei最终识别疾病,给医生模型进行获取医生"] = diagnosis_disease_rate_list
             all_log["jingwei最终识别症状（没有使用）"] = input_list
+
+            # 如果jingwei返回了空,则表示输入的东西无意义,直接返回
+            if diagnosis_disease_rate_list is None:
+                all_log["info"].append("jingwei识别出输入的东西无意义,直接返回")
+                self.update_session_log(session, all_log)
+                recommendation = {
+                    "all_log": all_log
+                }
+                return "other", None, recommendation
 
             # 疾病的icd10id和概率
             codes = []
