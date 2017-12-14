@@ -14,10 +14,8 @@ class PredModel:
 
 
 
-    def __init__(self, seg_model_path="/tvm/mdata/jerryzchen/model/cws.model",
-                 pos_model_path="/tvm/mdata/jerryzchen/model/pos.model",
-                 w2v_model_path="/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
-                 dict_var_path="/tvm/mdata/jerryzchen/model/dict_var.npy"):
+    def __init__(self, seg_model_path="./model/cws.model", pos_model_path="./model/pos.model",
+                 w2v_model_path="./model/model-webqa-hdf-2c.bin", dict_var_path="./val/dict_var.npy"):
         self.segmentor = Segmentor()
         self.postagger = Postagger()
         self.segmentor.load(seg_model_path)
@@ -26,7 +24,7 @@ class PredModel:
         self.dict = np.load(dict_var_path)
         self.prog = re.compile("[\.|\,|\?|\!|。|，|？|！|\s]")
         self.wv_dim = 250
-        self.name_weight = 0.5
+        self.name_weight = 0.1
         self.th_word_mask = 0.04
 
 
@@ -221,7 +219,7 @@ class PredModel:
 
         dim = self.wv_dim
         sent_vec = []
-        word_bag = []
+        word_bag=[]
         word_vec_bag=[]
 
         for chunk in self.split_into_chunks(input):
@@ -286,7 +284,7 @@ class PredModel:
             # assert(False)
             return None, None, None, None, None
 
-        # Dis_vec_HX = self.unitvec(np.sum(symp_wv,axis =0))
+        #Dis_vec_HX = self.unitvec(np.sum(symp_wv,axis =0))
         #Dis_vec_all = np.reshape(Dis_mask_vec.append(Dis_vec_HX),[4,dim])
 
         input_vec = self.unitvec(np.sum(sent_vec, axis=0))
@@ -302,8 +300,9 @@ class PredModel:
             symtom_dis = np.dot(dis_tmp, symp_wv.T)
             name_dis = np.dot(dis_tmp, disease_name_vec.T)[0]
             name_dis = name_dis * name_dis
-            combined_dis_tmp = (self.name_weight * name_dis * 2 + (1 - self.name_weight) * symtom_dis)[0] * mask_layer * \
+            combined_dis_tmp = (self.name_weight * name_dis + (1 - self.name_weight) * symtom_dis)[0] * mask_layer * \
                                mask_vec[0]
+            # combined_dis_tmp = symtom_dis[0] * mask_layer * mask_vec[0]
             combined_dis.append(combined_dis_tmp * combined_dis_tmp)
         combined_dis_out = np.sqrt(np.mean(combined_dis, axis = 0))
         val, pos = self.top_k(combined_dis_out, k_disease)
@@ -311,13 +310,13 @@ class PredModel:
         x_stop = k_disease
         for ii in range(len(diff)):
 
-            if diff[ii] > 80 and val[0] > 0.84:
+            if diff[ii] > 200 and val[0]>0.84:
 
                 x_stop = ii
 
                 break
 
-        pos = pos[0:x_stop + 1]
+        pos = pos[0:x_stop+1]
         val = val[0:x_stop+1]
 
 
@@ -390,9 +389,10 @@ class PredModel:
             Coeff_sim_out.append(Coeff_symp_out[index_sym_out_list])
 
         K_symp = min([len(symp_out_fin), k_symptom])
-        if Coeff_sim_out == []:
-            return None, None, None, None, None
         val_simp, pos_simp = self.top_k(Coeff_sim_out, K_symp)
         symp_out_fin = np.array(symp_out_fin)[pos_simp]
 
-        return np.array(diseases)[pos], np.array(index)[pos], val, symp_out_fin, val_simp
+        if val[0] < 0.5:
+            return None, None, None, None, None
+        else:
+            return np.array(diseases)[pos], np.array(index)[pos], val, symp_out_fin, val_simp

@@ -5,10 +5,10 @@ import logging.config
 import os
 import re
 import sys
-import time
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 
+import time
 import yaml
 from flask import Flask
 from flask import request
@@ -391,8 +391,8 @@ if __name__ == '__main__':
         "NO_2_PROMPT": "患者还有其他不适症状吗?",
         "NO_3_PROMPT": "患者还有其他不适症状吗?",
         "NO_SYMPTOMS_PROMPT": "以上都没有",
-        "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请咨询400-028-7028",
-        "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请咨询400-028-7028",  # ，如需请咨询400-028-7028"
+        "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请咨询 400-028-7028",
+        "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请咨询 400-028-7028",  # ，如需请咨询400-028-7028"
     }
 
     # text_config = load_config(src_path() + "/conf/text_config.yaml")
