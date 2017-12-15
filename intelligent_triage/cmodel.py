@@ -235,10 +235,7 @@ class FindDoc:
             for log in session["all_log"]:
                 if log["seqno"] < seqno:
                     temp_all_log.append(log)
-                elif log["seqno"] == seqno:
-                    temp_all_log.append(all_log)
-                elif log["seqno"] == seqno + 1:
-                    temp_all_log.append(all_log)
+            temp_all_log.append(all_log)
             session["all_log"] = temp_all_log
 
     def get_all_choice_from_session_questions(self, session):
