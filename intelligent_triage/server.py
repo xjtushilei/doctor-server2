@@ -13,7 +13,7 @@ import yaml
 from flask import Flask
 from flask import request
 
-from Logstat import logstat
+from logstat import logstat
 from cmodel import FindDoc
 
 app = Flask(__name__)
