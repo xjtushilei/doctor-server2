@@ -1,0 +1,49 @@
+{
+  "app": {
+    "debug": false,
+    "host": "0.0.0.0",
+    "port": 8000,
+    "threaded": true
+  },
+  "model_file": {
+    "hospital": {
+      "1": "path1",
+      "2": "path2"
+    },
+    "other": {
+      "fasttext_model": "/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
+      "seg_model": "/tvm/mdata/jerryzchen/model/cws.model",
+      "pos_model": "/tvm/mdata/jerryzchen/model/pos.model",
+      "all_symptom_count_file_path": "/tvm/mdata/jerryzchen/model/all-symptom-count.data",
+      "disease_symptom_file_dir": "/tvm/mdata/jerryzchen/model/disease-symptom3.data",
+      "symptoms_distributions_file_dir": "/tvm/mdata/jerryzchen/model/symptoms_distributions.json"
+    }
+  },
+  "text": {
+    "GREETING_PROMPT": "智能分诊助手帮您找到合适医生",
+    "NO_1_PROMPT": "请问患者哪里不舒服?",
+    "NO_CONTINUE": 3,
+    "NO_2_PROMPT": "患者还有其他不适症状吗?",
+    "NO_3_PROMPT": "患者还有其他不适症状吗?",
+    "NO_SYMPTOMS_PROMPT": "以上都没有",
+    "NO_SYMPTOMS_PROMPT_LIST": [
+      "以上都没有",
+      "没有了",
+      "没了"
+    ],
+    "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请咨询 400-028-7028",
+    "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请咨询 400-028-7028"
+  },
+  "DB": {
+    "redis": {
+      "host": "127.0.0.1",
+      "port": 6379,
+      "DBID": 0
+    },
+    "mongodb": {
+      "host": "127.0.0.1",
+      "port": 27017,
+      "db_name": "intelligent_triage_record_test"
+    }
+  }
+}
