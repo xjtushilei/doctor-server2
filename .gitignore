@@ -84,7 +84,8 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# pyenv
+# pyenv*.log
+
 .python-version
 
 # celery beat schedule file
@@ -114,5 +115,4 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-
 

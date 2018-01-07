@@ -366,7 +366,7 @@ class Pipeline:
                 if probs[0] >= self.app_config["text"]["NO_CONTINUE"]:
                     all_log["医生模型输入"] = [codes, probs, age, gender]
                     recommendation = {
-                        "doctors": self.get_doctors(codes=codes, probs=probs, age=age, gender=gender)
+                        "doctors": get_doctors(codes=codes, probs=probs, age=age, gender=gender)
                     }
                     if debug:
                         recommendation["all_log"] = all_log

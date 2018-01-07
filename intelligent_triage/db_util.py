@@ -20,6 +20,9 @@ class RedisCache(object):
             port=app_config["DB"]["redis"]["port"],
             db=app_config["DB"]["redis"]["DBID"])
 
+    def get_connection(self):
+        return self._connection
+
     def set_data(self, key, value):
         """
         set data with (key, value)
@@ -50,7 +53,6 @@ class Mongo:
             self.recordCollection = self.db.get_collection("record")
         else:
             self.recordCollection = self.db.get_collection("record_test")
-
         if prod:
             self.info_log = self.db.get_collection("info")
         else:
@@ -77,3 +79,4 @@ class Mongo:
 
     def unknow_error(self, item):
         self.unknow_error_log.insert(item)
+
