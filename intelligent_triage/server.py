@@ -168,8 +168,7 @@ def find_doctors():
             'question': question
         }
         session["questions"].append(question)
-        mongo.info({"type": "followup", "sessionId": sessionId, "session": session,
-                    "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
+
     elif status == "doctors" or status == "department":
         userRes = {
             'sessionId': sessionId,
@@ -185,10 +184,6 @@ def find_doctors():
                     "other": app_config["text"]["STATUS_DOCTOR_0"]
                 }
             }
-        mongo.info({"type": "doctors_or_department", "sessionId": sessionId, "session": session,
-                    "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
-
-
     else:
         userRes = {
             'sessionId': sessionId,
@@ -199,9 +194,10 @@ def find_doctors():
         }
         if debug:
             userRes["debug"] = recommendation
-        mongo.info({"type": "other", "sessionId": sessionId, "session": session,
-                    "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
 
+    mongo.info({"type": status, "sessionId": sessionId, "url": request.url,
+                "params": params, "session": session,
+                "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
     dump_session(sessionId, session)
     res = jsonify(userRes)
     return res
