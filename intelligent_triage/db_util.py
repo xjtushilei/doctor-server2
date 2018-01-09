@@ -15,10 +15,17 @@ class RedisCache(object):
 
     @staticmethod
     def create_pool(app_config):
-        RedisCache.pool = redis.ConnectionPool(
-            host=app_config["DB"]["redis"]["host"],
-            port=app_config["DB"]["redis"]["port"],
-            db=app_config["DB"]["redis"]["DBID"])
+        if app_config["DB"]["redis"]["auth"]:
+            RedisCache.pool = redis.ConnectionPool(
+                host=app_config["DB"]["redis"]["host"],
+                port=app_config["DB"]["redis"]["port"],
+                db=app_config["DB"]["redis"]["DBID"],
+                password=app_config["DB"]["redis"]["passwd"])
+        else:
+            RedisCache.pool = redis.ConnectionPool(
+                host=app_config["DB"]["redis"]["host"],
+                port=app_config["DB"]["redis"]["port"],
+                db=app_config["DB"]["redis"]["DBID"])
 
     def get_connection(self):
         return self._connection
@@ -48,6 +55,9 @@ class Mongo:
         self.client = MongoClient(host=app_config["DB"]["mongodb"]["host"], port=app_config["DB"]["mongodb"]["port"])
         # 选择相应的数据库名称
         self.db = self.client.get_database(app_config["DB"]["mongodb"]["db_name"])
+        if app_config["DB"]["mongodb"]["auth"]:
+            self.db.authenticate(name=app_config["DB"]["mongodb"]["user"],
+                                 password=app_config["DB"]["mongodb"]["passwd"])
 
         if prod:
             self.recordCollection = self.db.get_collection("record")
@@ -79,4 +89,3 @@ class Mongo:
 
     def unknow_error(self, item):
         self.unknow_error_log.insert(item)
-

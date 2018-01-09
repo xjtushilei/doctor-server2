@@ -36,16 +36,19 @@
   },
   "DB": {
     "redis": {
-      "host": "127.0.0.1",
+      "host": "172.27.0.10",
       "port": 6379,
       "DBID": 0,
-      "auth":false
+      "passwd": "S2k56dLhAahQtYZN",
+      "auth": true
     },
     "mongodb": {
-      "host": "127.0.0.1",
+      "host": "172.27.0.4",
       "port": 27017,
       "db_name": "intelligent_triage_record_test",
-      "auth": false
+      "user": "mongouser",
+      "passwd": "H4wU6jxzMfH9Gt9o",
+      "auth": true
     }
   }
 }
