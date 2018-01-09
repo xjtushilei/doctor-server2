@@ -54,10 +54,13 @@ class Mongo:
         # 建立数据库连接
         self.client = MongoClient(host=app_config["DB"]["mongodb"]["host"], port=app_config["DB"]["mongodb"]["port"])
         # 选择相应的数据库名称
-        self.db = self.client.get_database(app_config["DB"]["mongodb"]["db_name"])
         if app_config["DB"]["mongodb"]["auth"]:
+            self.db = self.client.get_database("admin")
             self.db.authenticate(name=app_config["DB"]["mongodb"]["user"],
                                  password=app_config["DB"]["mongodb"]["passwd"])
+            self.db = self.client.get_database(app_config["DB"]["mongodb"]["db_name"])
+        else:
+            self.db = self.client.get_database(app_config["DB"]["mongodb"]["db_name"])
 
         if prod:
             self.recordCollection = self.db.get_collection("record")
