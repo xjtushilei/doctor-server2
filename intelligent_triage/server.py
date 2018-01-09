@@ -35,7 +35,7 @@ def index():
 def test():
     if random.randint(1, 10) > 5:
         1 / 0
-    return "内部错误测试api"
+    return "内部错误测试api随机通过,没有错误！"
 
 
 @app.errorhandler(Exception)
