@@ -5,6 +5,7 @@ import logging.config
 import os
 import random
 import re
+import socket
 import sys
 import time
 import traceback
@@ -30,8 +31,25 @@ def index():
     return "OK", 200
 
 
+# 获取本机内网ip
+def get_host_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
+
+
+@app.route('/load-balance')
+def load_balance():
+    userIp = request.remote_addr
+    return "用户ip:" + str(userIp) + "-内网ip:" + str(get_host_ip()), 200
+
+
 # 内部测试错误api
-@app.route("/test/", methods=['Get'])
+@app.route("/test-error/", methods=['Get'])
 def test():
     if random.randint(1, 10) > 5:
         1 / 0
@@ -48,11 +66,14 @@ def unknow_error(error):
         "traceback": exstr,
         "error": str(error)
     }
+
+    # 先在本地记录日志，放置mongo挂掉记不住日志
+    log_unkonw_error.error(req)
+    log_unkonw_error.exception(error)
+
     mongo.unknow_error(
         {"type": "unknow_error", "code": 500, "error_data": error_data, "url": request.url,
          "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
-    log_unkonw_error.error(req)
-    log_unkonw_error.exception(error)
     return "内部错误", 500
 
 

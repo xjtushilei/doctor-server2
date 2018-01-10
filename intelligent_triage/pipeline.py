@@ -57,7 +57,7 @@ class Pipeline:
         with open(self.symptoms_distributions_file_dir, 'r', encoding='utf-8') as fp:
             self.symptoms_dist = json.load(fp)
         self.p_model = PredModel(self.seg_model_dir, self.pos_model_dir, self.fasttext_model_dir,
-                                 "/tvm/mdata/jerryzchen/model/dict_var.npy")
+                                 "/cfs/finddoctor_model/dict_var.npy")
         self.segmentor = self.p_model.segmentor
         self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
                                                                          self.all_symptom_count_file_path)
@@ -157,7 +157,8 @@ class Pipeline:
     def process(self, session, seqno, choice_now, age, gender, debug=False):
 
         # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
-        choice_now = choice_now.replace(self.app_config["text"]["NO_SYMPTOMS_PROMPT"], " ")
+        for prompt in self.app_config["text"]["NO_SYMPTOMS_PROMPT_LIST"]:
+            choice_now = choice_now.replace(prompt, " ")
         if "cardNo" in session["patient"]:
             userID = session["patient"]["cardNo"]
         else:

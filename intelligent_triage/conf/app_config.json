@@ -11,12 +11,12 @@
       "2": "path2"
     },
     "other": {
-      "fasttext_model": "/tvm/mdata/jerryzchen/model/model-webqa-hdf-2c.bin",
-      "seg_model": "/tvm/mdata/jerryzchen/model/cws.model",
-      "pos_model": "/tvm/mdata/jerryzchen/model/pos.model",
-      "all_symptom_count_file_path": "/tvm/mdata/jerryzchen/model/all-symptom-count.data",
-      "disease_symptom_file_dir": "/tvm/mdata/jerryzchen/model/disease-symptom3.data",
-      "symptoms_distributions_file_dir": "/tvm/mdata/jerryzchen/model/symptoms_distributions.json"
+      "fasttext_model": "/cfs/finddoctor_model/model-webqa-hdf-2c.bin",
+      "seg_model": "/cfs/finddoctor_model/cws.model",
+      "pos_model": "/cfs/finddoctor_model/pos.model",
+      "all_symptom_count_file_path": "/cfs/finddoctor_model/all-symptom-count.data",
+      "disease_symptom_file_dir": "/cfs/finddoctor_model/disease-symptom3.data",
+      "symptoms_distributions_file_dir": "/cfs/finddoctor_model/symptoms_distributions.json"
     }
   },
   "text": {
@@ -39,12 +39,12 @@
       "host": "127.0.0.1",
       "port": 6379,
       "DBID": 0,
-      "auth":false
+      "auth": false
     },
     "mongodb": {
       "host": "127.0.0.1",
       "port": 27017,
-      "db_name": "intelligent_triage_record_test",
+      "db_name": "intelligent_triage_record",
       "auth": false
     }
   }
