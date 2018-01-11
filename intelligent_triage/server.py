@@ -45,7 +45,7 @@ def get_host_ip():
 @app.route('/load-balance')
 def load_balance():
     userIp = request.remote_addr
-    return "用户ip:" + str(userIp) + "-内网ip:" + str(get_host_ip()), 200
+    return "用户ip:" + str(userIp) + "-后台服务标识码:" + str(get_host_ip()).split(".")[3], 200
 
 
 # 内部测试错误api
@@ -246,7 +246,7 @@ def find_doctor_data_check(request):
     if not ("clientId" in query_params and "orgId" in query_params and "mobimedical" in query_params["clientId"]):
         return False, error("未授权用户"), 401
     if not ("sessionId" in query_params and
-            "seqno" in query_params and "query" in query_params and len(query_params["seqno"]) > 0):
+                    "seqno" in query_params and "query" in query_params and len(query_params["seqno"]) > 0):
         return False, error("错误的请求: url中没有包含choice或query或seqno"), 400
     return True, None, None
 
@@ -399,14 +399,14 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         config_path = sys.argv[1]
     else:
-        if not os.path.exists("log/"):
-            os.makedirs("log/")
         config_path = src_path() + "/conf/app_config.json"
     # 获取yaml配置文件
     app_config = load_config(config_path)
 
     ################################LOG日志文件#######################
     # 获取log配置文件
+    if not os.path.exists("log/"):
+        os.makedirs("log/")
     log_config_path = src_path() + "/conf/logger.conf"
     logging.config.fileConfig(log_config_path)
     # 通用日志
