@@ -57,7 +57,7 @@ class Pipeline:
         with open(self.symptoms_distributions_file_dir, 'r', encoding='utf-8') as fp:
             self.symptoms_dist = json.load(fp)
         self.p_model = PredModel(self.seg_model_dir, self.pos_model_dir, self.fasttext_model_dir,
-                                 "/cfs/finddoctor_model/dict_var.npy")
+                                 "/mdata/finddoctor/model/dict_var.npy")
         self.segmentor = self.p_model.segmentor
         self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
                                                                          self.all_symptom_count_file_path)

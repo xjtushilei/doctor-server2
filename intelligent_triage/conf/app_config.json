@@ -11,12 +11,12 @@
       "2": "path2"
     },
     "other": {
-      "fasttext_model": "/cfs/finddoctor_model/model-webqa-hdf-2c.bin",
-      "seg_model": "/cfs/finddoctor_model/cws.model",
-      "pos_model": "/cfs/finddoctor_model/pos.model",
-      "all_symptom_count_file_path": "/cfs/finddoctor_model/all-symptom-count.data",
-      "disease_symptom_file_dir": "/cfs/finddoctor_model/disease-symptom3.data",
-      "symptoms_distributions_file_dir": "/cfs/finddoctor_model/symptoms_distributions.json"
+      "fasttext_model": "/mdata/finddoctor/model/model-webqa-hdf-2c.bin",
+      "seg_model": "/mdata/finddoctor/model/cws.model",
+      "pos_model": "/mdata/finddoctor/model/pos.model",
+      "all_symptom_count_file_path": "/mdata/finddoctor/model/all-symptom-count.data",
+      "disease_symptom_file_dir": "/mdata/finddoctor/model/disease-symptom3.data",
+      "symptoms_distributions_file_dir": "/mdata/finddoctor/model/symptoms_distributions.json"
     }
   },
   "text": {
@@ -44,7 +44,7 @@
     "mongodb": {
       "host": "127.0.0.1",
       "port": 27017,
-      "db_name": "intelligent_triage_record",
+      "db_name": "intelligent_triage",
       "auth": false
     }
   }

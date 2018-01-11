@@ -73,7 +73,7 @@ def unknow_error(error):
 
     mongo.unknow_error(
         {"type": "unknow_error", "code": 500, "error_data": error_data, "url": request.url,
-         "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
+         "time": datetime.utcnow()})
     return "内部错误", 500
 
 
@@ -97,7 +97,7 @@ def record():
     ok, res, code = record_data_check(request)
     if not ok:
         mongo.error({"type": "record_check", "code": code, "res": res, "url": request.url, "data": request.json,
-                     "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
+                     "time": datetime.utcnow()})
         return jsonify(res), code
 
     req = request.get_json()
@@ -106,7 +106,7 @@ def record():
     orgId = params["orgId"][0]
     req["clientId"] = clientId
     req["orgId"] = orgId
-    req["time"] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    req["time"] = datetime.utcnow()
     mongo.record(req)
     return "ok"
 
@@ -118,7 +118,7 @@ def creat_session():
     ok, res, code = session_data_check(request)
     if not ok:
         mongo.error({"type": "creat_session_check", "code": code, "res": res, "url": request.url, "data": request.json,
-                     "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
+                     "time": datetime.utcnow()})
         return jsonify(res), code
 
     req = request.get_json()
@@ -140,7 +140,7 @@ def creat_session():
     session = {'patient': patient, 'wechatOpenId': wechatOpenId, 'questions': [question]}
     dump_session(sessionId, session)
     mongo.info({"type": "creat_session_done", "sessionId": sessionId, "session": session,
-                "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
+                "time": datetime.utcnow()})
     res = jsonify(userRes)
     return res
 
@@ -152,7 +152,7 @@ def find_doctors():
     ok, res, code = find_doctor_data_check(request)
     if not ok:
         mongo.error({"type": "find_doctors_check", "code": code, "res": res, "url": request.url, "data": request.json,
-                     "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
+                     "time": datetime.utcnow()})
         return jsonify(res), code
     # 获取有用的信息
     params = parse_qs(urlparse(request.url).query)
@@ -218,7 +218,7 @@ def find_doctors():
 
     mongo.info({"type": status, "sessionId": sessionId, "url": request.url,
                 "params": params, "session": session,
-                "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
+                "time": datetime.utcnow()})
     dump_session(sessionId, session)
     res = jsonify(userRes)
     return res
@@ -427,7 +427,7 @@ if __name__ == '__main__':
     ###########################初始化mongodb驱动###########################
     mongo = Mongo(app_config)
     mongo.info_log.insert({"loadtime": str((endtime - starttime).seconds), "type": "loadtime",
-                           "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))})
+                           "time": datetime.utcnow()})
     ######################### flask 启动##################################
     app.run(debug=app_config["app"]["debug"],
             host=app_config["app"]["host"],
