@@ -165,7 +165,7 @@ def find_doctors():
         mongo.error({"type": "redis错误", "sessionId": sessionId, "url": request.url,
                      "params": params, "session": session,
                      "time": datetime.utcnow()})
-        return jsonify(error("sessionId错误（sessionId可能已经超时失效），请重新访问开始问诊")), 402
+        return jsonify(error("sessionId错误（sessionId可能已经超时失效），请重新访问开始问诊")), 440
     session = update_session(session, seqno, choice)
     dob = session["patient"]["dob"]
     sex = session["patient"]["sex"]
@@ -302,8 +302,8 @@ def load_session(id):
 def dump_session(sessionId, session):
     sessionData = json.dumps(session, ensure_ascii=False)
     RedisCache(app_config).set_data(sessionId, sessionData)
-    # reidis最多 session保留2天
-    RedisCache(app_config).get_connection().expire(sessionId, 60 * 60 * 24 * 2)
+    # reidis最多 session保留15分钟
+    RedisCache(app_config).get_connection().expire(sessionId, 60 * 15)
 
 
 def get_age_from_dob(dob):
