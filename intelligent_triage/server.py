@@ -160,7 +160,12 @@ def find_doctors():
     else:
         debug = False
 
-    session = load_session(sessionId)
+    ok, session = load_session(sessionId)
+    if not ok:
+        mongo.error({"type": "redis错误", "sessionId": sessionId, "url": request.url,
+                     "params": params, "session": session,
+                     "time": datetime.utcnow()})
+        return jsonify(error("sessionId错误（sessionId可能已经超时失效），请重新访问开始问诊")), 402
     session = update_session(session, seqno, choice)
     dob = session["patient"]["dob"]
     sex = session["patient"]["sex"]
@@ -235,7 +240,7 @@ def find_doctor_data_check(request):
     query = url.query
     query_params = parse_qs(query)
     if not ("sessionId" in query_params and
-                    "seqno" in query_params and "query" in query_params and len(query_params["seqno"]) > 0):
+            "seqno" in query_params and "query" in query_params and len(query_params["seqno"]) > 0):
         return False, error("错误的请求: url中没有包含choice或query或seqno"), 400
     return True, None, None
 
@@ -286,9 +291,12 @@ def session_data_check(request):
 
 
 def load_session(id):
-    sessionData = RedisCache(app_config).get_data(id).decode()
-    session = json.loads(sessionData)
-    return session
+    try:
+        sessionData = RedisCache(app_config).get_data(id).decode()
+        session = json.loads(sessionData)
+        return True, session
+    except:
+        return False, None
 
 
 def dump_session(sessionId, session):
