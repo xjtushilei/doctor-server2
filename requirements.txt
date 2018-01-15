@@ -30,4 +30,5 @@ urllib3==1.22
 Werkzeug==0.12.2
 redis==2.10.6
 pymongo==3.5.1
+flask-cors==3.0.3
 

@@ -5,6 +5,18 @@
     "port": 8080,
     "threaded": true
   },
+  "auth": {
+    "clientId": [
+      "testclient",
+      "yihui",
+      "jindie"
+    ],
+    "orgId": [
+      "testorg",
+      "gzfezx",
+      "nsqfy"
+    ]
+  },
   "model_file": {
     "hospital": {
       "1": "path1",

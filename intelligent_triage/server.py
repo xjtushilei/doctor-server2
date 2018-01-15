@@ -10,19 +10,22 @@ import sys
 import time
 import traceback
 from datetime import datetime
-from functools import wraps
 from urllib.parse import urlparse, parse_qs
 
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify
 from flask import request
+from flask_cors import CORS
 
 from db_util import RedisCache, Mongo
 from pipeline import Pipeline
 
 app = Flask(__name__)
+# 允许跨域访问
+CORS(app, supports_credentials=True)
 
-CLIENT_API_SESSIONS = "/v1/sessions"
-CLIENT_API_DOCTORS = "/v1/doctors"
+CLIENT_API_SESSIONS = "/v2/sessions"
+CLIENT_API_DOCTORS = "/v2/doctors"
+CLIENT_API_RECORD = "/v2/appointments"
 
 
 # heartbeat handler
@@ -77,22 +80,7 @@ def unknow_error(error):
     return "内部错误", 500
 
 
-# 允许跨域访问
-def allow_cross_domain(fun):
-    @wraps(fun)
-    def wrapper_fun(*args, **kwargs):
-        rst = make_response(fun(*args, **kwargs))
-        rst.headers['Access-Control-Allow-Origin'] = '*'
-        rst.headers['Access-Control-Allow-Methods'] = 'PUT,GET,POST,DELETE'
-        allow_headers = "Referer,Accept,Origin,User-Agent"
-        rst.headers['Access-Control-Allow-Headers'] = allow_headers
-        return rst
-
-    return wrapper_fun
-
-
-@app.route('/v1/record', methods=["POST"])
-@allow_cross_domain
+@app.route(CLIENT_API_RECORD, methods=["POST"])
 def record():
     ok, res, code = record_data_check(request)
     if not ok:
@@ -111,8 +99,7 @@ def record():
     return "ok"
 
 
-@app.route('/v1/sessions', methods=["POST"])
-@allow_cross_domain
+@app.route(CLIENT_API_SESSIONS, methods=["POST"])
 def creat_session():
     # 检查数据是否有效和url合法性
     ok, res, code = session_data_check(request)
@@ -145,8 +132,7 @@ def creat_session():
     return res
 
 
-@allow_cross_domain
-@app.route('/v1/doctors', methods=["GET"])
+@app.route(CLIENT_API_DOCTORS, methods=["GET"])
 def find_doctors():
     # url检查
     ok, res, code = find_doctor_data_check(request)
@@ -234,19 +220,22 @@ def auth_check(request):
     url = urlparse(request.url)
     query = url.query
     query_params = parse_qs(query)
-    if not ("clientId" in query_params and "orgId" in query_params and "mobimedical" in query_params["clientId"]):
+    if not ("clientId" in query_params and "orgId" in query_params
+            and query_params["clientId"][0] in app_config["auth"]["clientId"]
+            and query_params["orgId"][0] in app_config["auth"]["orgId"]):
         return False, error("未授权用户"), 401
     return True, None, None
 
 
 def find_doctor_data_check(request):
+    ok, res, code = auth_check(request)
+    if not ok:
+        return False, res, code
     url = urlparse(request.url)
     query = url.query
     query_params = parse_qs(query)
-    if not ("clientId" in query_params and "orgId" in query_params and "mobimedical" in query_params["clientId"]):
-        return False, error("未授权用户"), 401
     if not ("sessionId" in query_params and
-                    "seqno" in query_params and "query" in query_params and len(query_params["seqno"]) > 0):
+            "seqno" in query_params and "query" in query_params and len(query_params["seqno"]) > 0):
         return False, error("错误的请求: url中没有包含choice或query或seqno"), 400
     return True, None, None
 
