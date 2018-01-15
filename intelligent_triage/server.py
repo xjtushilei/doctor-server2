@@ -235,7 +235,7 @@ def find_doctor_data_check(request):
     query = url.query
     query_params = parse_qs(query)
     if not ("sessionId" in query_params and
-            "seqno" in query_params and "query" in query_params and len(query_params["seqno"]) > 0):
+                    "seqno" in query_params and "query" in query_params and len(query_params["seqno"]) > 0):
         return False, error("错误的请求: url中没有包含choice或query或seqno"), 400
     return True, None, None
 
