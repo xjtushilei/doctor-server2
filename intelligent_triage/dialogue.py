@@ -1,6 +1,8 @@
 # coding=utf-8
 import json
 
+import predict
+
 
 def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
                       all_symptom_count_file_path="./model/all-symptom-count.data"):
@@ -13,7 +15,7 @@ def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
         return json.load(file1), json.load(file2)
 
 
-def get_diagnosis_first(input, model, age, gender):
+def get_diagnosis_first(input, age, gender, dict_npy, segmentor, postagger, fasttext):
     """
     接受京伟的数据
     :return: 两个东西(1.疾病的名字和概率的list(0name.1rate,2icd10)；2.京伟给出的症状列表，之后作为我们的输入)
@@ -22,7 +24,8 @@ def get_diagnosis_first(input, model, age, gender):
     K_Top_dis = 5
     K_Top_symp = 5
 
-    diseases, icd10, val, symp_out, Coeff_sim_out = model.predict(input, age, gender, K_Top_dis, K_Top_symp)
+    diseases, icd10, val, symp_out, Coeff_sim_out = predict.predict(input, age, gender, K_Top_dis, K_Top_symp, dict_npy,
+                                                                    segmentor, postagger, fasttext)
     if diseases is None:
         return None, None
     nvs = zip(symp_out, Coeff_sim_out)

@@ -2,63 +2,86 @@ import json
 import os
 import re
 from datetime import datetime
+from pyltp import Segmentor, Postagger
 
+import fastText
 import numpy as np
 
 import dialogue
 import ner
+import predict
 from doctors import get_doctors
-from pmodel import PredModel
 
 
 class Pipeline:
     def __init__(self, app_config):
+        self.root_path = app_config["model_file"]["root_path"]
+        for hospital in app_config["model_file"]["hospital"]:
+            for file_type in ["doctor_path", "predict_path"]:
+                hospital_file_path = self.root_path + hospital[file_type]
+                if os.path.isfile(hospital_file_path):
+                    self.symptoms_distributions_file_dir = hospital_file_path
+                else:
+                    raise RuntimeError("cannot find model file: " + hospital_file_path)
 
         symptoms_distributions_file_dir = app_config["model_file"]["other"]["symptoms_distributions_file_dir"]
-
-        if os.path.isfile(symptoms_distributions_file_dir):
-            self.symptoms_distributions_file_dir = symptoms_distributions_file_dir
+        if os.path.isfile(self.root_path + symptoms_distributions_file_dir):
+            self.symptoms_distributions_file_dir = self.root_path + symptoms_distributions_file_dir
         else:
-            raise RuntimeError("cannot find model file: " + symptoms_distributions_file_dir)
+            raise RuntimeError("cannot find model file: " + self.root_path + symptoms_distributions_file_dir)
 
         fasttext_model_dir = app_config["model_file"]["other"]["fasttext_model"]
-        if os.path.isfile(fasttext_model_dir):
-            self.fasttext_model_dir = fasttext_model_dir
+        if os.path.isfile(self.root_path + fasttext_model_dir):
+            self.fasttext_model_dir = self.root_path + fasttext_model_dir
         else:
-            raise RuntimeError("cannot find model file: " + fasttext_model_dir)
+            raise RuntimeError("cannot find model file: " + self.root_path + fasttext_model_dir)
 
         seg_model_dir = app_config["model_file"]["other"]["seg_model"]
-        if os.path.isfile(seg_model_dir):
-            self.seg_model_dir = seg_model_dir
+        if os.path.isfile(self.root_path + seg_model_dir):
+            self.seg_model_dir = self.root_path + seg_model_dir
         else:
-            raise RuntimeError("cannot find model file: " + seg_model_dir)
+            raise RuntimeError("cannot find model file: " + self.root_path + seg_model_dir)
 
         pos_model_dir = app_config["model_file"]["other"]["pos_model"]
-        if os.path.isfile(pos_model_dir):
-            self.pos_model_dir = pos_model_dir
+        if os.path.isfile(self.root_path + pos_model_dir):
+            self.pos_model_dir = self.root_path + pos_model_dir
         else:
-            raise RuntimeError("cannot find model file: " + pos_model_dir)
+            raise RuntimeError("cannot find model file: " + self.root_path + pos_model_dir)
 
         all_symptom_count_file_path = app_config["model_file"]["other"]["all_symptom_count_file_path"]
-        if os.path.isfile(all_symptom_count_file_path):
-            self.all_symptom_count_file_path = all_symptom_count_file_path
+        if os.path.isfile(self.root_path + all_symptom_count_file_path):
+            self.all_symptom_count_file_path = self.root_path + all_symptom_count_file_path
         else:
-            raise RuntimeError("cannot find model file: " + all_symptom_count_file_path)
+            raise RuntimeError("cannot find model file: " + self.root_path + all_symptom_count_file_path)
 
         disease_symptom_file_dir = app_config["model_file"]["other"]["disease_symptom_file_dir"]
-        if os.path.isfile(disease_symptom_file_dir):
-            self.disease_symptom_file_dir = disease_symptom_file_dir
+        if os.path.isfile(self.root_path + disease_symptom_file_dir):
+            self.disease_symptom_file_dir = self.root_path + disease_symptom_file_dir
         else:
-            raise RuntimeError("cannot find model file: " + disease_symptom_file_dir)
-        ###########################文案信息############################
+            raise RuntimeError("cannot find model file: " + self.root_path + disease_symptom_file_dir)
+        ###########################文案信息在配置文件中############################
         self.app_config = app_config
+        # 所有doctor和predict文件
+        self.doctor_model_dict = {}
+        self.predict_model_dict = {}
 
     def load(self):
+        # 加载首轮推荐症状分布文件
         with open(self.symptoms_distributions_file_dir, 'r', encoding='utf-8') as fp:
             self.symptoms_dist = json.load(fp)
-        self.p_model = PredModel(self.seg_model_dir, self.pos_model_dir, self.fasttext_model_dir,
-                                 "/mdata/finddoctor/model/dict_var.npy")
-        self.segmentor = self.p_model.segmentor
+        # 加载医院定制的所有doctor和predict文件
+        for hospital in self.app_config["model_file"]["hospital"]:
+            with open(self.root_path + hospital["doctor_path"], encoding="utf-8") as file:
+                self.doctor_model_dict[hospital["orgId"]] = json.load(file)
+            self.predict_model_dict[hospital["orgId"]] = np.load(self.root_path + hospital["predict_path"])
+        # 加载字典模型
+        self.segmentor = Segmentor()
+        self.postagger = Postagger()
+        self.segmentor.load(self.seg_model_dir)
+        self.postagger.load(self.pos_model_dir)
+        # 加载fasttext
+        self.ft = fastText.load_model(self.fasttext_model_dir)
+        # 加载多轮推荐症状字典
         self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
                                                                          self.all_symptom_count_file_path)
 
@@ -154,17 +177,14 @@ class Pipeline:
         return result
 
     # 核心模型、主要的逻辑实现
-    def process(self, session, seqno, choice_now, age, gender, debug=False):
+    def process(self, session, seqno, choice_now, age, gender, orgId, clientId, branchId, debug=False):
 
         # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
         for prompt in self.app_config["text"]["NO_SYMPTOMS_PROMPT_LIST"]:
             choice_now = choice_now.replace(prompt, " ")
-        if "cardNo" in session["patient"]:
-            userID = session["patient"]["cardNo"]
-        else:
-            userID = "没有从上游获取到"
+        userID = session["patient"]["cardNo"]
         all_log = {"info": []}
-        # 得到用户选择的症状和没有选择的症状
+
         all_log["choice_now"] = choice_now
         all_log["seqno"] = seqno
         all_log["age"] = age
@@ -186,7 +206,8 @@ class Pipeline:
             dis_out = ['遗传咨询', '男科', '产科', "（非'遗传咨询', '男科', '产科'）[程序继续往下走]"]
             dis_out_id = ['6', '5', '8']
             all_log["jingwei的预测专科模型输入"] = choice_now.strip()
-            label, prob_max = self.p_model.pre_predict(choice_now.strip(), age, gender)
+            label, prob_max = predict.pre_predict(choice_now.strip(), age, gender, self.predict_model_dict[orgId],
+                                                  self.segmentor, self.postagger, self.ft)
             all_log["jingwei  pre_predict的计算值"] = str(prob_max)
             all_log["jingwei  pre_predict分到科室"] = dis_out[label]
             if label != 3:
@@ -215,8 +236,8 @@ class Pipeline:
             # 诊断得到的疾病;识别到的症状
             diagnosis_disease_rate_list, input_list = dialogue.get_diagnosis_first(
                 input=",".join(self.get_all_choice_from_session_questions(session)),
-                model=self.p_model,
-                age=age, gender=gender)
+                age=age, gender=gender, dict_npy=self.predict_model_dict[orgId],
+                segmentor=self.segmentor, postagger=self.postagger, fasttext=self.ft)
 
             all_log["jingwei识别疾病："] = diagnosis_disease_rate_list
             all_log["jingwei识别症状："] = input_list
@@ -343,10 +364,8 @@ class Pipeline:
                 all_log["jingwei模型输入"] = ",".join(self.get_all_choice_from_session_questions(session))
                 diagnosis_disease_rate_list, input_list = dialogue.get_diagnosis_first(
                     input=",".join(self.get_all_choice_from_session_questions(session)),
-                    model=self.p_model,
-                    age=age,
-                    gender=gender
-                )
+                    age=age, gender=gender, dict_npy=self.predict_model_dict[orgId],
+                    segmentor=self.segmentor, postagger=self.postagger, fasttext=self.ft)
 
                 # 如果jingwei返回了空,则表示输入的东西无意义,直接返回
                 if diagnosis_disease_rate_list is None:
@@ -422,15 +441,12 @@ class Pipeline:
             return "followup", question, None
         # 最后一轮会给出诊断结果
         else:
-
             # 将历史所有记录进入jingwei的模型
             all_log["jingwei最后一轮输入"] = ",".join(self.get_all_choice_from_session_questions(session))
             diagnosis_disease_rate_list, input_list = dialogue.get_diagnosis_first(
                 input=",".join(self.get_all_choice_from_session_questions(session)),
-                model=self.p_model,
-                age=age,
-                gender=gender
-            )
+                age=age, gender=gender, dict_npy=self.predict_model_dict[orgId],
+                segmentor=self.segmentor, postagger=self.postagger, fasttext=self.ft)
             # jingwei识别的疾病记录到session中
             session["diagnosis_disease_rate_list"] = diagnosis_disease_rate_list
 

@@ -50,7 +50,7 @@ class RedisCache(object):
 
 
 class Mongo:
-    def __init__(self, app_config, prod=True):
+    def __init__(self, app_config):
         # 建立数据库连接
         self.client = MongoClient(host=app_config["DB"]["mongodb"]["host"], port=app_config["DB"]["mongodb"]["port"])
         # 选择相应的数据库名称
@@ -62,24 +62,12 @@ class Mongo:
         else:
             self.db = self.client.get_database(app_config["DB"]["mongodb"]["db_name"])
 
-        if prod:
-            self.recordCollection = self.db.get_collection("record")
-        else:
-            self.recordCollection = self.db.get_collection("record_test")
-        if prod:
-            self.info_log = self.db.get_collection("info")
-        else:
-            self.info_log = self.db.get_collection("info_test")
+        self.recordCollection = self.db.get_collection("record")
+        self.info_log = self.db.get_collection("info")
 
-        if prod:
-            self.error_log = self.db.get_collection("error")
-        else:
-            self.error_log = self.db.get_collection("error_test")
+        self.error_log = self.db.get_collection("error")
 
-        if prod:
-            self.unknow_error_log = self.db.get_collection("unknow_error")
-        else:
-            self.unknow_error_log = self.db.get_collection("unknow_error_test")
+        self.unknow_error_log = self.db.get_collection("unknow_error")
 
     def record(self, item):
         self.recordCollection.insert(item)

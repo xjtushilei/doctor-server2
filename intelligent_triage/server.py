@@ -107,11 +107,11 @@ def creat_session():
 
     req = request.get_json()
     params = parse_qs(urlparse(request.url).query)
-    clientId = params["clientId"][0]
-    orgId = params["orgId"][0]
-    branchId = None
-    if "branchId" in params and len(params["branchId"]) > 0:
-        branchId = params["branchId"][0]
+    # clientId = params["clientId"][0]
+    # orgId = params["orgId"][0]
+    # branchId = None
+    # if "branchId" in params and len(params["branchId"]) > 0:
+    #     branchId = params["branchId"][0]
 
     patient = req["patient"]
     dob = patient["dob"]
@@ -130,7 +130,8 @@ def creat_session():
     }
     session = {'patient': patient, 'wechatOpenId': wechatOpenId, 'questions': [question]}
     dump_session(sessionId, session)
-    mongo.info({"type": "creat_session_done", "sessionId": sessionId, "session": session,
+    mongo.info({"type": "creat_session_done", "sessionId": sessionId,
+                "session": session, "params": params,
                 "time": datetime.utcnow()})
     res = jsonify(userRes)
     return res
@@ -180,7 +181,8 @@ def find_doctors():
     sex = session["patient"]["sex"]
     age = get_age_from_dob(dob)
 
-    status, question, recommendation = pipline.process(session, seqno, choice, age, sex, debug)
+    status, question, recommendation = pipline.process(session, seqno, choice, age, sex, orgId, clientId,
+                                                       branchId, debug=debug)
 
     if status == "followup":
         userRes = {
@@ -235,8 +237,8 @@ def auth_check(request):
     query = url.query
     query_params = parse_qs(query)
     if not ("clientId" in query_params and "orgId" in query_params
-            and query_params["clientId"][0] in app_config["auth"]["clientId"]
-            and query_params["orgId"][0] in app_config["auth"]["orgId"]):
+            and query_params["clientId"][0] in auth_clientId_set
+            and query_params["orgId"][0] in auth_orgId_set):
         return False, error("未授权用户"), 401
     return True, None, None
 
@@ -262,7 +264,7 @@ def record_data_check(request):
     req = request.get_json()
     # 检查数据是否为空
     if req is None:
-        res = error("错误的请求: 无法解析JSON")
+        res = error("错误的请求: 无法解析JSON 或 请求中请设置 'content-type' 为 'application/json' ")
         return False, res, 400
     # 检查数据是否有效
     if "patient" not in req or "doctor" not in req or "sessionId" not in req or "appointmentId" not in req or "wechatOpenId" not in req:
@@ -281,7 +283,7 @@ def session_data_check(request):
     req = request.get_json()
     # 检查数据是否为空
     if req is None:
-        res = error("错误的请求: 无法解析JSON")
+        res = error("错误的请求: 无法解析JSON 或 请求中请设置 'content-type' 为 'application/json' ")
         return False, res, 400
     # 检查数据是否有效
     if "patient" not in req or "wechatOpenId" not in req:
@@ -409,6 +411,12 @@ if __name__ == '__main__':
     # 获取yaml配置文件
     app_config = load_config(config_path)
 
+    ################################获得授权集合#######################
+    auth_orgId_set = set()
+    auth_clientId_set = set()
+    for hospital in app_config["model_file"]["hospital"]:
+        auth_orgId_set.add(hospital["orgId"])
+        auth_clientId_set.add(hospital["clientId"])
     ################################LOG日志文件#######################
     # 获取log配置文件
     if not os.path.exists("log/"):

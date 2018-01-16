@@ -1,5 +1,5 @@
 # 医生模型的获取医生信息
-def get_doctors(codes, probs, age, gender, model=None):
+def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=None, model=None):
     return [
         {
             "id": "1111",
