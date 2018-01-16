@@ -20,6 +20,7 @@ from db_util import RedisCache, Mongo
 from pipeline import Pipeline
 
 app = Flask(__name__)
+
 # 允许跨域访问
 CORS(app, supports_credentials=True)
 
