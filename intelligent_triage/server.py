@@ -90,10 +90,7 @@ def record():
 
     req = request.get_json()
     params = parse_qs(urlparse(request.url).query)
-    clientId = params["clientId"][0]
-    orgId = params["orgId"][0]
-    req["clientId"] = clientId
-    req["orgId"] = orgId
+    req["params"] = params
     req["time"] = datetime.utcnow()
     mongo.record(req)
     return "ok"
@@ -109,6 +106,13 @@ def creat_session():
         return jsonify(res), code
 
     req = request.get_json()
+    params = parse_qs(urlparse(request.url).query)
+    clientId = params["clientId"][0]
+    orgId = params["orgId"][0]
+    branchId = None
+    if "branchId" in params and len(params["branchId"]) > 0:
+        branchId = params["branchId"][0]
+
     patient = req["patient"]
     dob = patient["dob"]
     gender = patient["sex"]
@@ -142,6 +146,11 @@ def find_doctors():
         return jsonify(res), code
     # 获取有用的信息
     params = parse_qs(urlparse(request.url).query)
+    clientId = params["clientId"][0]
+    orgId = params["orgId"][0]
+    branchId = None
+    if "branchId" in params and len(params["branchId"]) > 0:
+        branchId = params["branchId"][0]
     sessionId = params["sessionId"][0]
     seqno = int(params["seqno"][0])
     if "choice" not in params:
@@ -302,8 +311,8 @@ def load_session(id):
 def dump_session(sessionId, session):
     sessionData = json.dumps(session, ensure_ascii=False)
     RedisCache(app_config).set_data(sessionId, sessionData)
-    # reidis最多 session保留15分钟
-    RedisCache(app_config).get_connection().expire(sessionId, 60 * 15)
+    # reidis最多 session保留24分钟
+    RedisCache(app_config).get_connection().expire(sessionId, 60 * 24)
 
 
 def get_age_from_dob(dob):
