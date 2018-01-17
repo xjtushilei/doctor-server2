@@ -162,8 +162,8 @@ def find_doctors():
         xss_status, xss_desc = xss_defense_check(choice)
         if not xss_status:
             return error("错误的请求:" + xss_desc), 400
-        # 去掉“什么都没有“等垃圾信息
-        for x in app_config["text"]["NO_1_PROMPT"]:
+        # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
+        for x in app_config["text"]["NO_SYMPTOMS_PROMPT_LIST"]:
             choice = choice.replace(x, " ")
     # 是否在测试页面展示debug信息
     if "debug" in params and params["debug"][0] == "true":

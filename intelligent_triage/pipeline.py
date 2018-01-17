@@ -179,9 +179,6 @@ class Pipeline:
     # 核心模型、主要的逻辑实现
     def process(self, session, seqno, choice_now, age, gender, orgId, clientId, branchId, debug=False):
 
-        # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
-        for prompt in self.app_config["text"]["NO_SYMPTOMS_PROMPT_LIST"]:
-            choice_now = choice_now.replace(prompt, " ")
         userID = session["patient"]["cardNo"]
         all_log = {"info": []}
 
