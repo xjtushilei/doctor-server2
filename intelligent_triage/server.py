@@ -35,21 +35,11 @@ def index():
     return "OK", 200
 
 
-# 获取本机内网ip
-def get_host_ip():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-    finally:
-        s.close()
-    return ip
-
-
+# 负载均衡测试api
 @app.route('/load-balance')
 def load_balance():
     userIp = request.remote_addr
-    return "用户ip:" + str(userIp) + "-后台服务标识码:" + str(get_host_ip()).split(".")[3], 200
+    return "用户ip:" + str(userIp) + "-后台服务标识码:" + str(server_ip).split(".")[3], 200
 
 
 # 内部测试错误api
@@ -71,7 +61,7 @@ def unknow_error(error):
         "error": str(error)
     }
 
-    # 先在本地记录日志，放置mongo挂掉记不住日志
+    # 先在本地记录日志，防止mongo挂掉记不住日志
     log_unkonw_error.error(req)
     log_unkonw_error.exception(error)
 
@@ -100,6 +90,7 @@ def record():
 
 @app.route(CLIENT_API_SESSIONS, methods=["POST"])
 def creat_session():
+    start_time = time.time()
     # 检查数据是否有效和url合法性
     ok, res, code = session_data_check(request)
     if not ok:
@@ -132,15 +123,19 @@ def creat_session():
     }
     session = {'patient': patient, 'wechatOpenId': wechatOpenId, 'questions': [question]}
     dump_session(sessionId, session)
+    time_consuming = round(1000 * (time.time() - start_time), 3)
     mongo.info({"type": "creat_session_done", "sessionId": sessionId,
                 "session": session, "params": params,
-                "time": datetime.utcnow(), "ip": request.remote_addr})
+                "time": datetime.utcnow(), "ip": request.remote_addr,
+                "time_consuming": time_consuming})
+
     res = jsonify(userRes)
     return res
 
 
 @app.route(CLIENT_API_DOCTORS, methods=["GET"])
 def find_doctors():
+    start_time = time.time()
     # url检查
     ok, res, code = find_doctor_data_check(request)
     if not ok:
@@ -219,10 +214,13 @@ def find_doctors():
         }
         if debug:
             userRes["debug"] = recommendation
+    # 计算主要逻辑运行时间
+    time_consuming = round(1000 * (time.time() - start_time), 3)
 
     mongo.info({"type": status, "sessionId": sessionId, "url": request.url,
                 "params": params, "session": session,
-                "time": datetime.utcnow(), "ip": request.remote_addr})
+                "time": datetime.utcnow(), "ip": request.remote_addr,
+                "time_consuming": time_consuming})
     dump_session(sessionId, session)
     res = jsonify(userRes)
     return res
@@ -397,9 +395,19 @@ def load_config(json_path="app_config.json"):
         return json.load(config_file)
 
 
-def src_dir():
-    return os.path.dirname(os.path.realpath(__file__))
+# 获取本机内网ip
+def get_host_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
 
+
+# 获取本机内网ip
+server_ip = get_host_ip()
 
 if __name__ == '__main__':
 
@@ -443,7 +451,7 @@ if __name__ == '__main__':
     ###########################初始化mongodb驱动###########################
     mongo = Mongo(app_config)
     mongo.info_log.insert({"loadtime": str((endtime - starttime).seconds), "type": "loadtime",
-                           "time": datetime.utcnow(), "ip": get_host_ip()})
+                           "time": datetime.utcnow(), "ip": server_ip})
     ######################### flask 启动##################################
     app.run(debug=app_config["app"]["debug"],
             host=app_config["app"]["host"],

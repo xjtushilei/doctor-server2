@@ -5,6 +5,10 @@
     "port": 8080,
     "threaded": true
   },
+  "monitor": {
+    "note": "腾讯云监控api配置,需要配置python文件所在位置，监控命名空间，参数名和值",
+    "upload": true
+  },
   "model_file": {
     "root_path": "/mdata/finddoctor/model/",
     "hospital": [
