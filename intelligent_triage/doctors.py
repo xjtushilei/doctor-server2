@@ -3,30 +3,35 @@ def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=N
     return [
         {
             "id": "1111",
-            "name": "都是的",
+            "name": "医生小明",
+            "departmentId": "abc1",
             "branchId": "1"
         },
         {
             "id": "222",
-            "name": "答复",
-            "branchId": "abc"
+            "name": "小红",
+            "departmentId": "abc2",
+            "branchId": "2"
 
         },
         {
             "id": "333",
-            "name": "阿萨德",
+            "name": "小李",
+            "departmentId": "abc1",
             "branchId": "12"
 
         },
         {
             "id": "444",
-            "name": "给的",
-            "branchId": "abc"
+            "name": "小白",
+            "departmentId": "abc2",
+            "branchId": "12"
 
         },
         {
             "id": "555",
-            "name": "答复",
+            "name": "小熊",
+            "departmentId": "abc2",
             "branchId": "2"
 
         }
