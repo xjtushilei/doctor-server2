@@ -155,7 +155,7 @@ class Pipeline:
                 words_no_choices.append(choice)
         return words_choices, words_no_choices
 
-    # 在session中设置all_log，从而保存这个session的所有log,方便一次查看,缺点是会浪费taf的session内存
+    # 在session中设置all_log，从而保存这个session的所有log,方便一次查看,缺点是会浪费session存储
     # 同时注意不要被已用户大量注入垃圾信息，所以设计了+1这样的设置。
     def update_session_log(self, session, all_log):
         if "all_log" not in session:
@@ -176,8 +176,33 @@ class Pipeline:
                 result.append(question["choice"])
         return result
 
+    # 京伟的predict模型封装
+    def get_diagnosis_first(self, input, age, gender, dict_npy, segmentor, postagger, fasttext):
+        """
+        接受京伟的数据,返回推荐列表，对话推荐需要的症状列表,还有丽娟需要的codes,probs
+        """
+        K_Top_dis = 5
+        K_Top_symp = 5
+        diseases, icd10, val, symp_out, Coeff_sim_out, word_vec_bag = predict.predict(input, age, gender, K_Top_dis,
+                                                                                      K_Top_symp,
+                                                                                      dict_npy,
+                                                                                      segmentor, postagger, fasttext)
+        if diseases is None:
+            return None, None, None, None
+        nvs = zip(symp_out, Coeff_sim_out)
+        symp_list = [symp for symp, value in nvs]
+        disease_rate_list = []
+        for i, d in enumerate(diseases):
+            disease_rate_list.append([d, val[i], icd10[i]])
+        codes = []
+        probs = []
+        for v in disease_rate_list:
+            codes.append(v[2])
+            probs.append(v[1])
+        return disease_rate_list, symp_list, codes, probs
+
     # 核心模型、主要的逻辑实现
-    def process(self, session, seqno, choice_now, age, gender, orgId, clientId, branchId, debug=False):
+    def process(self, session, seqno, choice_now, age, gender, orgId, clientId, branchId, appointment, debug=False):
 
         userID = session["patient"]["cardNo"]
         all_log = {"info": []}
@@ -199,50 +224,22 @@ class Pipeline:
                     "all_log": all_log
                 }
                 return "other", None, recommendation
-            # jingwei的代码，进来先判断3种科室，不在目标科室则继续,有则返回
-            dis_out = ['遗传咨询', '男科', '产科', "（非'遗传咨询', '男科', '产科'）[程序继续往下走]"]
-            dis_out_id = ['6', '5', '8']
-            all_log["jingwei的预测专科模型输入"] = choice_now.strip()
-            label, prob_max = predict.pre_predict(choice_now.strip(), age, gender, self.predict_model_dict[orgId],
-                                                  self.segmentor, self.postagger, self.ft)
-            all_log["jingwei  pre_predict的计算值"] = str(prob_max)
-            all_log["jingwei  pre_predict分到科室"] = dis_out[label]
-            if label != 3:
-                recommendation = {
-                    "department":
-                        {
-                            'name': dis_out[label],
-                            'id': dis_out_id[label]
-                        }
-                }
-                if debug:
-                    recommendation["all_log"] = all_log
-                self.update_session_log(session, all_log)
-                return "department", None, recommendation
-
-            if gender == "male" and age >= 18:
-                all_log["info"].append("gender == 'male' and age >= 18,并且没有识别出是‘遗传咨询’,返回男科")
-                self.update_session_log(session, all_log)
-                recommendation = {
-                    "all_log": all_log
-                }
-                return "other", None, recommendation
 
             # 进入jingwei的正常判断
-            all_log["jingwei首轮模型输入"] = ",".join(self.get_all_choice_from_session_questions(session))
+            all_log["predict模型输入"] = ",".join(self.get_all_choice_from_session_questions(session))
             # 诊断得到的疾病;识别到的症状
-            diagnosis_disease_rate_list, input_list = dialogue.get_diagnosis_first(
+            diagnosis_disease_rate_list, input_list, codes, probs = self.get_diagnosis_first(
                 input=",".join(self.get_all_choice_from_session_questions(session)),
                 age=age, gender=gender, dict_npy=self.predict_model_dict[orgId],
                 segmentor=self.segmentor, postagger=self.postagger, fasttext=self.ft)
 
-            all_log["jingwei识别疾病："] = diagnosis_disease_rate_list
-            all_log["jingwei识别症状："] = input_list
+            all_log["predict识别疾病："] = diagnosis_disease_rate_list
+            all_log["predict识别症状："] = input_list
             all_log["本轮为止,用户没有选择的所有症状"] = symptoms_no_chioce
             all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
                 self.get_all_choice_from_session_questions(session))
 
-            # 如果jingwei返回了空,则表示输入的东西无意义,直接返回
+            # 如果predict返回了空,则表示输入的东西无意义,直接返回
             if diagnosis_disease_rate_list is None:
                 all_log["info"].append("jingwei识别出输入的东西无意义,直接返回")
                 self.update_session_log(session, all_log)
@@ -251,17 +248,13 @@ class Pipeline:
                 }
                 return "other", None, recommendation
 
-            # 医生模型的输入
-            codes = []
-            probs = []
-            for v in diagnosis_disease_rate_list:
-                codes.append(v[2])
-                probs.append(v[1])
             # 如果阈值大于 NO_CONTINUE ,则直接返回诊断结果,不进行下一轮
             if probs[0] >= self.app_config["text"]["NO_CONTINUE"]:
                 all_log["医生模型输入"] = [codes, probs, age, gender]
                 recommendation = {
-                    "doctors": get_doctors(codes=codes, probs=probs, age=age, gender=gender, model=None)
+                    "doctors": get_doctors(codes=codes, probs=probs, age=age, gender=gender,
+                                           orgId=orgId, clientId=clientId, branchId=branchId,
+                                           model=self.doctor_model_dict[orgId], appointment=appointment)
                 }
                 if debug:
                     recommendation["all_log"] = all_log
@@ -271,12 +264,14 @@ class Pipeline:
 
             # 记住jingwei的诊断结果,wangmeng下一轮使用
             session["diagnosis_disease_rate_list"] = diagnosis_disease_rate_list
-            # wangmeng推荐算法
+
+            # ner识别，用来避免推荐时候发生语义相近的重复推荐
             ner_words, resp, ner_time = ner.post(choice_now, userID)
             if "ner" not in session:
                 session["ner_time"] = [ner_time]
                 session["ner"] = ner_words
             else:
+                # 记住ner的信息，之后还要用
                 temp_ner = session["ner"]
                 temp_ner.extend(ner_words)
                 temp_ner = list(set(temp_ner))
@@ -287,7 +282,8 @@ class Pipeline:
             all_log["nlu-response"] = resp
             all_log["nlu-提取结果"] = ner_words
             symptoms_no_chioce.extend(session["ner"])
-            # 记住ner的信息，之后还要用
+
+            # wangmeng推荐算法
             result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_list, input_list,
                                           symptoms_no_chioce,
                                           choice_history_words=self.process_sentences_sl(
@@ -305,10 +301,13 @@ class Pipeline:
                 "query": self.app_config["text"]["NO_2_PROMPT"],
                 "choices": choices
             }
+            # 如果开启了debug，则返回的结果中有过程信息
             if debug:
                 question["all_log"] = all_log
+            # 把日志更新到session中，方便session持久化时候能够记录日志
             self.update_session_log(session, all_log)
             return "followup", question, None
+
         elif seqno == 2:
 
             # 和上一轮的选择列表进行对比,判断用户本轮所有的输入是否全部来自选择，没有自己人工输入？
@@ -322,7 +321,7 @@ class Pipeline:
             all_log["info"].append("本轮选择:" + str(choice_now))
             all_log["info"].append("和上一轮的选择列表进行对比,判断用户本轮所有的输入是否全部来自选择，没有自己人工输入:" + str(input_flag))
 
-            # 如果全部来自选择，则不经过土豪模型，而是取本次的结果和之前的症状，进输入王meng的模型
+            # 如果全部来自选择，则不经过土豪模型，而是取本次的结果和之前的症状，进输入wangmeng的模型
             if input_flag:
                 all_log["info"].append("没有进入jingwei,进入wangmeng逻辑,直接推荐症状")
 
@@ -335,6 +334,8 @@ class Pipeline:
                 all_log["本轮为止,用户所有输入过的文本的分词"] = self.process_sentences_sl(
                     self.get_all_choice_from_session_questions(session))
                 ner_words, resp, ner_time = ner.post(choice_now, userID)
+
+                # ner识别，用来避免推荐时候发生语义相近的重复推荐
                 if "ner" not in session:
                     session["ner_time"] = [ner_time]
                     session["ner"] = ner_words
@@ -348,8 +349,10 @@ class Pipeline:
                 all_log["nlu输入"] = choice_now
                 all_log["nlu-response"] = resp
                 all_log["nlu-提取结果"] = ner_words
+                # 将ner结果 和用户输入过得信息都放入一个里，以后不能推荐这些信息
                 symptoms_no_chioce.extend(session["ner"])
                 symptoms_no_chioce.extend(symptoms)
+                # wangmeng推荐算法
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_list, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences_sl(
@@ -359,7 +362,8 @@ class Pipeline:
                 # 如果有了新的用户输入(不是从列表里选择的),则进入jingwei的模型
                 all_log["info"].append("用户输入了新的描述,进入jingwei模型")
                 all_log["jingwei模型输入"] = ",".join(self.get_all_choice_from_session_questions(session))
-                diagnosis_disease_rate_list, input_list = dialogue.get_diagnosis_first(
+                # jingwei的predict
+                diagnosis_disease_rate_list, input_list, codes, probs = self.get_diagnosis_first(
                     input=",".join(self.get_all_choice_from_session_questions(session)),
                     age=age, gender=gender, dict_npy=self.predict_model_dict[orgId],
                     segmentor=self.segmentor, postagger=self.postagger, fasttext=self.ft)
@@ -374,29 +378,25 @@ class Pipeline:
                     return "other", None, recommendation
 
                 # 如果阈值大于 NO_CONTINUE ,则直接返回诊断结果,不进行下一轮
-                codes = []
-                probs = []
-
-                for v in diagnosis_disease_rate_list:
-                    codes.append(v[2])
-                    probs.append(v[1])
                 if probs[0] >= self.app_config["text"]["NO_CONTINUE"]:
                     all_log["医生模型输入"] = [codes, probs, age, gender]
                     recommendation = {
-                        "doctors": get_doctors(codes=codes, probs=probs, age=age, gender=gender)
+                        "doctors": get_doctors(codes=codes, probs=probs, age=age, gender=gender,
+                                               orgId=orgId, clientId=clientId, branchId=branchId,
+                                               model=self.doctor_model_dict[orgId], appointment=appointment)
                     }
                     if debug:
                         recommendation["all_log"] = all_log
                         recommendation["jingwei"] = diagnosis_disease_rate_list
                     self.update_session_log(session, all_log)
                     return "doctors", None, recommendation
-                session["probs"] = probs[0]
 
                 all_log["jingwei识别疾病"] = diagnosis_disease_rate_list
                 all_log["jingwei识别症状"] = input_list
                 # jingwei识别的疾病记录到session中
                 session["diagnosis_disease_rate_list"] = diagnosis_disease_rate_list
 
+                # ner处理
                 ner_words, resp, ner_time = ner.post(choice_now, userID)
                 if "ner" not in session:
                     session["ner_time"] = [ner_time]
@@ -414,7 +414,8 @@ class Pipeline:
                 all_log["nlu-提取结果"] = ner_words
                 symptoms_no_chioce.extend(session["ner"])
                 symptoms_no_chioce.extend(symptoms)
-                # 注意这里的seq=1
+
+                # wangmeng的推荐算法，注意这里的seq=1（意思是用户有新的输入，京伟会重新产生症状，推荐会重新开始）
                 result = dialogue.core_method(self.l3sym_dict, diagnosis_disease_rate_list, input_list,
                                               symptoms_no_chioce,
                                               choice_history_words=self.process_sentences_sl(
@@ -440,7 +441,8 @@ class Pipeline:
         else:
             # 将历史所有记录进入jingwei的模型
             all_log["jingwei最后一轮输入"] = ",".join(self.get_all_choice_from_session_questions(session))
-            diagnosis_disease_rate_list, input_list = dialogue.get_diagnosis_first(
+            # jingwei的predict
+            diagnosis_disease_rate_list, input_list, codes, probs = self.get_diagnosis_first(
                 input=",".join(self.get_all_choice_from_session_questions(session)),
                 age=age, gender=gender, dict_npy=self.predict_model_dict[orgId],
                 segmentor=self.segmentor, postagger=self.postagger, fasttext=self.ft)
@@ -459,15 +461,11 @@ class Pipeline:
                 }
                 return "other", None, recommendation
 
-            # 疾病的icd10id和概率
-            codes = []
-            probs = []
-            for v in diagnosis_disease_rate_list:
-                codes.append(v[2])
-                probs.append(v[1])
             all_log["医生模型输入"] = [codes, probs, age, gender]
             recommendation = {
-                "doctors": get_doctors(codes=codes, probs=probs, age=age, gender=gender)
+                "doctors": get_doctors(codes=codes, probs=probs, age=age, gender=gender,
+                                       orgId=orgId, clientId=clientId, branchId=branchId,
+                                       model=self.doctor_model_dict[orgId], appointment=appointment)
             }
             if debug:
                 recommendation["all_log"] = all_log

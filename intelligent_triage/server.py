@@ -147,8 +147,12 @@ def find_doctors():
     clientId = params["clientId"][0]
     orgId = params["orgId"][0]
     branchId = None
+    # 和医院约定的参数
+    appointment = None
     if "branchId" in params and len(params["branchId"]) > 0:
         branchId = params["branchId"][0]
+    if "appointment" in params and len(params["appointment"]) > 0:
+        appointment = params["appointment"][0]
     sessionId = params["sessionId"][0]
     seqno = int(params["seqno"][0])
     if "choice" not in params:
@@ -178,9 +182,9 @@ def find_doctors():
     sex = session["patient"]["sex"]
     age = get_age_from_dob(dob)
 
+    # 进入主要逻辑函数
     status, question, recommendation = pipline.process(session, seqno, choice, age, sex, orgId, clientId,
-                                                       branchId, debug=debug)
-
+                                                       branchId, appointment, debug=debug)
     if status == "followup":
         userRes = {
             'sessionId': sessionId,

@@ -53,22 +53,22 @@ def Masking(mask_matrix, age, gender):
 
     if age < 1:
 
-        mask_layer[np.where(mask_matrix[6] == 0)] = 0
+        mask_layer[np.where(mask_matrix[2] == 0)] = 0
 
     elif age < 12.1:
 
-        mask_layer[np.where(mask_matrix[5] == 0)] = 0
+        mask_layer[np.where(mask_matrix[3] == 0)] = 0
 
     elif age < 18.1:
 
         mask_layer[np.where(mask_matrix[4] == 0)] = 0
 
-    elif age < 40.1:
+    elif age < 65.1:
 
-        mask_layer[np.where(mask_matrix[3] == 0)] = 0
+        mask_layer[np.where(mask_matrix[5] == 0)] = 0
 
     else:
-        mask_layer[np.where(mask_matrix[2] == 0)] = 0
+        mask_layer[np.where(mask_matrix[6] == 0)] = 0
 
     if gender in ['M', 'm', 'male', 'Male', '男', '男性', '男孩']:
 
@@ -259,8 +259,16 @@ def predict(input, age, gender, k_disease, k_symptom, dict_npy, segmentor, posta
         # assert(False)
         return None, None, None, None, None
 
-    input_vec = unitvec(np.sum(sent_vec, axis=0))
+    # Dis_vec_HX = self.unitvec(np.sum(symp_wv,axis =0))
+    # Dis_vec_all = np.reshape(Dis_mask_vec.append(Dis_vec_HX),[4,dim])
 
+    input_vec = unitvec(np.sum(sent_vec, axis=0))
+    # input_vec = np.reshape(input_vec, [1, dim])
+    # symtom_dis = np.dot(input_vec, symp_wv.T)
+    # name_dis = np.dot(input_vec, disease_name_vec.T)[0]
+    # combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]*mask_layer*mask_vec[0]
+    # #combined_dis =(self.name_weight*name_dis+(1-self.name_weight)*symtom_dis)[0]
+    # val, pos = self.top_k(combined_dis, k_disease)
     combined_dis = []
     for ll in range(len(sent_vec)):
         dis_tmp = np.reshape(sent_vec[ll], [1, dim])
@@ -273,17 +281,31 @@ def predict(input, age, gender, k_disease, k_symptom, dict_npy, segmentor, posta
         combined_dis.append(combined_dis_tmp * combined_dis_tmp)
     combined_dis_out = np.sqrt(np.mean(combined_dis, axis=0))
     val, pos = top_k(combined_dis_out, k_disease)
-    diff = -100 * np.diff(val)
-    x_stop = k_disease
-    for ii in range(len(diff)):
+    # diff = -100*np.diff(val)
+    # x_stop = k_disease
+    # for ii in range(len(diff)):
+    #
+    #     if diff[ii] > 200 and val[0]>0.84:
+    #
+    #         x_stop = ii
+    #
+    #         break
+    #
+    #
+    # pos = pos[0:x_stop+1]
+    # val = val[0:x_stop+1]
 
-        if diff[ii] > 200 and val[0] > 0.84:
-            x_stop = ii
-
-            break
-
-    pos = pos[0:x_stop + 1]
-    val = val[0:x_stop + 1]
+    # coeff_mask = np.zeros([1,len(pos)])
+    # coeff_mask[0][pos[0:10]] = 1
+    # neg_plane =  np.sum(symp_wv[pos[len(pos)-50:len(pos)]],axis =0)
+    # neg_plane = self.unitvec(neg_plane)
+    # neg_plane = np.reshape(neg_plane,[1,len(neg_plane)])
+    # coeff_shrink = 0.5+0.5*(1-np.dot(neg_plane,symp_wv.T))
+    # coeff_matrix = np.dot(coeff_shrink.T,np.ones([1,dim]))
+    # symp_wv_shrink = symp_wv*coeff_matrix
+    # symtom_dis = np.dot(input_vec, symp_wv_shrink.T)*coeff_mask
+    # combine_symtom_dis = symtom_dis[0]
+    # val, pos = self.top_k(combine_symtom_dis, k_disease)
 
     seg_vec_cur = np.array(seg_matrix)[pos]
 
@@ -293,7 +315,17 @@ def predict(input, age, gender, k_disease, k_symptom, dict_npy, segmentor, posta
 
     sympt_bag_cur = []
 
+    # seg_vec_all=  []
+    # sympt_bag_all = []
     symps_selected = []
+
+    # for ii in range(len(seg_bag_all)):
+    #     sympt_bag_all.extend(seg_bag_all[ii])
+    #     seg_vec_all.extend(seg_bag_all[ii])
+    #
+    #     if mask_layer[ii] == 0:
+    #
+    #        symps_selected.append()
 
     for ii in range(len(seg_bag_cur)):
         seg_vec_bag.extend(seg_vec_cur[ii])
@@ -328,12 +360,10 @@ def predict(input, age, gender, k_disease, k_symptom, dict_npy, segmentor, posta
         Coeff_sim_out.append(Coeff_symp_out[index_sym_out_list])
 
     K_symp = min([len(symp_out_fin), k_symptom])
-    if Coeff_sim_out == []:
-        return None, None, None, None, None
     val_simp, pos_simp = top_k(Coeff_sim_out, K_symp)
     symp_out_fin = np.array(symp_out_fin)[pos_simp]
 
     if val[0] < 0.5:
-        return None, None, None, None, None
+        return None, None, None, None, None, None
     else:
-        return np.array(diseases)[pos], np.array(index)[pos], val, symp_out_fin, val_simp
+        return np.array(diseases)[pos], np.array(index)[pos], val, symp_out_fin, val_simp, word_bag

@@ -29,8 +29,8 @@
         "clientId": "jindie",
         "orgName": "深圳南山区妇幼",
         "clientName": "金蝶",
-        "doctor_path": "/hospital/测试.doctor.json",
-        "predict_path": "/hospital/测试.predict.npy"
+        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json",
+        "predict_path": "/hospital/深圳南山区妇幼.predict.npy"
       },
       {
         "orgId": "gzfezx",
@@ -42,12 +42,12 @@
       }
     ],
     "other": {
-      "fasttext_model": "model-webqa-hdf-2c.bin",
-      "seg_model": "cws.model",
-      "pos_model": "pos.model",
-      "all_symptom_count_file_path": "all-symptom-count.data",
-      "disease_symptom_file_dir": "disease-symptom3.data",
-      "symptoms_distributions_file_dir": "symptoms_distributions.json"
+      "fasttext_model": "model-webqa-hdf-2c.bin.v1",
+      "seg_model": "cws.model.v1",
+      "pos_model": "pos.model.v1",
+      "all_symptom_count_file_path": "all-symptom-count.data.v1",
+      "disease_symptom_file_dir": "disease-symptom3.data.v1",
+      "symptoms_distributions_file_dir": "symptoms_distributions.json.v1"
     }
   },
   "text": {
@@ -62,8 +62,8 @@
       "没有了",
       "没了"
     ],
-    "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请咨询 400-028-7028",
-    "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请咨询 400-028-7028"
+    "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请电话咨询",
+    "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请电话咨询"
   },
   "DB": {
     "redis": {
