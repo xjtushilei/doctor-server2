@@ -5,7 +5,6 @@ import json
 def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=None, model=None, appointment=None):
     # example
     # get_doctors(['M80', 'R04', 'G80', 'B80', 'H52'],[0.9,0.9,0.9,0.9,0.9],22,"F")
-    print(codes, probs, age, gender, sep="\n")
     prob_threshold = 0.6
     age_threshold = 0.1
     gender_threshold = 0.1

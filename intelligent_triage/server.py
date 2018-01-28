@@ -199,7 +199,6 @@ def find_doctors():
             'status': status,
             'recommendation': recommendation
         }
-        print(recommendation)
         # 患者口述有疾病和症状，可以分到ICD10，但是不在医院诊疗范围,那么丽娟返回的doctor就是空
         if status == "doctors" and len(recommendation["doctors"]) == 0:
             userRes = {
