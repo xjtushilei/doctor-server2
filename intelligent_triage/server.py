@@ -206,7 +206,8 @@ def find_doctors():
                 'status': 'other',
                 'recommendation': {
                     "other": app_config["text"]["STATUS_DOCTOR_0"]
-                }
+                },
+                "all_log": recommendation
             }
     else:
         userRes = {

@@ -13,7 +13,7 @@ def post(content, userID="jerryz"):
     }
     start_time = time.time()
     try:
-        resp = requests.post("http://172.27.0.6:8802/nlu", json=body, timeout=0.25).json()
+        resp = requests.post("http://172.27.0.6:8802/nlu", json=body, timeout=0.75).json()
         nerList = resp["reply"]["ner_norms"]
         slots = resp["reply"]["slots"]
         result = []
