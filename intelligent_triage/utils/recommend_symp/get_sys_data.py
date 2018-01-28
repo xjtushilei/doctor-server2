@@ -107,5 +107,6 @@ def get_sym_count():
     with open("gen_data/all-symptom-count.data", "w", encoding="utf-8") as file:
         file.write(json.dumps(count, ensure_ascii=False))
 
-# deal_symptom_txt()
-# get_sym_count()
+
+deal_symptom_txt()
+get_sym_count()
