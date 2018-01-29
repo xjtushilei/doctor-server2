@@ -5,9 +5,9 @@ import json
 def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=None, model=None, appointment=None):
     # example
     # get_doctors(['M80', 'R04', 'G80', 'B80', 'H52'],[0.9,0.9,0.9,0.9,0.9],22,"F")
-    prob_threshold = 0.6
-    age_threshold = 0.1
-    gender_threshold = 0.1
+    prob_threshold = 0.5
+    age_threshold = 0.05
+    gender_threshold = 0.05
 
     code = codes[0]
     prob = probs[0]
@@ -15,11 +15,11 @@ def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=N
     if prob < prob_threshold:
         return []
 
-    if age <= 1:
+    if 0 < age <= 1:
         age_index = 0
     elif 1 < age <= 18:
         age_index = 1
-    elif 18 <= age < 100:
+    elif 18 < age <= 120:
         age_index = 2
     else:
         return []
@@ -31,12 +31,11 @@ def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=N
     else:
         return []
 
-    if code in model.keys():
-        if model[code]["age"][age_index] <= age_threshold:
+    agename = ["age01", "age0118", "age18"]
+    if code in model[agename[age_index]].keys():
+        if model[agename[age_index]][code]["gender"][gender_index] <= gender_threshold:
             return []
-        if model[code]["gender"][gender_index] <= gender_threshold:
-            return []
-        return model[code]["doctors"][:30]
+        return model[agename[age_index]][code]["doctors"][:10]
     else:
         return []
 
