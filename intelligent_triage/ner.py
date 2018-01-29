@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import re
 import time
 
 import requests
@@ -18,10 +19,11 @@ def post(content, userID="jerryz"):
         slots = resp["reply"]["slots"]
         result = []
         for w in nerList:
-            result.extend(w.split("|"))
+            result.extend(re.split("[-|,]", w))
         for l in slots.values():
             result.extend(l[0:2])
         result = list(set(result))
-        return result, resp, str(1000 * (time.time() - start_time)).split('.')[0]
+        time_consuming = round(1000 * (time.time() - start_time), 3)
+        return result, resp, time_consuming
     except Exception:
-        return [], "超时（250ms）或者json解析错误", str(1000 * (time.time() - start_time)).split('.')[0]
+        return [], "超时（250ms）或者json解析错误", time_consuming
