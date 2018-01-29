@@ -40,41 +40,46 @@
         "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
         "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1"
       }
-      },
-      "text"
-      :
-      {
-        "GREETING_PROMPT": "智能分诊助手帮您找到合适医生",
-        "NO_1_PROMPT": "请问患者哪里不舒服?",
-        "NO_CONTINUE": 3,
-        "NO_2_PROMPT": "患者还有其他不适症状吗?",
-        "NO_3_PROMPT": "患者还有其他不适症状吗?",
-        "NO_SYMPTOMS_PROMPT": "以上都没有",
-        "NO_SYMPTOMS_PROMPT_LIST": [
-          "以上都没有",
-          "没有了",
-          "没了"
-        ],
-        "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请电话咨询",
-        "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请电话咨询"
-      },
-      "DB"
-      :
-      {
-        "redis": {
-          "host": "172.27.0.10",
-          "port": 6379,
-          "DBID": 0,
-          "passwd": "S2k56dLhAahQtYZN",
-          "auth": true
-        },
-        "mongodb": {
-          "host": "172.27.0.4",
-          "port": 27017,
-          "db_name": "intelligent_triage",
-          "user": "mongouser",
-          "passwd": "H4wU6jxzMfH9Gt9o",
-          "auth": true
-        }
-      }
-      }
+    ],
+    "other": {
+      "fasttext_model": "model-webqa-hdf-2c.bin.v1",
+      "seg_model": "cws.model.v1",
+      "pos_model": "pos.model.v1",
+      "all_symptom_count_file_path": "all-symptom-count.data.v2",
+      "disease_symptom_file_dir": "disease-symptom3.data.v2",
+      "symptoms_distributions_file_dir": "symptoms_distributions.json.v1"
+    }
+  },
+  "text": {
+    "GREETING_PROMPT": "智能分诊助手帮您找到合适医生",
+    "NO_1_PROMPT": "请问患者哪里不舒服?",
+    "NO_CONTINUE": 3,
+    "NO_2_PROMPT": "患者还有其他不适症状吗?",
+    "NO_3_PROMPT": "患者还有其他不适症状吗?",
+    "NO_SYMPTOMS_PROMPT": "以上都没有",
+    "NO_SYMPTOMS_PROMPT_LIST": [
+      "以上都没有",
+      "没有了",
+      "没了"
+    ],
+    "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请电话咨询",
+    "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请电话咨询"
+  },
+  "DB": {
+    "redis": {
+      "host": "172.27.0.10",
+      "port": 6379,
+      "DBID": 0,
+      "passwd": "S2k56dLhAahQtYZN",
+      "auth": true
+    },
+    "mongodb": {
+      "host": "172.27.0.4",
+      "port": 27017,
+      "db_name": "intelligent_triage",
+      "user": "mongouser",
+      "passwd": "H4wU6jxzMfH9Gt9o",
+      "auth": true
+    }
+  }
+}
