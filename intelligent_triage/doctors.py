@@ -6,14 +6,7 @@ def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=N
     # example
     # get_doctors(['M80', 'R04', 'G80', 'B80', 'H52'],[0.9,0.9,0.9,0.9,0.9],22,"F")
     prob_threshold = 0.5
-    age_threshold = 0.05
     gender_threshold = 0.05
-
-    code = codes[0]
-    prob = probs[0]
-
-    if prob < prob_threshold:
-        return []
 
     if 0 < age <= 1:
         age_index = 0
@@ -23,6 +16,7 @@ def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=N
         age_index = 2
     else:
         return []
+    agename = ["age01", "age0118", "age18"]
 
     if gender in ["M", "男", "male"]:
         gender_index = 0
@@ -31,13 +25,11 @@ def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=N
     else:
         return []
 
-    agename = ["age01", "age0118", "age18"]
-    if code in model[agename[age_index]].keys():
-        if model[agename[age_index]][code]["gender"][gender_index] <= gender_threshold:
-            return []
-        return model[agename[age_index]][code]["doctors"][:10]
-    else:
-        return []
+    for code, prob in zip(codes, probs):
+        if (prob >= prob_threshold) and (code in model[agename[age_index]].keys()) and (
+                    model[agename[age_index]][code]["gender"][gender_index] >= gender_threshold):
+            return model[agename[age_index]][code]["doctors"][:30]
+    return []
 
 # with open("/mdata/finddoctor/model/hospital/深圳南山区妇幼.doctor.json.v1") as file:
 #     model = json.load(file)
