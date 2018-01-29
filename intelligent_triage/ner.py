@@ -26,4 +26,5 @@ def post(content, userID="jerryz"):
         time_consuming = round(1000 * (time.time() - start_time), 3)
         return result, resp, time_consuming
     except Exception:
+        time_consuming = round(1000 * (time.time() - start_time), 3)
         return [], "超时（250ms）或者json解析错误", time_consuming
