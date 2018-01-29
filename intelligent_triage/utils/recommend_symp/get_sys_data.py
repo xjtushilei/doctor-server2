@@ -10,7 +10,7 @@ def remove_stopwords(line):
     return re.sub(sws, " ", line)
 
 ############ 文件位置，样例文件.###########################
-symptoms_path="symptoms_nov26.txt"
+symptoms_path="symptoms_2018_1_29.txt"
 #########################################################
 
 
