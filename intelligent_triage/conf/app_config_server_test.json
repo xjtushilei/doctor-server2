@@ -29,7 +29,7 @@
         "clientId": "jindie",
         "orgName": "深圳南山区妇幼",
         "clientName": "金蝶",
-        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v1",
+        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
         "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1"
       },
       {
