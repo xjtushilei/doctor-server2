@@ -14,6 +14,7 @@ from doctors import get_doctors
 
 
 class Pipeline:
+    # 检查模型文件在不在
     def __init__(self, app_config):
         self.root_path = app_config["model_file"]["root_path"]
         for hospital in app_config["model_file"]["hospital"]:
@@ -59,12 +60,12 @@ class Pipeline:
             self.disease_symptom_file_dir = self.root_path + disease_symptom_file_dir
         else:
             raise RuntimeError("cannot find model file: " + self.root_path + disease_symptom_file_dir)
-        ###########################文案信息在配置文件中############################
         self.app_config = app_config
         # 所有doctor和predict文件
         self.doctor_model_dict = {}
         self.predict_model_dict = {}
 
+    # load模型文件
     def load(self):
         # 加载首轮推荐症状分布文件
         with open(self.symptoms_distributions_file_dir, 'r', encoding='utf-8') as fp:
@@ -120,16 +121,7 @@ class Pipeline:
         sws = "[！|“|”|‘|’|…|′|｜|、|，|。|〈|〉:：|《|》|「|」|『|』|【|】|〔|〕|︿|！|＃|＄|％|＆|＇|（|）|＊|＋|－|,．||；|＜|＝|＞|？|＠|［|］|＿|｛|｜|｝|～|↑|→|≈|①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩|￥|Δ|Ψ|γ|μ|φ|!|\"|'|#|\$|%|&|\*|\+|,|\.|;|\?|\\\|@|\(|\)|\[|\]|\^|_|`|\||\{|\}|~|<|>|=]"
         return re.sub(sws, " ", line)
 
-    # 老大用的分词函数
-    def process_sentences(self, sentences):
-        words = []
-        for sentence in sentences:
-            sent = self.remove_stopwords(sentence)
-            for word in self.segmentor.segment(sent):
-                words.append(word)
-        return words
-
-    # shilei用的分词函数,包括老大的分词和使用标点分词的结果
+    # 处理输入用的分词函数,包括ltp的分词和使用标点分词的结果
     def process_sentences_sl(self, sentences):
         words = []
         for sentence in sentences:
@@ -169,6 +161,7 @@ class Pipeline:
             temp_all_log.append(all_log)
             session["all_log"] = temp_all_log
 
+    # 获取历史所有的输入
     def get_all_choice_from_session_questions(self, session):
         result = []
         for question in session["questions"]:
@@ -215,6 +208,7 @@ class Pipeline:
         symptoms, symptoms_no_chioce = self.process_choice(self.get_all_choice_from_session_questions(session),
                                                            [question["choices"] for question in
                                                             session["questions"]])
+        # 第一轮
         if seqno == 1:
             # 当用户第一轮的输入为空时候，返回不可诊断
             if choice_now.strip() == "":
@@ -308,6 +302,7 @@ class Pipeline:
             self.update_session_log(session, all_log)
             return "followup", question, None
 
+        # 第二轮
         elif seqno == 2:
 
             # 和上一轮的选择列表进行对比,判断用户本轮所有的输入是否全部来自选择，没有自己人工输入？
@@ -437,6 +432,7 @@ class Pipeline:
                 question["all_log"] = all_log
             self.update_session_log(session, all_log)
             return "followup", question, None
+
         # 最后一轮会给出诊断结果
         else:
             # 将历史所有记录进入jingwei的模型
