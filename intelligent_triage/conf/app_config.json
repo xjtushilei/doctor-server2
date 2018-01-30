@@ -5,6 +5,7 @@
     "port": 8080,
     "threaded": true
   },
+  "predict_url": "http://127.0.0.1:8082/v1/predict",
   "model_file": {
     "root_path": "/mdata/finddoctor/model/",
     "hospital": [

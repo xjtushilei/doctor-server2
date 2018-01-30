@@ -6,15 +6,15 @@ import time
 import requests
 
 
-def post(content, userID="jerryz"):
-    body = {
+def get(content, url):
+    params = {
         "version": '1.0',
         "text": content,
         "userId": userID
     }
     start_time = time.time()
     try:
-        resp = requests.post("http://172.27.0.6:8802/nlu", json=body, timeout=0.75).json()
+        resp = requests.post(url, params=params).json()
         nerList = resp["reply"]["ner_norms"]
         slots = resp["reply"]["slots"]
         result = []
