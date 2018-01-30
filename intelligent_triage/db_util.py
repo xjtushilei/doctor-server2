@@ -1,52 +1,7 @@
 #!/usr/bin/env python3
 # coding:utf8
 
-import redis
 from pymongo import MongoClient
-
-
-class RedisCache(object):
-
-    def __init__(self, app_config):
-        self.app_config = app_config
-        if not hasattr(RedisCache, 'pool'):
-            RedisCache.create_pool(app_config)
-        self._connection = redis.Redis(connection_pool=RedisCache.pool)
-
-    @staticmethod
-    def create_pool(app_config):
-        if app_config["DB"]["redis"]["auth"]:
-            RedisCache.pool = redis.ConnectionPool(
-                host=app_config["DB"]["redis"]["host"],
-                port=app_config["DB"]["redis"]["port"],
-                db=app_config["DB"]["redis"]["DBID"],
-                password=app_config["DB"]["redis"]["passwd"])
-        else:
-            RedisCache.pool = redis.ConnectionPool(
-                host=app_config["DB"]["redis"]["host"],
-                port=app_config["DB"]["redis"]["port"],
-                db=app_config["DB"]["redis"]["DBID"])
-
-    def get_connection(self):
-        return self._connection
-
-    def set_data(self, key, value):
-        """
-        set data with (key, value)
-        """
-        return self._connection.set(key, value)
-
-    def get_data(self, key):
-        """
-        get data by key
-        """
-        return self._connection.get(key)
-
-    def del_data(self, key):
-        """
-        delete cache by key
-        """
-        return self._connection.delete(key)
 
 
 class Mongo:
@@ -62,15 +17,11 @@ class Mongo:
         else:
             self.db = self.client.get_database(app_config["DB"]["mongodb"]["db_name"])
 
-        self.recordCollection = self.db.get_collection("record")
         self.info_log = self.db.get_collection("info")
 
         self.error_log = self.db.get_collection("error")
 
         self.unknow_error_log = self.db.get_collection("unknow_error")
-
-    def record(self, item):
-        self.recordCollection.insert(item)
 
     def info(self, item):
         self.info_log.insert(item)

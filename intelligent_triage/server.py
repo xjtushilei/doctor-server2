@@ -1,13 +1,10 @@
 # coding=utf-8
-import hashlib
 import json
 import logging.config
 import os
 import random
-import re
 import socket
 import sys
-import time
 import traceback
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
@@ -16,17 +13,16 @@ from flask import Flask, jsonify
 from flask import request
 from flask_cors import CORS
 
-from db_util import RedisCache, Mongo
-from pipeline import Pipeline
+from db_util import Mongo
 
 app = Flask(__name__)
-
+# 返回的json串支持中文显示
+app.config['JSON_AS_ASCII'] = False
 # 允许跨域访问
 CORS(app, supports_credentials=True)
 
-CLIENT_API_SESSIONS = "/v2/sessions"
-CLIENT_API_DOCTORS = "/v2/doctors"
-CLIENT_API_RECORD = "/v2/appointments"
+# api版本信息和url
+CLIENT_API_PREDICT = "/v1/predict"
 
 
 # heartbeat handler
@@ -47,12 +43,12 @@ def load_balance():
 def test():
     if random.randint(1, 10) > 5:
         1 / 0
-    return "内部错误测试api随机通过,没有错误！"
+    return "内部错误测试api随机通过,没有错误异常！"
 
 
+# 处理所有未处理的异常
 @app.errorhandler(Exception)
 def unknow_error(error):
-    """"处理所有未处理的异常"""
     req = request.get_json()
     exstr = traceback.format_exc()
     error_data = {
@@ -71,322 +67,74 @@ def unknow_error(error):
     return "内部错误", 500
 
 
-@app.route(CLIENT_API_RECORD, methods=["POST"])
-def record():
-    ok, res, code = record_data_check(request)
+@app.route(CLIENT_API_PREDICT, methods=["GET"])
+def predict():
+    query_params = parse_qs(urlparse(request.url).query)
+    # 记录请求日志
+    log = {"type": "get", "url": request.url, "time": datetime.utcnow(), "ip": request.remote_addr}
+    mongo.info(log)
+    # 检查url参数合法性
+    ok, res, code = predict_url_check(query_params)
     if not ok:
-        mongo.error({"type": "record_check", "code": code, "res": res, "url": request.url, "data": request.json,
-                     "time": datetime.utcnow(), "ip": request.remote_addr})
+        mongo.error({"type": "predict_url_check", "code": code, "res": res, "url": request.url,
+                     "time": datetime.utcnow(), "ip": request.remote_addr, "params": query_params})
         return jsonify(res), code
 
-    req = request.get_json()
-    params = parse_qs(urlparse(request.url).query)
-    req["params"] = params
-    req["time"] = datetime.utcnow()
-    req["ip"] = request.remote_addr
-    mongo.record(req)
-    return "ok"
+    sessionId = query_params["sessionId"][0]
+    seqno = query_params["seqno"][0]
+    input = query_params["input"][0]
+    userId = query_params["userId"][0]
+    gender = query_params["gender"][0]
+    age = query_params["age"][0]
+    k_disease = query_params["k_disease"][0]
+    k_symptom = query_params["k_symptom"][0]
+
+    # 记录返回日志
+    log = {"type": "return", "params": query_params, "time": datetime.utcnow(),
+           "ip": request.remote_addr, "url": request.url, }
+    mongo.info(log)
+    return jsonify({})
 
 
-@app.route(CLIENT_API_SESSIONS, methods=["POST"])
-def creat_session():
-    start_time = time.time()
-    # 检查数据是否有效和url合法性
-    ok, res, code = session_data_check(request)
-    if not ok:
-        mongo.error({"type": "creat_session_check", "code": code, "res": res, "url": request.url, "data": request.json,
-                     "time": datetime.utcnow(), "ip": request.remote_addr})
-        return jsonify(res), code
-
-    req = request.get_json()
-    params = parse_qs(urlparse(request.url).query)
-    # clientId = params["clientId"][0]
-    # orgId = params["orgId"][0]
-    # branchId = None
-    # if "branchId" in params and len(params["branchId"]) > 0:
-    #     branchId = params["branchId"][0]
-
-    patient = req["patient"]
-    dob = patient["dob"]
-    gender = patient["sex"]
-    cardNo = patient["cardNo"]
-    wechatOpenId = req["wechatOpenId"]
-    age = get_age_from_dob(dob)
-    sessionId = wechatOpenId + "_" + cardNo + "_" + create_random_num_by_md5()
-    # 获取推荐的初始症状
-    symptoms = pipline.get_common_symptoms(age, gender)
-    question = create_question('multiple', 1, app_config["text"]["NO_1_PROMPT"], symptoms)
-    userRes = {
-        'sessionId': sessionId,
-        'greeting': app_config["text"]["GREETING_PROMPT"],
-        'question': question
-    }
-    session = {'patient': patient, 'wechatOpenId': wechatOpenId, 'questions': [question]}
-    dump_session(sessionId, session)
-    time_consuming = round(1000 * (time.time() - start_time), 3)
-    mongo.info({"type": "creat_session_done", "sessionId": sessionId,
-                "session": session, "params": params,
-                "time": datetime.utcnow(), "ip": request.remote_addr,
-                "time_consuming": time_consuming})
-
-    res = jsonify(userRes)
-    return res
-
-
-@app.route(CLIENT_API_DOCTORS, methods=["GET"])
-def find_doctors():
-    start_time = time.time()
-    # url检查
-    ok, res, code = find_doctor_data_check(request)
-    if not ok:
-        mongo.error({"type": "find_doctors_check", "code": code, "res": res, "url": request.url, "data": request.json,
-                     "time": datetime.utcnow(), "ip": request.remote_addr})
-        return jsonify(res), code
-    # 获取有用的信息
-    params = parse_qs(urlparse(request.url).query)
-    clientId = params["clientId"][0]
-    orgId = params["orgId"][0]
-    branchId = None
-    # 和医院约定的参数
-    appointment = None
-    if "branchId" in params and len(params["branchId"]) > 0:
-        branchId = params["branchId"][0]
-    if "appointment" in params and len(params["appointment"]) > 0:
-        appointment = params["appointment"][0]
-    sessionId = params["sessionId"][0]
-    seqno = int(params["seqno"][0])
-    if "choice" not in params:
-        choice = " "
-    else:
-        choice = params["choice"][0]
-        xss_status, xss_desc = xss_defense_check(choice)
-        if not xss_status:
-            return error("错误的请求:" + xss_desc), 400
-        # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
-        for x in app_config["text"]["NO_SYMPTOMS_PROMPT_LIST"]:
-            choice = choice.replace(x, " ")
-    # 是否在测试页面展示debug信息
-    if "debug" in params and params["debug"][0] == "true":
-        debug = True
-    else:
-        debug = False
-
-    ok, session = load_session(sessionId)
-    if not ok:
-        mongo.error({"type": "redis错误", "sessionId": sessionId, "url": request.url,
-                     "params": params, "session": session,
-                     "time": datetime.utcnow(), "ip": request.remote_addr})
-        return jsonify(error("sessionId错误（sessionId可能已经超时失效），请重新访问开始问诊")), 440
-    session = update_session(session, seqno, choice)
-    dob = session["patient"]["dob"]
-    sex = session["patient"]["sex"]
-    age = get_age_from_dob(dob)
-
-    # 进入主要逻辑函数
-    status, question, recommendation = pipline.process(session, seqno, choice, age, sex, orgId, clientId,
-                                                       branchId, appointment, debug=debug)
-    if status == "followup":
-        userRes = {
-            'sessionId': sessionId,
-            'status': status,
-            'question': question
-        }
-        session["questions"].append(question)
-
-    elif status == "doctors" or status == "department":
-        userRes = {
-            'sessionId': sessionId,
-            'status': status,
-            'recommendation': recommendation
-        }
-        # 患者口述有疾病和症状，可以分到ICD10，但是不在医院诊疗范围,那么丽娟返回的doctor就是空
-        if status == "doctors" and len(recommendation["doctors"]) == 0:
-            userRes = {
-                'sessionId': sessionId,
-                'status': 'other',
-                'recommendation': {
-                    "other": app_config["text"]["STATUS_DOCTOR_0"]
-                },
-                "all_log": recommendation
-            }
-    else:
-        userRes = {
-            'sessionId': sessionId,
-            'status': 'other',
-            'recommendation': {
-                "other": app_config["text"]["STATUS_OTHER"]
-            }
-        }
-        if debug:
-            userRes["debug"] = recommendation
-    # 计算主要逻辑运行时间
-    time_consuming = round(1000 * (time.time() - start_time), 3)
-
-    mongo.info({"type": status, "sessionId": sessionId, "url": request.url,
-                "params": params, "session": session,
-                "time": datetime.utcnow(), "ip": request.remote_addr,
-                "time_consuming": time_consuming})
-    dump_session(sessionId, session)
-    res = jsonify(userRes)
-    return res
-
-
+# 定义错误异常
 def error(error_msg):
     return {
         "error": error_msg
     }
 
 
-def auth_check(request):
-    url = urlparse(request.url)
-    query = url.query
-    query_params = parse_qs(query)
-    if not ("clientId" in query_params and "orgId" in query_params
-            and query_params["clientId"][0] in auth_clientId_set
-            and query_params["orgId"][0] in auth_orgId_set):
-        return False, error("未授权用户"), 401
-    return True, None, None
-
-
-def find_doctor_data_check(request):
-    ok, res, code = auth_check(request)
-    if not ok:
-        return False, res, code
-    url = urlparse(request.url)
-    query = url.query
-    query_params = parse_qs(query)
-    if not ("sessionId" in query_params and
-            "seqno" in query_params and "query" in query_params and len(query_params["seqno"]) > 0):
-        return False, error("错误的请求: url中没有包含choice或query或seqno"), 400
-    return True, None, None
-
-
-def record_data_check(request):
-    ok, res, code = auth_check(request)
-    if not ok:
-        return False, res, code
-
-    req = request.get_json()
-    # 检查数据是否为空
-    if req is None:
-        res = error("错误的请求: 无法解析JSON 或 请求中请设置 'content-type' 为 'application/json' ")
-        return False, res, 400
-    # 检查数据是否有效
-    if "patient" not in req or "doctor" not in req or "sessionId" not in req or "appointmentId" not in req or "wechatOpenId" not in req:
-        return False, error("错误的请求: 错误的数据上报格式(字段缺失)"), 400
-    if "cardNo" not in req["patient"] or "doctorId" not in req["doctor"]:
-        return False, error("错误的请求: 错误的数据上报格式(cardNo或doctorId字段缺失)"), 400
-
-    return True, None, None
-
-
-def session_data_check(request):
-    ok, res, code = auth_check(request)
-    if not ok:
-        return False, res, code
-
-    req = request.get_json()
-    # 检查数据是否为空
-    if req is None:
-        res = error("错误的请求: 无法解析JSON 或 请求中请设置 'content-type' 为 'application/json' ")
-        return False, res, 400
-    # 检查数据是否有效
-    if "patient" not in req or "wechatOpenId" not in req:
-        return False, error("错误的请求: 错误的数据格式(字段缺失)"), 400
-    patient = req["patient"]
-    if "dob" not in patient or "cardNo" not in patient or "sex" not in patient or "name" not in patient:
-        return False, error("错误的请求: 错误的数据格式(patient中字段缺失)"), 400
-    dob = patient["dob"]
-    gender = patient["sex"]
-    if not (is_valid_date(dob) and len(dob) == 10):
-        return False, error("错误的请求: 错误的数据格式(出生年月格式不对,示例：2018-02-01)"), 400
+# 检查url参数合法性
+def predict_url_check(query_params):
+    if not ("sessionId" in query_params and "seqno" in query_params
+            and "input" in query_params and "userId" in query_params
+            and "k_disease" in query_params and "k_symptom" in query_params
+            and "age" in query_params and "gender" in query_params):
+        return False, error("错误的请求: url中没有包含sessionId或input或seqno或userId或age或gender或k_disease或k_symptom"), 400
+    gender = query_params["gender"][0]
     if not (gender == "male" or gender == "female"):
-        return False, error("错误的请求: 错误的数据格式(sex格式不对,应该是male或female)"), 400
-
+        return False, error("错误的请求: 错误的数据格式(gender格式不对,应该是male或female)"), 400
+    age = query_params["age"][0]
+    try:
+        age = float(age)
+        if age < 0:
+            return False, error("错误的请求: 错误的数据格式(age格式不对,应该是正整数或正浮点数)"), 400
+    except ValueError:
+        return False, error("错误的请求: 错误的数据格式(age格式不对,应该是正整数或正浮点数)"), 400
+    k_disease = query_params["k_disease"][0]
+    try:
+        k_disease = int(k_disease)
+        if k_disease < 0:
+            return False, error("错误的请求: 错误的数据格式(k_disease格式不对,应该是正整数)"), 400
+    except ValueError:
+        return False, error("错误的请求: 错误的数据格式(k_disease格式不对,应该是正整数)"), 400
+    k_symptom = query_params["k_symptom"][0]
+    try:
+        k_symptom = int(k_symptom)
+        if k_symptom < 0:
+            return False, error("错误的请求: 错误的数据格式(k_symptom 格式不对,应该是正整数)"), 400
+    except ValueError:
+        return False, error("错误的请求: 错误的数据格式(k_symptom 格式不对,应该是正整数)"), 400
     return True, None, None
-
-
-def load_session(id):
-    try:
-        sessionData = RedisCache(app_config).get_data(id).decode()
-        session = json.loads(sessionData)
-        return True, session
-    except:
-        return False, None
-
-
-def dump_session(sessionId, session):
-    sessionData = json.dumps(session, ensure_ascii=False)
-    RedisCache(app_config).set_data(sessionId, sessionData)
-    # reidis最多 session保留24分钟
-    RedisCache(app_config).get_connection().expire(sessionId, 60 * 24)
-
-
-def get_age_from_dob(dob):
-    birth = datetime.strptime(dob, "%Y-%m-%d")
-    today = datetime.today()
-    diff = (today - birth)
-    ageInDays = diff.days
-    return ageInDays / 365.
-
-
-def create_question(qtype, seqno, query, choices):
-    return {
-        'type': qtype,
-        'seqno': seqno,
-        'query': query,
-        'choices': choices
-    }
-
-
-def is_valid_date(strdate):
-    '''''判断是否是一个有效的日期字符串'''
-    try:
-        time.strptime(strdate, "%Y-%m-%d")
-        return True
-    except:
-        return False
-
-
-# 创建随机数
-def create_random_num_by_md5():  # 通过MD5的方式创建
-    m = hashlib.md5()
-    m.update(bytes(str(time.time()), encoding='utf-8'))
-    return m.hexdigest()
-
-
-def update_session(session, seqno, choice):
-    if "questions" in session:
-        questions = session["questions"]
-        # print(questions)
-        updatedQuestions = []
-        for question in questions:
-            if "seqno" in question:
-                if question["seqno"] < seqno:
-                    updatedQuestions.append(question)
-                elif question["seqno"] == seqno:
-                    question["choice"] = choice
-                    updatedQuestions.append(question)
-        session["questions"] = updatedQuestions
-        # print(session["questions"])
-    return session
-
-
-sql_key = ["select", "in", "from", "between", "aliases", "join", "union", "create", "null",
-           "unique", "alter", "nulls", "avg", "sum", "max", "min", "len", "like", "where",
-           "and", "order", "insert", "delete", "update", "top"]
-
-
-def xss_defense_check(input):
-    dr = re.compile(r'<[^>]+>', re.S)
-    dd = dr.sub('', input)
-    if len(dd) != len(input):
-        return False, "请求字段包含html标签"
-    input = input.lower()
-    for key in sql_key:
-        if key in input:
-            return False, "请求字段包含SQL常见关键字"
-    return True, None
 
 
 # 获取当前文件的绝对路径，加在配置文件前，这样才能读出来
@@ -425,34 +173,20 @@ if __name__ == '__main__':
         config_path = src_path() + "/conf/app_config.json"
     # 获取yaml配置文件
     app_config = load_config(config_path)
-
-    ################################获得授权集合#######################
-    auth_orgId_set = set()
-    auth_clientId_set = set()
-    for hospital in app_config["model_file"]["hospital"]:
-        auth_orgId_set.add(hospital["orgId"])
-        auth_clientId_set.add(hospital["clientId"])
     ################################LOG日志文件#######################
     # 获取log配置文件
     if not os.path.exists("log/"):
         os.makedirs("log/")
     log_config_path = src_path() + "/conf/logger.conf"
     logging.config.fileConfig(log_config_path)
-    # 通用日志
-    log_info = logging.getLogger("myinfo")
     # 记录程序中位置的错误，比如jignwei的模型突然出现不可预知的except，就捕获
     log_unkonw_error = logging.getLogger("unknown_error")
-    # DEBUG--INFO--ERROR
-    log_level = "DEBUG"
     ###############################模型文件加载#########################
     # 统计加载模型时间
     starttime = datetime.now()
-    pipline = Pipeline(app_config)
-    pipline.load()
-    endtime = datetime.now()
-    log_info.setLevel(log_level)
-    print("模型加载一共用时:" + str((endtime - starttime).seconds) + "秒" + "\nfinished loading models.\n server started .")
 
+    endtime = datetime.now()
+    print("模型加载一共用时:" + str((endtime - starttime).seconds) + "秒" + "\nfinished loading models.\n server started .")
     ###########################初始化mongodb驱动###########################
     mongo = Mongo(app_config)
     mongo.info_log.insert({"loadtime": str((endtime - starttime).seconds), "type": "loadtime",
