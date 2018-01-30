@@ -9,7 +9,8 @@
     "root_path": "/cfs_chengdu/finddoctor/model/",
     "fasttext_model": "model-webqa-hdf-2c.bin.v1",
     "seg_model": "cws.model.v1",
-    "pos_model": "pos.model.v1"
+    "pos_model": "pos.model.v1",
+    "dict_var": "dict_var.npy.v1"
   },
   "DB": {
     "mongodb": {

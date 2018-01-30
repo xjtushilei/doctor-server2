@@ -14,6 +14,7 @@ from flask import request
 from flask_cors import CORS
 
 from db_util import Mongo
+from pmodel import PredModel
 
 app = Flask(__name__)
 # 返回的json串支持中文显示
@@ -80,20 +81,29 @@ def predict():
                      "time": datetime.utcnow(), "ip": request.remote_addr, "params": query_params})
         return jsonify(res), code
 
-    sessionId = query_params["sessionId"][0]
-    seqno = query_params["seqno"][0]
     input = query_params["input"][0]
-    userId = query_params["userId"][0]
     gender = query_params["gender"][0]
-    age = query_params["age"][0]
-    k_disease = query_params["k_disease"][0]
-    k_symptom = query_params["k_symptom"][0]
+    age = int(query_params["age"][0])
+    k_disease = int(query_params["k_disease"][0])
+    k_symptom = int(query_params["k_symptom"][0])
+    diseases, icd10, rate, symptoms, Coeff_sim_out, word_vec_bag = predictModel.predict(input=input,
+                                                                                        age=age,
+                                                                                        gender=gender,
+                                                                                        k_disease=k_disease,
+                                                                                        k_symptom=k_symptom)
 
+    if diseases is None:
+        result = {"diseases": [], "icd10": [], "rate": [], "symptom": []}
+    else:
+        diseases = diseases.tolist()
+        icd10 = icd10.tolist()
+        symptoms = symptoms.tolist()
+        result = {"diseases": diseases, "icd10": icd10, "rate": rate, "symptom": symptoms}
     # 记录返回日志
     log = {"type": "return", "params": query_params, "time": datetime.utcnow(),
-           "ip": request.remote_addr, "url": request.url, }
+           "ip": request.remote_addr, "url": request.url, "result": result}
     mongo.info(log)
-    return jsonify({})
+    return jsonify(result)
 
 
 # 定义错误异常
@@ -184,7 +194,11 @@ if __name__ == '__main__':
     ###############################模型文件加载#########################
     # 统计加载模型时间
     starttime = datetime.now()
-
+    predictModel = PredModel(
+        seg_model_path=app_config["model_file"]["root_path"] + app_config["model_file"]["seg_model"],
+        pos_model_path=app_config["model_file"]["root_path"] + app_config["model_file"]["pos_model"],
+        w2v_model_path=app_config["model_file"]["root_path"] + app_config["model_file"]["fasttext_model"],
+        dict_var_path=app_config["model_file"]["root_path"] + app_config["model_file"]["dict_var"])
     endtime = datetime.now()
     print("模型加载一共用时:" + str((endtime - starttime).seconds) + "秒" + "\nfinished loading models.\n server started .")
     ###########################初始化mongodb驱动###########################
