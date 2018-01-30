@@ -18,18 +18,12 @@ class Pipeline:
     def __init__(self, app_config):
         self.root_path = app_config["model_file"]["root_path"]
         for hospital in app_config["model_file"]["hospital"]:
-            for file_type in ["doctor_path", "predict_path"]:
+            for file_type in ["doctor_path", "predict_path", "symptoms_distributions_path"]:
                 hospital_file_path = self.root_path + hospital[file_type]
                 if os.path.isfile(hospital_file_path):
                     self.symptoms_distributions_file_dir = hospital_file_path
                 else:
                     raise RuntimeError("cannot find model file: " + hospital_file_path)
-
-        symptoms_distributions_file_dir = app_config["model_file"]["other"]["symptoms_distributions_file_dir"]
-        if os.path.isfile(self.root_path + symptoms_distributions_file_dir):
-            self.symptoms_distributions_file_dir = self.root_path + symptoms_distributions_file_dir
-        else:
-            raise RuntimeError("cannot find model file: " + self.root_path + symptoms_distributions_file_dir)
 
         fasttext_model_dir = app_config["model_file"]["other"]["fasttext_model"]
         if os.path.isfile(self.root_path + fasttext_model_dir):
@@ -61,19 +55,22 @@ class Pipeline:
         else:
             raise RuntimeError("cannot find model file: " + self.root_path + disease_symptom_file_dir)
         self.app_config = app_config
-        # 所有doctor和predict文件
+        # 所有doctor,predict,symptoms_distributions_path文件
         self.doctor_model_dict = {}
         self.predict_model_dict = {}
+        self.symptoms_distributions_dict = {}
 
     # load模型文件
     def load(self):
-        # 加载首轮推荐症状分布文件
-        with open(self.symptoms_distributions_file_dir, 'r', encoding='utf-8') as fp:
-            self.symptoms_dist = json.load(fp)
         # 加载医院定制的所有doctor和predict文件
         for hospital in self.app_config["model_file"]["hospital"]:
+            # 加载推荐医生模型
             with open(self.root_path + hospital["doctor_path"], encoding="utf-8") as file:
                 self.doctor_model_dict[hospital["orgId"]] = json.load(file)
+            # 加载首轮推荐模型
+            with open(self.root_path + hospital["symptoms_distributions_path"], encoding="utf-8") as file:
+                self.symptoms_distributions_dict[hospital["orgId"]] = json.load(file)
+            # 加载医院推荐模型
             self.predict_model_dict[hospital["orgId"]] = np.load(self.root_path + hospital["predict_path"])
         # 加载字典模型
         self.segmentor = Segmentor()
@@ -87,7 +84,7 @@ class Pipeline:
                                                                          self.all_symptom_count_file_path)
 
     # 医生模型的首轮推荐症状
-    def get_common_symptoms(self, age, gender, month=None):
+    def get_common_symptoms(self, age, gender, orgid, month=None):
         # input: age: int, age>0; gender: {'F','M'}; month:int, [1,..12]
         # age = 12
         # gender = 'F'
@@ -114,7 +111,7 @@ class Pipeline:
         a = np.argmax(np.array(ages) >= age)
         index = 'M' + str(months[m - 1]) + 'M' + str(months[m]) + 'A' + str(ages[a - 1]) + 'A' + str(
             ages[a]) + gender
-        return [item[0] for item in self.symptoms_dist[index]][0:5]
+        return [item[0] for item in self.symptoms_distributions_dict[orgid][index]][0:5]
 
     # 去掉停用词，并用空格替换
     def remove_stopwords(self, line):

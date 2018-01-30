@@ -103,7 +103,7 @@ def creat_session():
     req = request.get_json()
     params = parse_qs(urlparse(request.url).query)
     # clientId = params["clientId"][0]
-    # orgId = params["orgId"][0]
+    orgId = params["orgId"][0]
     # branchId = None
     # if "branchId" in params and len(params["branchId"]) > 0:
     #     branchId = params["branchId"][0]
@@ -116,7 +116,7 @@ def creat_session():
     age = get_age_from_dob(dob)
     sessionId = wechatOpenId + "_" + cardNo + "_" + create_random_num_by_md5()
     # 获取推荐的初始症状
-    symptoms = pipline.get_common_symptoms(age, gender)
+    symptoms = pipline.get_common_symptoms(age, gender, orgId)
     question = create_question('multiple', 1, app_config["text"]["NO_1_PROMPT"], symptoms)
     userRes = {
         'sessionId': sessionId,
