@@ -9,7 +9,7 @@ import numpy as np
 
 import dialogue
 import ner
-import predict
+import predictold
 from doctors import get_doctors
 
 
@@ -173,10 +173,10 @@ class Pipeline:
         """
         K_Top_dis = 5
         K_Top_symp = 5
-        diseases, icd10, val, symp_out, Coeff_sim_out, word_vec_bag = predict.predict(input, age, gender, K_Top_dis,
-                                                                                      K_Top_symp,
-                                                                                      dict_npy,
-                                                                                      segmentor, postagger, fasttext)
+        diseases, icd10, val, symp_out, Coeff_sim_out, word_vec_bag = predictold.predict(input, age, gender, K_Top_dis,
+                                                                                         K_Top_symp,
+                                                                                         dict_npy,
+                                                                                         segmentor, postagger, fasttext)
         if diseases is None:
             return None, None, None, None
         nvs = zip(symp_out, Coeff_sim_out)
