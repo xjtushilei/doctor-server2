@@ -158,6 +158,7 @@ def find_doctors():
         appointment = params["appointment"][0]
     sessionId = params["sessionId"][0]
     seqno = int(params["seqno"][0])
+    # python的特色，传空的时候取不到该值，其他语言或框架请忽略
     if "choice" not in params:
         choice = " "
     else:
@@ -210,7 +211,6 @@ def find_doctors():
                 'recommendation': {
                     "other": app_config["text"]["STATUS_DOCTOR_0"]
                 },
-                "all_log": recommendation
             }
     else:
         userRes = {
@@ -220,8 +220,6 @@ def find_doctors():
                 "other": app_config["text"]["STATUS_OTHER"]
             }
         }
-        if debug:
-            userRes["debug"] = recommendation
     # 计算主要逻辑运行时间
     time_consuming = round(1000 * (time.time() - start_time), 3)
 

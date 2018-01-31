@@ -6,21 +6,22 @@ import requests
 
 
 # 返回结果，超时时间，结果是否可以用
-def get(input, age, gender, k_disease, k_symptom, sessionId, userId, seqno, url):
-    params = {
-        "input": input,
-        "age": age,
+def get(all_choice, all_choices, age, gender, k_disease, k_recommendation_symtom, sessionId, userId, seqno, url):
+    data = {
+        "session_id": sessionId,
+        "user_id": userId,
+        "seqno": seqno,
         "gender": gender,
+        "age": age,
         "k_disease": k_disease,
-        "k_symptom": k_symptom,
-        "sessionId": sessionId,
-        "userId": userId,
-        "seqno": seqno
+        "k_recommendation_symtom": k_recommendation_symtom,
+        "all_choice": all_choice,
+        "all_choices": all_choices
     }
     start_time = time.time()
     try:
         # 最长等待5秒，不返回，则人为没有匹配到疾病
-        resp = requests.get(url, params=params, timeout=5)
+        resp = requests.post(url, json=data, timeout=5)
         result = resp.json()
         time_consuming = round(1000 * (time.time() - start_time), 3)
         return result, time_consuming, resp.ok
