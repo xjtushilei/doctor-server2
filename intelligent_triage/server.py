@@ -83,7 +83,7 @@ def predict():
 
     input = query_params["input"][0]
     gender = query_params["gender"][0]
-    age = int(query_params["age"][0])
+    age = float(query_params["age"][0])
     k_disease = int(query_params["k_disease"][0])
     k_symptom = int(query_params["k_symptom"][0])
     diseases, icd10, rate, symptoms, Coeff_sim_out, word_vec_bag = predictModel.predict(input=input,
