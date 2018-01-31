@@ -71,6 +71,7 @@ def unknow_error(error):
     return "内部错误", 500
 
 
+# 上报挂号成功！
 @app.route(CLIENT_API_RECORD, methods=["POST"])
 def record():
     ok, res, code = record_data_check(request)
@@ -88,6 +89,7 @@ def record():
     return "ok"
 
 
+# 创建session
 @app.route(CLIENT_API_SESSIONS, methods=["POST"])
 def creat_session():
     start_time = time.time()
@@ -101,7 +103,7 @@ def creat_session():
     req = request.get_json()
     params = parse_qs(urlparse(request.url).query)
     # clientId = params["clientId"][0]
-    # orgId = params["orgId"][0]
+    orgId = params["orgId"][0]
     # branchId = None
     # if "branchId" in params and len(params["branchId"]) > 0:
     #     branchId = params["branchId"][0]
@@ -114,7 +116,7 @@ def creat_session():
     age = get_age_from_dob(dob)
     sessionId = wechatOpenId + "_" + cardNo + "_" + create_random_num_by_md5()
     # 获取推荐的初始症状
-    symptoms = pipline.get_common_symptoms(age, gender)
+    symptoms = pipline.get_common_symptoms(age, gender, orgId)
     question = create_question('multiple', 1, app_config["text"]["NO_1_PROMPT"], symptoms)
     userRes = {
         'sessionId': sessionId,
@@ -133,6 +135,7 @@ def creat_session():
     return res
 
 
+# 诊断并推荐症状、医生
 @app.route(CLIENT_API_DOCTORS, methods=["GET"])
 def find_doctors():
     start_time = time.time()
@@ -231,12 +234,14 @@ def find_doctors():
     return res
 
 
+# 错误数据结构定义
 def error(error_msg):
     return {
         "error": error_msg
     }
 
 
+# 授权检查
 def auth_check(request):
     url = urlparse(request.url)
     query = url.query
@@ -248,6 +253,7 @@ def auth_check(request):
     return True, None, None
 
 
+# find_doctor_data函数的参数检查
 def find_doctor_data_check(request):
     ok, res, code = auth_check(request)
     if not ok:
@@ -261,6 +267,7 @@ def find_doctor_data_check(request):
     return True, None, None
 
 
+# 　参数检查
 def record_data_check(request):
     ok, res, code = auth_check(request)
     if not ok:
@@ -280,6 +287,7 @@ def record_data_check(request):
     return True, None, None
 
 
+# ｓｅｓｓｉｏｎ的参数检查
 def session_data_check(request):
     ok, res, code = auth_check(request)
     if not ok:
@@ -306,6 +314,7 @@ def session_data_check(request):
     return True, None, None
 
 
+# 从redis中loadsession
 def load_session(id):
     try:
         sessionData = RedisCache(app_config).get_data(id).decode()
@@ -315,6 +324,7 @@ def load_session(id):
         return False, None
 
 
+# 持久化session到redis中
 def dump_session(sessionId, session):
     sessionData = json.dumps(session, ensure_ascii=False)
     RedisCache(app_config).set_data(sessionId, sessionData)
@@ -322,6 +332,7 @@ def dump_session(sessionId, session):
     RedisCache(app_config).get_connection().expire(sessionId, 60 * 24)
 
 
+# 计算年龄
 def get_age_from_dob(dob):
     birth = datetime.strptime(dob, "%Y-%m-%d")
     today = datetime.today()
@@ -330,6 +341,7 @@ def get_age_from_dob(dob):
     return ageInDays / 365.
 
 
+# 返回的问题的数据结构定义
 def create_question(qtype, seqno, query, choices):
     return {
         'type': qtype,
@@ -339,6 +351,7 @@ def create_question(qtype, seqno, query, choices):
     }
 
 
+# 判断日期合法性
 def is_valid_date(strdate):
     '''''判断是否是一个有效的日期字符串'''
     try:
@@ -355,6 +368,7 @@ def create_random_num_by_md5():  # 通过MD5的方式创建
     return m.hexdigest()
 
 
+# 更新session
 def update_session(session, seqno, choice):
     if "questions" in session:
         questions = session["questions"]
@@ -377,6 +391,7 @@ sql_key = ["select", "in", "from", "between", "aliases", "join", "union", "creat
            "and", "order", "insert", "delete", "update", "top"]
 
 
+# 检查异常请求
 def xss_defense_check(input):
     dr = re.compile(r'<[^>]+>', re.S)
     dd = dr.sub('', input)
