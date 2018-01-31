@@ -32,7 +32,7 @@ def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=N
             for item in model[agename[age_index]][code]["doctors"]:
                 item["registration"] = True
                 results.append(item)
-            return results[:20]
+            return results[:10]
     return []
 
 # with open("/mdata/finddoctor/model/hospital/深圳南山区妇幼.doctor.json.v1") as file:
