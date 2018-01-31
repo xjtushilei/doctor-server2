@@ -25,10 +25,14 @@ def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=N
     else:
         return []
 
+    results = []
     for code, prob in zip(codes, probs):
         if (prob >= prob_threshold) and (code in model[agename[age_index]].keys()) and (
                     model[agename[age_index]][code]["gender"][gender_index] >= gender_threshold):
-            return model[agename[age_index]][code]["doctors"][:30]
+            for item in model[agename[age_index]][code]["doctors"]:
+                item["registration"] = True
+                results.append(item)
+            return results[:20]
     return []
 
 # with open("/mdata/finddoctor/model/hospital/深圳南山区妇幼.doctor.json.v1") as file:
