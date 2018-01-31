@@ -1,9 +1,6 @@
 # coding=utf-8
 import json
 
-import predictold
-
-
 def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
                       all_symptom_count_file_path="./model/all-symptom-count.data"):
     """

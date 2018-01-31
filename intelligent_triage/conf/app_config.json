@@ -15,7 +15,6 @@
         "orgName": "深圳福田妇幼保健",
         "clientName": "金蝶",
         "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
-        "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       },
       {
@@ -24,7 +23,6 @@
         "orgName": "测试",
         "clientName": "测试",
         "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
-        "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       },
       {
@@ -33,7 +31,6 @@
         "orgName": "深圳南山区妇幼",
         "clientName": "金蝶",
         "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
-        "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       },
       {
@@ -42,12 +39,10 @@
         "orgName": "广州妇儿中心",
         "clientName": "医慧",
         "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
-        "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       }
     ],
     "other": {
-      "fasttext_model": "model-webqa-hdf-2c.bin.v1",
       "seg_model": "cws.model.v1",
       "pos_model": "pos.model.v1",
       "all_symptom_count_file_path": "all-symptom-count.data.v2",

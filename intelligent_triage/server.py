@@ -50,7 +50,7 @@ def test():
     return "内部错误测试api随机通过,没有错误！"
 
 
-@app.errorhandler(Exception)
+# @app.errorhandler(Exception)
 def unknow_error(error):
     """"处理所有未处理的异常"""
     req = request.get_json()
@@ -123,7 +123,7 @@ def creat_session():
         'greeting': app_config["text"]["GREETING_PROMPT"],
         'question': question
     }
-    session = {'patient': patient, 'wechatOpenId': wechatOpenId, 'questions': [question]}
+    session = {"sessionId": sessionId, 'patient': patient, 'wechatOpenId': wechatOpenId, 'questions': [question]}
     dump_session(sessionId, session)
     time_consuming = round(1000 * (time.time() - start_time), 3)
     mongo.info({"type": "creat_session_done", "sessionId": sessionId,

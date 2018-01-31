@@ -27,3 +27,6 @@ def get(input, age, gender, k_disease, k_symptom, sessionId, userId, seqno, url)
     except Exception:
         time_consuming = round(1000 * (time.time() - start_time), 3)
         return None, time_consuming, False
+
+
+print(get("乏力,头疼,", 11.12312312, "female", 5, 5, "12", "userid", 1, "http://127.0.0.1:8082/v1/predict"))
