@@ -9,8 +9,11 @@ sws = "[！|“|”|‘|’|…|′|｜|、|，|。|〈|〉:：|《|》|「|」|
 def remove_stopwords(line):
     return re.sub(sws, " ", line)
 
+
 ############ 文件位置，样例文件.###########################
-symptoms_path="symptoms_2018_1_29.txt"
+symptoms_path = "symptoms_2018_1_29.txt"
+
+
 #########################################################
 
 
@@ -46,7 +49,6 @@ def deal_symptom_txt():
     生成dict文件，处理症状的文件
     :return: level3的dict
     """
-    all_sym_count={}
     l3sym_map = {}
     class_names, class_codes, symptoms0, symptoms1, symptoms2, symptoms3 = read_disease_symptoms()
     for i in range(len(class_names)):
@@ -76,7 +78,7 @@ def deal_symptom_txt():
             all_sym_dic[sys] = 9 * bite
             top1[sys] = 9 * bite
 
-        l3sym_map[l3name] = {"l3name": l3name, "l3code": l3code, "all_sym_dic": all_sym_dic,
+        l3sym_map[l3code] = {"l3name": l3name, "l3code": l3code, "all_sym_dic": all_sym_dic,
                              "top3": top3, "top2": top2, "top1": top1}
 
     with open("gen_data/disease-symptom3.data", "w", encoding="utf-8") as file:
@@ -90,8 +92,6 @@ def get_sym_count():
         for line in fp:
             line = line.encode('utf-8').decode('utf-8-sig')
             words = line.split('|')
-            name = words[0]
-            code = words[1]
 
             symp0 = remove_stopwords(words[2].strip()).split(" ")
             str1.extend(symp0)
@@ -101,8 +101,7 @@ def get_sym_count():
 
             symp2 = remove_stopwords(words[4].strip()).split(" ")
             str1.extend(symp2)
-
-    count = collections.Counter(str1)
+        count = collections.Counter(str1)
     # print(count)
     with open("gen_data/all-symptom-count.data", "w", encoding="utf-8") as file:
         file.write(json.dumps(count, ensure_ascii=False))

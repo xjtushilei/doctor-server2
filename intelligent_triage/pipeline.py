@@ -61,9 +61,10 @@ class Pipeline:
         self.segmentor = Segmentor()
         self.segmentor.load(self.seg_model_dir)
 
-        # 加载多轮推荐症状字典
-        self.l3sym_dict, self.all_sym_count = dialogue.read_symptom_data(self.disease_symptom_file_dir,
-                                                                         self.all_symptom_count_file_path)
+        # 加载多轮推荐症状字典 1.disease和症状   2.还有所有症状的排序
+        with open(self.disease_symptom_file_dir, encoding='utf-8') as file1, open(self.all_symptom_count_file_path,
+                                                                                  encoding='utf-8') as file2:
+            self.l3sym_dict, self.all_sym_count = json.load(file1), json.load(file2)
 
     # 医生模型的首轮推荐症状,苏丽娟
     def get_common_symptoms(self, age, gender, orgid, month=None):
@@ -151,18 +152,17 @@ class Pipeline:
     # 京伟的predict模型封装
     def get_diagnosis_first(self, input, age, gender, sessionId, userId, seqno):
         """
-        接受京伟的数据,返回推荐列表，对话推荐需要的症状列表,还有丽娟需要的codes,probs
+        接受京伟的数据,返回推荐列表，对话推荐需要的症状列表,还有丽娟需要的icd10codes和概率
         """
         # 返回前k个疾病
         k_disease = 5
         # 返回前k个症状
         k_symptom = 5
-        print(self.app_config["predict_url"], input, age, gender, sessionId, userId, seqno)
+        # 调用predict
         result, time_consuming, ok = predict.get(input=input, age=age, gender=gender,
                                                  k_disease=k_disease, k_symptom=k_symptom, seqno=seqno,
                                                  sessionId=sessionId, userId=userId, url=self.app_config["predict_url"])
 
-        print(result, ok)
         if not ok or len(result["diseases"]) == 0:
             return None, None, None, None
         else:
@@ -170,10 +170,11 @@ class Pipeline:
             icd10 = result["icd10"]
             rate = result["rate"]
             symptom = result["symptom"]
+            # 疾病name,概率，icd10编号
             disease_rate_list = []
             for i, d in enumerate(diseases):
                 disease_rate_list.append([d, rate[i], icd10[i]])
-            return disease_rate_list, symptom, icd10, symptom
+            return disease_rate_list, symptom, icd10, rate
 
     # 核心模型、主要的逻辑实现
     def process(self, session, seqno, choice_now, age, gender, orgId, clientId, branchId, appointment, debug=False):

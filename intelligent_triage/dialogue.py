@@ -1,6 +1,8 @@
 # coding=utf-8
 import json
 
+
+# 该函数暂时没有使用，仅单独调试该程序时候可以使用
 def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
                       all_symptom_count_file_path="./model/all-symptom-count.data"):
     """
@@ -12,12 +14,11 @@ def read_symptom_data(disease_symptom_file_dir='./model/disease-symptom3.data',
         return json.load(file1), json.load(file2)
 
 
-
-
+# 将接收到的list(一个元素中：index=0是疾病name,1:概率,2:icd10编号)转化为字典(icd10编码->概率)
 def disease_rate_list_to_dict(disease_rate_list):
     disease_rate_dict = {}
     for d in disease_rate_list:
-        disease_rate_dict[d[0]] = [d[1], d[2]]
+        disease_rate_dict[d[2]] = d[1]
     return disease_rate_dict
 
 
@@ -57,7 +58,7 @@ def calculate_p_sym_plus(rateList):
 def core_method(l3sym_dict, disease_rate_list=None, input_list=None, no_use_input_list=[],
                 max_recommend_sym_num=5, choice_history_words=[], seq=2, all_sym_count={}):
     # print(input_list,no_use_input_list,choice_history_words)
-    # 症状的排序,只返回5个
+    # 转化为(icd10编码->概率)的字典
     disease_rate_dict = disease_rate_list_to_dict(disease_rate_list)
     rate_matrix = {}
     # disease that we need from all disease
@@ -65,9 +66,9 @@ def core_method(l3sym_dict, disease_rate_list=None, input_list=None, no_use_inpu
     # 是否匹配到症状，大于0则匹配到
     normal_recommendation = False
 
-    # select disease that we need from all disease
+    # 选择我们需要的icd10编码
     for (d, obj) in l3sym_dict.items():
-        # select 京伟给的疾病
+        # 筛选出京伟给的疾病中包含的icd10编码
         if d in disease_rate_dict:
             # 遭受了什么症状
             suffer_sym_dic = {}
@@ -94,10 +95,10 @@ def core_method(l3sym_dict, disease_rate_list=None, input_list=None, no_use_inpu
         # recommend_set用来去重，避免推荐的症状中出现重复
         recommend_set = set()
         for i in range(5):
-            for d_name in disease_rate_dict.keys():
-                if d_name in l3sym_dict:
-                    if len(l3sym_dict[d_name]["top2"]) >= i + 1:
-                        top2 = l3sym_dict[d_name]["top2"]
+            for d_icd0 in disease_rate_dict.keys():
+                if d_icd0 in l3sym_dict:
+                    if len(l3sym_dict[d_icd0]["top2"]) >= i + 1:
+                        top2 = l3sym_dict[d_icd0]["top2"]
                         sym_key = list(top2.keys())[i]
                         # input_list 是京伟的识别结果，choice_history_words是原始输入的分词结果
                         if sym_key in recommend_set or sym_key in input_list or sym_key in choice_history_words or sym_key in no_use_input_list:
@@ -130,7 +131,7 @@ def core_method(l3sym_dict, disease_rate_list=None, input_list=None, no_use_inpu
                 sym_obj["rate_calculate"] = 1 - (calculate_p_sym_plus(sym_obj["rate_list"]) - 0.5) ** 2
 
         else:
-            # 如果没有得到正常的初始化，就根据疾病的概率进行排序
+            # 如果没有得到正常的初始化，就根据症状的初始概率进行排序
             for (sym_name, sym_obj) in rate_matrix.items():
                 sym_obj["rate_calculate"] = sym_obj["rate"]
 
