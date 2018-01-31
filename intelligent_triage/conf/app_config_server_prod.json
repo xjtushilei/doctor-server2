@@ -13,7 +13,7 @@
         "clientId": "jindie",
         "orgName": "深圳福田妇幼保健",
         "clientName": "金蝶",
-        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
+        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v3",
         "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       },
@@ -22,7 +22,7 @@
         "clientId": "testclient",
         "orgName": "测试",
         "clientName": "测试",
-        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
+        "doctor_path": "/hospital/广州妇儿中心.doctor.json.v1",
         "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       },
@@ -31,7 +31,7 @@
         "clientId": "jindie",
         "orgName": "深圳南山区妇幼",
         "clientName": "金蝶",
-        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
+        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v3",
         "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       },
@@ -40,7 +40,7 @@
         "clientId": "yihui",
         "orgName": "广州妇儿中心",
         "clientName": "医慧",
-        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
+        "doctor_path": "/hospital/广州妇儿中心.doctor.json.v1",
         "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       }
