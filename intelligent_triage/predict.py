@@ -1,30 +1,29 @@
 # coding=utf-8
 
-import re
 import time
 
 import requests
 
 
-def get(content, url):
+# 返回结果，超时时间，结果是否可以用
+def get(input, age, gender, k_disease, k_symptom, sessionId, userId, seqno, url):
     params = {
-        "version": '1.0',
-        "text": content,
-        "userId": userID
+        "input": input,
+        "age": age,
+        "gender": gender,
+        "k_disease": k_disease,
+        "k_symptom": k_symptom,
+        "sessionId": sessionId,
+        "userId": userId,
+        "seqno": seqno
     }
     start_time = time.time()
     try:
-        resp = requests.post(url, params=params).json()
-        nerList = resp["reply"]["ner_norms"]
-        slots = resp["reply"]["slots"]
-        result = []
-        for w in nerList:
-            result.extend(re.split("[-|,]", w))
-        for l in slots.values():
-            result.extend(l[0:2])
-        result = list(set(result))
+        # 最长等待5秒，不返回，则人为没有匹配到疾病
+        resp = requests.get(url, params=params, timeout=5)
+        result = resp.json()
         time_consuming = round(1000 * (time.time() - start_time), 3)
-        return result, resp, time_consuming
+        return result, time_consuming, resp.ok
     except Exception:
         time_consuming = round(1000 * (time.time() - start_time), 3)
-        return [], "超时（250ms）或者json解析错误", time_consuming
+        return None, time_consuming, False

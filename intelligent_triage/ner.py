@@ -6,7 +6,7 @@ import time
 import requests
 
 
-def post(input, age, gender, k_disease, k_symptom, sessionId, userId, seqno):
+def post(content, userID="jerryz"):
     body = {
         "version": '1.0',
         "text": content,

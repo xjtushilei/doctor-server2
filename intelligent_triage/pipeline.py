@@ -9,7 +9,7 @@ import numpy as np
 
 import dialogue
 import ner
-import predictold
+import predict
 from doctors import get_doctors
 
 
@@ -167,29 +167,24 @@ class Pipeline:
         return result
 
     # 京伟的predict模型封装
-    def get_diagnosis_first(self, input, age, gender, dict_npy, segmentor, postagger, fasttext):
+    def get_diagnosis_first(self, input, age, gender, k_disease, k_symptom, sessionId, userId, seqno):
         """
         接受京伟的数据,返回推荐列表，对话推荐需要的症状列表,还有丽娟需要的codes,probs
         """
-        K_Top_dis = 5
-        K_Top_symp = 5
-        diseases, icd10, val, symp_out, Coeff_sim_out, word_vec_bag = predictold.predict(input, age, gender, K_Top_dis,
-                                                                                         K_Top_symp,
-                                                                                         dict_npy,
-                                                                                         segmentor, postagger, fasttext)
-        if diseases is None:
+        result, time_consuming, ok = predict.get(input=input, age=age, gender=gender,
+                                                 k_disease=k_disease, k_symptom=k_symptom,
+                                                 sessionId=sessionId, userId=userId, seqno=seqno)
+
+        diseases = result["diseases"]
+        icd10 = result["icd10"]
+        rate = result["rate"]
+        symptom = result["symptom"]
+        if not ok:
             return None, None, None, None
-        nvs = zip(symp_out, Coeff_sim_out)
-        symp_list = [symp for symp, value in nvs]
         disease_rate_list = []
         for i, d in enumerate(diseases):
-            disease_rate_list.append([d, val[i], icd10[i]])
-        codes = []
-        probs = []
-        for v in disease_rate_list:
-            codes.append(v[2])
-            probs.append(v[1])
-        return disease_rate_list, symp_list, codes, probs
+            disease_rate_list.append([d, rate[i], icd10[i]])
+        return disease_rate_list, symptom, icd10, symptom
 
     # 核心模型、主要的逻辑实现
     def process(self, session, seqno, choice_now, age, gender, orgId, clientId, branchId, appointment, debug=False):
