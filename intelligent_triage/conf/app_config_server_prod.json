@@ -7,7 +7,7 @@
   },
   "predict_url": "http://172.27.0.8:8082/v1/predict",
   "model_file": {
-    "root_path": "/mdata/finddoctor/model/",
+    "root_path": "/cfs_chengdu/finddoctor/model/",
     "hospital": [
       {
         "orgId": "szftfybj",
