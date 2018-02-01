@@ -83,13 +83,19 @@ def predict():
         mongo.error({"type": "predict_url_check", "code": code, "res": res, "url": request.url,
                      "time": datetime.utcnow(), "ip": request.remote_addr, "post_data": post_data})
         return jsonify(res), code
-    diseases, icd10, rate, symptoms, Coeff_sim_out, vcb = predictModel.predict(input=post_data["all_choice"],
+
+    input = post_data["all_choice"]
+    # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
+    for x in app_config["no_symptoms"]:
+        input = input.replace(x, " ")
+    # predict的预测
+    diseases, icd10, rate, symptoms, Coeff_sim_out, vcb = predictModel.predict(input=input,
                                                                                age=post_data["age"],
                                                                                gender=post_data["gender"],
                                                                                k_disease=post_data["k_disease"],
                                                                                k_symptom=5)
     if diseases is None:
-        result = {"diseases": [], "icd10": [], "rate": [], "recommendation_symtom": []}
+        result = {"diseases": [], "icd10": [], "rate": [], "recommendation_symtom": [], "no_continue": None}
     else:
         diseases = diseases.tolist()
         icd10 = icd10.tolist()
@@ -111,6 +117,12 @@ def predict():
                                                      no_use_symtom_list=no_use_symtom_list, seqno=post_data["seqno"],
                                                      max_recommend_sym_num=post_data["k_recommendation_symtom"])
         result = {"diseases": diseases, "icd10": icd10, "rate": rate, "recommendation_symtom": recommendation_symtom}
+
+        if rate[0] >= app_config["no_continue"]:
+            result["no_continue"] = True
+        else:
+            result["no_continue"] = False
+
     # 记录返回日志
     log = {"type": "return", "post_data": post_data, "time": datetime.utcnow(),
            "ip": request.remote_addr, "url": request.url, "result": result}

@@ -12,11 +12,17 @@
     "pos_model": "pos.model.v1",
     "dict_var": "dict_var.npy.v1"
   },
+  "no_symptoms": [
+    "以上都没有",
+    "没有了",
+    "没了"
+  ],
+  "no_continue": 3,
   "DB": {
     "mongodb": {
       "host": "172.27.0.11",
       "port": 27017,
-      "db_name": "intelligent_triage",
+      "db_name": "predict_log",
       "user": "mongouser",
       "passwd": "8Wu2Lqc1bcXV6MKc",
       "auth": true
