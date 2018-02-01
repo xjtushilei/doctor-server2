@@ -94,6 +94,7 @@ def predict():
                                                                                gender=post_data["gender"],
                                                                                k_disease=post_data["k_disease"],
                                                                                k_symptom=5)
+    nerlog = {}
     if diseases is None:
         result = {"diseases": [], "icd10": [], "rate": [], "recommendation_symtom": [], "no_continue": None}
     else:
@@ -111,6 +112,8 @@ def predict():
         no_use_symtom_list.extend(post_data["all_choices"])
         # ner识别出的同义词不再推荐
         ner_words, resp, ner_time = ner.post(post_data["all_choice"], post_data["user_id"])
+        # 记录ner日志到mongo中
+        nerlog = {"ner_words": ner_words, "resp": resp, "ner_time": ner_time}
         no_use_symtom_list.extend(ner_words)
 
         recommendation_symtom = dialogue.core_method(disease_rate_list=disease_rate_list, input_list=symptoms,
@@ -125,7 +128,8 @@ def predict():
 
     # 记录返回日志
     log = {"type": "return", "post_data": post_data, "time": datetime.utcnow(),
-           "ip": request.remote_addr, "url": request.url, "result": result}
+           "ip": request.remote_addr, "url": request.url, "result": result,
+           "ner": nerlog}
     mongo.info(log)
     return jsonify(result)
 
