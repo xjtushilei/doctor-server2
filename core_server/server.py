@@ -43,7 +43,7 @@ def load_balance():
 
 # 内部测试错误api
 @app.route("/test-error/", methods=['Get'])
-def test():
+def ping_error():
     if random.randint(1, 10) > 5:
         1 / 0
     return "内部错误测试api随机通过,没有错误异常！"
