@@ -5,16 +5,16 @@
     "port": 8080,
     "threaded": true
   },
+  "predict_url": "http://172.27.0.8:8082/v1/predict",
   "model_file": {
-    "root_path": "/cfs_chengdu/finddoctor/model/",
+    "root_path": "/mdata/finddoctor/model/",
     "hospital": [
       {
         "orgId": "szftfybj",
         "clientId": "jindie",
         "orgName": "深圳福田妇幼保健",
         "clientName": "金蝶",
-        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
-        "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
+        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v3",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       },
       {
@@ -22,8 +22,7 @@
         "clientId": "testclient",
         "orgName": "测试",
         "clientName": "测试",
-        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
-        "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
+        "doctor_path": "/hospital/广州妇儿中心.doctor.json.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       },
       {
@@ -31,8 +30,7 @@
         "clientId": "jindie",
         "orgName": "深圳南山区妇幼",
         "clientName": "金蝶",
-        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
-        "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
+        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v3",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       },
       {
@@ -40,18 +38,10 @@
         "clientId": "yihui",
         "orgName": "广州妇儿中心",
         "clientName": "医慧",
-        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v2",
-        "predict_path": "/hospital/深圳南山区妇幼.predict.npy.v1",
+        "doctor_path": "/hospital/广州妇儿中心.doctor.json.v1",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       }
-    ],
-    "other": {
-      "fasttext_model": "model-webqa-hdf-2c.bin.v1",
-      "seg_model": "cws.model.v1",
-      "pos_model": "pos.model.v1",
-      "all_symptom_count_file_path": "all-symptom-count.data.v2",
-      "disease_symptom_file_dir": "disease-symptom3.data.v2"
-    }
+    ]
   },
   "text": {
     "GREETING_PROMPT": "智能分诊助手帮您找到合适医生",

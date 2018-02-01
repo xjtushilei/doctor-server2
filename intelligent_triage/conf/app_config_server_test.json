@@ -5,8 +5,9 @@
     "port": 8080,
     "threaded": true
   },
+  "predict_url": "http://172.27.0.12:8082/v1/predict",
   "model_file": {
-    "root_path": "/cfs_chengdu/finddoctor/model/",
+    "root_path": "/mdata/finddoctor/model/",
     "hospital": [
       {
         "orgId": "szftfybj",
