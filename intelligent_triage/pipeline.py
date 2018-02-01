@@ -66,7 +66,7 @@ class Pipeline:
             ages[a]) + gender
         return [item[0] for item in self.symptoms_distributions_dict[orgid][index]][0:5]
 
-    # 获取历史所有的输入
+    # 获取历史所有的输入，用来icd10分类预测
     def get_all_choice_from_session_questions(self, session):
         result = []
         for question in session["questions"]:
@@ -74,7 +74,7 @@ class Pipeline:
                 result.append(question["choice"])
         return ",".join(result)
 
-    # 获取历史所有的症状选项
+    # 获取历史所有的症状选项,用来去重
     def get_all_choices_from_session_questions(self, session):
         result = []
         for question in session["questions"]:
@@ -97,17 +97,14 @@ class Pipeline:
                                                  sessionId=sessionId, userId=userId, url=self.app_config["predict_url"])
 
         if not ok or len(result["diseases"]) == 0:
-            return None, None, None, None
+            return None, None, None, None, None
         else:
             diseases = result["diseases"]
             icd10 = result["icd10"]
             rate = result["rate"]
             recommendation_symtom = result["recommendation_symtom"]
-            # # 疾病name,概率，icd10编号
-            # disease_rate_list = []
-            # for i, d in enumerate(diseases):
-            #     disease_rate_list.append([d, rate[i], icd10[i]])
-            return diseases, icd10, rate, recommendation_symtom
+            no_continue = result["no_continue"]
+            return diseases, icd10, rate, recommendation_symtom, no_continue
 
     # 核心模型、主要的逻辑实现
     def process(self, session, seqno, choice_now, age, gender, orgId, clientId, branchId, appointment, debug=False):
@@ -119,20 +116,25 @@ class Pipeline:
             return "other", None, None
 
         # 诊断得到的疾病;识别到的症状
-        diseases, icd10, rate, recommendation_symtom = self.get_diagnosis_first(
+        diseases, icd10, rate, recommendation_symtom, no_continue = self.get_diagnosis_first(
             session=session, age=age, gender=gender, sessionId=session["sessionId"], userId=userID, seqno=seqno)
 
         # 如果predict返回了空,则表示输入的东西无意义,直接返回
         if diseases is None:
             return "other", None, None
 
-        # 如果阈值大于 NO_CONTINUE ,则直接返回诊断结果,不进行下一轮
-        if rate[0] >= self.app_config["text"]["NO_CONTINUE"]:
+        # 如果 NO_CONTINUE(分类可信度很高，不需要进行继续提问) ,则直接返回诊断结果,不进行下一轮
+        if no_continue:
             recommendation = {
                 "doctors": get_doctors(codes=icd10, probs=rate, age=age, gender=gender,
                                        orgId=orgId, clientId=clientId, branchId=branchId,
                                        model=self.doctor_model_dict[orgId], appointment=appointment)
             }
+            if debug:
+                disease_rate_list = []
+                for i, d in enumerate(diseases):
+                    disease_rate_list.append([d, rate[i], icd10[i]])
+                recommendation["jingwei"] = disease_rate_list
             return "doctors", None, recommendation
         if seqno < 3:
             question = {
@@ -148,4 +150,9 @@ class Pipeline:
                                        orgId=orgId, clientId=clientId, branchId=branchId,
                                        model=self.doctor_model_dict[orgId], appointment=appointment)
             }
+            if debug:
+                disease_rate_list = []
+                for i, d in enumerate(diseases):
+                    disease_rate_list.append([d, rate[i], icd10[i]])
+                recommendation["jingwei"] = disease_rate_list
             return "doctors", None, recommendation

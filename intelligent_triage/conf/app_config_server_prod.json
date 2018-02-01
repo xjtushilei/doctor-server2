@@ -56,15 +56,7 @@
   "text": {
     "GREETING_PROMPT": "智能分诊助手帮您找到合适医生",
     "NO_1_PROMPT": "请问患者哪里不舒服?",
-    "NO_CONTINUE": 3,
     "NO_2_PROMPT": "患者还有其他不适症状吗?",
-    "NO_3_PROMPT": "患者还有其他不适症状吗?",
-    "NO_SYMPTOMS_PROMPT": "以上都没有",
-    "NO_SYMPTOMS_PROMPT_LIST": [
-      "以上都没有",
-      "没有了",
-      "没了"
-    ],
     "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请电话咨询",
     "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请电话咨询"
   },

@@ -166,9 +166,7 @@ def find_doctors():
         xss_status, xss_desc = xss_defense_check(choice)
         if not xss_status:
             return error("错误的请求:" + xss_desc), 400
-        # 过滤掉用户通过点击输入的“以上都没有”，相当于输入为空，如果有其他内容，继续处理
-        for x in app_config["text"]["NO_SYMPTOMS_PROMPT_LIST"]:
-            choice = choice.replace(x, " ")
+
     # 是否在测试页面展示debug信息
     if "debug" in params and params["debug"][0] == "true":
         debug = True
@@ -304,6 +302,7 @@ def session_data_check(request):
         return False, error("错误的请求: 错误的数据格式(patient中字段缺失)"), 400
     dob = patient["dob"]
     gender = patient["sex"]
+    # 出生日期一定要检测，这里是个坑。isv经常传错,造成后面程序bug！一定要检测！！一定要检测！！一定要检测！！
     if not (is_valid_date(dob) and len(dob) == 10):
         return False, error("错误的请求: 错误的数据格式(出生年月格式不对,示例：2018-02-01)"), 400
     if not (gender == "male" or gender == "female"):
