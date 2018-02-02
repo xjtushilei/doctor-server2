@@ -10,7 +10,7 @@
     "fasttext_model": "model-webqa-hdf-2c.bin.v1",
     "seg_model": "cws.model.v1",
     "pos_model": "pos.model.v1",
-    "dict_var": "dict_var.npy.v1",
+    "dict_var": "dict_var.npy.v2",
     "all_symptom_count_file_path": "all-symptom-count.data.v3",
     "disease_symptom_file_dir": "disease-symptom3.data.v3"
   },
