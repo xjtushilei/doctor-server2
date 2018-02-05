@@ -1,0 +1,67 @@
+{
+  "app": {
+    "debug": false,
+    "host": "0.0.0.0",
+    "port": 8080,
+    "threaded": true
+  },
+  "predict_url": "http://111.231.201.154:8082/v1/predict",
+  "model_file": {
+    "root_path": "/mdata/finddoctor/model/",
+    "hospital": [
+      {
+        "orgId": "szftfybj",
+        "clientId": "jindie",
+        "orgName": "深圳福田妇幼保健",
+        "clientName": "金蝶",
+        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v3",
+        "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
+      },
+      {
+        "orgId": "testorg",
+        "clientId": "testclient",
+        "orgName": "测试",
+        "clientName": "测试",
+        "doctor_path": "/hospital/广州妇儿中心.doctor.json.v1",
+        "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
+      },
+      {
+        "orgId": "nsqfy",
+        "clientId": "jindie",
+        "orgName": "深圳南山区妇幼",
+        "clientName": "金蝶",
+        "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v3",
+        "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
+      },
+      {
+        "orgId": "gzfezx",
+        "clientId": "yihui",
+        "orgName": "广州妇儿中心",
+        "clientName": "医慧",
+        "doctor_path": "/hospital/广州妇儿中心.doctor.json.v1",
+        "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
+      }
+    ]
+  },
+  "text": {
+    "GREETING_PROMPT": "智能分诊助手帮您找到合适医生",
+    "NO_1_PROMPT": "请问患者哪里不舒服?",
+    "NO_2_PROMPT": "患者还有其他不适症状吗?",
+    "STATUS_OTHER": "抱歉，没有发现您的疾病信息，如需请电话咨询",
+    "STATUS_DOCTOR_0": "抱歉，暂无合适的医生为您推荐，如需请电话咨询"
+  },
+  "DB": {
+    "redis": {
+      "host": "127.0.0.1",
+      "port": 6379,
+      "DBID": 0,
+      "auth": false
+    },
+    "mongodb": {
+      "host": "127.0.0.1",
+      "port": 27017,
+      "db_name": "intelligent_triage",
+      "auth": false
+    }
+  }
+}
