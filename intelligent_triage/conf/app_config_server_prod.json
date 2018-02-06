@@ -46,7 +46,7 @@
         "clientId": "jindie",
         "orgName": "东莞市妇幼保健院",
         "clientName": "金蝶",
-        "doctor_path": "/hospital/东莞妇幼.doctor.json.v1",
+        "doctor_path": "/hospital/东莞妇幼.doctor.json.v2",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1"
       }
     ]
