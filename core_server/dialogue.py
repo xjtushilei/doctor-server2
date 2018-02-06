@@ -3,12 +3,11 @@ import json
 
 
 class Dialogue:
-
-    def __init__(self, disease_symptom_file_path, all_symptom_count_file_path):
+    def __init__(self, recommend_file_path):
         # 加载多轮推荐症状字典 1.disease和症状   2.还有所有症状的排序
-        with open(disease_symptom_file_path, encoding='utf-8') as file1, open(
-                all_symptom_count_file_path, encoding='utf-8') as file2:
-            self.l3sym_dict, self.all_sym_count = json.load(file1), json.load(file2)
+        with open(recommend_file_path, encoding='utf-8') as file:
+            recommend_model = json.load(file)
+            self.l3sym_dict, self.all_sym_count = recommend_model["disease-symptom3"], recommend_model["symptom-count"]
 
     # 将接收到的list(一个元素中：index=0是疾病name,1:概率,2:icd10编号)转化为字典(icd10编码->概率)
     def disease_rate_list_to_dict(self, disease_rate_list):

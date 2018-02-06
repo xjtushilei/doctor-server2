@@ -9,13 +9,12 @@ import sys
 import traceback
 from datetime import datetime
 
-from flask import Flask, jsonify
-from flask import request
-from flask_cors import CORS
-
 import ner
 from db_util import Mongo
 from dialogue import Dialogue
+from flask import Flask, jsonify
+from flask import request
+from flask_cors import CORS
 from pmodel import PredModel
 
 app = Flask(__name__)
@@ -252,9 +251,7 @@ if __name__ == '__main__':
     segmentor = predictModel.segmentor
     dialogue = Dialogue(
         disease_symptom_file_path=app_config["model_file"]["root_path"] + app_config["model_file"][
-            "disease_symptom_file_dir"],
-        all_symptom_count_file_path=app_config["model_file"]["root_path"] + app_config["model_file"][
-            "all_symptom_count_file_path"])
+            "recommend"])
     endtime = datetime.now()
     print("模型加载一共用时:" + str((endtime - starttime).seconds) + "秒" + "\nfinished loading models.\n server started .")
     ###########################初始化mongodb驱动###########################

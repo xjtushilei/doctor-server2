@@ -11,8 +11,7 @@
     "seg_model": "cws.model.v1",
     "pos_model": "pos.model.v1",
     "dict_var": "dict_var.npy.v4",
-    "all_symptom_count_file_path": "all-symptom-count.data.v5",
-    "disease_symptom_file_dir": "disease-symptom3.data.v5"
+    "recommend": "recommend.model.V1.2018-02-06"
   },
   "no_symptoms": [
     "以上都没有",

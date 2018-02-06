@@ -2,6 +2,7 @@
 import collections
 import json
 import re
+from datetime import datetime
 
 sws = "[，。、；,;]"
 
@@ -12,6 +13,15 @@ def remove_stopwords(line):
 
 ############ 文件位置，样例文件.###########################
 symptoms_path = "symptoms_qa.txt"
+update_log = "合并两个文件为一个"
+big_version = "V1"
+time = str(datetime.now().date())
+version = {
+    "version": big_version,
+    "updatetime": time,
+    "update_log": update_log
+}
+model = {"version": version}
 
 
 #########################################################
@@ -80,9 +90,7 @@ def deal_symptom_txt():
 
         l3sym_map[l3code] = {"l3name": l3name, "l3code": l3code, "all_sym_dic": all_sym_dic,
                              "top3": top3, "top2": top2, "top1": top1}
-    with open("gen_data/disease-symptom3.data", "w", encoding="utf-8") as file:
-        file.write(json.dumps(l3sym_map, ensure_ascii=False))
-    return l3sym_map
+    model["disease-symptom3"] = l3sym_map
 
 
 def get_sym_count():
@@ -101,10 +109,10 @@ def get_sym_count():
             symp2 = remove_stopwords(words[4].strip()).split(" ")
             str1.extend(symp2)
         count = collections.Counter(str1)
-    # print(count)
-    with open("gen_data/all-symptom-count.data", "w", encoding="utf-8") as file:
-        file.write(json.dumps(count, ensure_ascii=False))
+    model["symptom-count"] = count
 
 
 deal_symptom_txt()
 get_sym_count()
+with open("gen_data/recommend.model." + big_version + "." + time, "w", encoding="utf-8") as file:
+    file.write(json.dumps(model, ensure_ascii=False, indent=2))
