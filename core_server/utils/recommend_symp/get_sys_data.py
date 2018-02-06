@@ -3,7 +3,7 @@ import collections
 import json
 import re
 
-sws = "，。、；,;"
+sws = "[，。、；,;]"
 
 
 def remove_stopwords(line):
@@ -80,7 +80,6 @@ def deal_symptom_txt():
 
         l3sym_map[l3code] = {"l3name": l3name, "l3code": l3code, "all_sym_dic": all_sym_dic,
                              "top3": top3, "top2": top2, "top1": top1}
-
     with open("gen_data/disease-symptom3.data", "w", encoding="utf-8") as file:
         file.write(json.dumps(l3sym_map, ensure_ascii=False))
     return l3sym_map
