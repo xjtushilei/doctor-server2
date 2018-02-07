@@ -250,7 +250,7 @@ if __name__ == '__main__':
         dict_var_path=app_config["model_file"]["root_path"] + app_config["model_file"]["dict_var"])
     segmentor = predictModel.segmentor
     dialogue = Dialogue(
-        disease_symptom_file_path=app_config["model_file"]["root_path"] + app_config["model_file"][
+        recommend_file_path=app_config["model_file"]["root_path"] + app_config["model_file"][
             "recommend"])
     endtime = datetime.now()
     print("模型加载一共用时:" + str((endtime - starttime).seconds) + "秒" + "\nfinished loading models.\n server started .")
