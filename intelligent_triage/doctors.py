@@ -1,10 +1,11 @@
 # 医生模型的获取医生信息
-import json
+import time
+
+import requests
 
 
-def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=None, model=None, appointment=None):
-    # example
-    # get_doctors(['M80', 'R04', 'G80', 'B80', 'H52'],[0.9,0.9,0.9,0.9,0.9],22,"F")
+def get_doctors(codes, probs, age, gender, query_hospital_url, query_hospital_id, model,
+                orgId=None, clientId=None, branchId=None, appointment=None, debug=False):
     prob_threshold = 0.5
     gender_threshold = 0.05
 
@@ -25,58 +26,78 @@ def get_doctors(codes, probs, age, gender, orgId=None, clientId=None, branchId=N
     else:
         return []
 
-    results = []
+    # get the query list of doctors
+    doctors_query = {}
+    doctors_query["doctors"] = []
     for code, prob in zip(codes, probs):
         if (prob >= prob_threshold) and (code in model[agename[age_index]].keys()) and (
                     model[agename[age_index]][code]["gender"][gender_index] >= gender_threshold):
             for item in model[agename[age_index]][code]["doctors"]:
                 item["registration"] = True
-                results.append(item)
-            return results[:10]
-    return []
+                doctors_query["doctors"].append({"docId": item["id"], "departmentId": item["departmentId"]})
 
-# with open("/mdata/finddoctor/model/hospital/深圳南山区妇幼.doctor.json.v1") as file:
-#     model = json.load(file)
-#
-# print(get_doctors(['J02', 'J40', 'J06', 'J35', 'J38'],
-#                   [0.74853809402643345, 0.7108708211696062, 0.70845967670456367, 0.7077403685609519,
-#                    0.70313291072985629],
-#                   11.898630136986302,
-#                   "female", model=model))
+    # rank doctors according to schedules
+    # import datetime
+    # today_date = datetime.date.today() ##2018-01-15
+    doctors_recommendation = []
 
-#     return [
-#         {
-#             "id": "1111",
-#             "name": "医生小明",
-#             "departmentId": "abc1",
-#             "branchId": "1"
-#         },
-#         {
-#             "id": "222",
-#             "name": "小红",
-#             "departmentId": "abc2",
-#             "branchId": "2"
+    # 如果是测试环境，直接返回结果
+    if orgId == "testorg":
+        tempdocs = {
+            "doctors": [
+                {
+                    "docId": "410",
+                    "departmentId": "10001"
+                }
+            ]
+        }
+        doctors_schedule, time_consuming, ok = query_doctors(tempdocs, query_hospital_id, query_hospital_url, debug)
+        if ok:
+            for item in doctors_schedule["doctors"]:
+                temp = {}
+                for key, value in item.items():
+                    # 去掉这个字段
+                    if key != "schedule":
+                        temp[key] = value
+                doctors_recommendation.append(temp)
+            return doctors_recommendation, True
+        else:
+            return None, False
+    # 非测试环境，丽娟进行推荐医生
+    else:
+        doctors_schedule, time_consuming, ok = query_doctors(doctors_query, query_hospital_id,
+                                                             query_hospital_url, debug)
+        if ok:
+            if doctors_schedule["status"] == "ok":
+                doctors_info = doctors_schedule["doctors"]
+                for item1 in doctors_query:
+                    flag = False
+                    for item2 in doctors_info:
+                        if item2["docId"] == item1["id"]:
+                            for schedule in item2["schedule"]:
+                                if schedule["available"] > 0:
+                                    flag = True
+                                    break
+                            if flag == True:
+                                temp = {}
+                                for key, value in item2.items():
+                                    if key != "schedule":
+                                        temp[key] = value
+                                doctors_recommendation.append(temp)
+        else:
+            return None, False
+        return doctors_recommendation, True
 
-#         },
-#         {
-#             "id": "333",
-#             "name": "小李",
-#             "departmentId": "abc1",
-#             "branchId": "12"
 
-#         },
-#         {
-#             "id": "444",
-#             "name": "小白",
-#             "departmentId": "abc2",
-#             "branchId": "12"
+def query_doctors(doctors, hospital_id, url, debug=False):
+    url = url + hospital_id
 
-#         },
-#         {
-#             "id": "555",
-#             "name": "小熊",
-#             "departmentId": "abc2",
-#             "branchId": "2"
-
-#         }
-#     ]
+    start_time = time.time()
+    try:
+        temp = requests.post(url, json=doctors, timeout=25)
+        doctors_schedule = temp.json()
+        time_consuming = round(1000 * (time.time() - start_time), 3)
+        return doctors_schedule, time_consuming, temp.ok
+    except Exception as e:
+        time_consuming = round(1000 * (time.time() - start_time), 3)
+        return None, time_consuming, False

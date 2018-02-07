@@ -12,7 +12,7 @@ class Pipeline:
     # 检查模型文件在不在
     def __init__(self, app_config):
         self.root_path = app_config["model_file"]["root_path"]
-        for hospital in app_config["model_file"]["hospital"]:
+        for hospital in app_config["model_file"]["hospital"].values():
             for file_type in ["doctor_path", "symptoms_distributions_path"]:
                 hospital_file_path = self.root_path + hospital[file_type]
                 if os.path.isfile(hospital_file_path):
@@ -28,7 +28,7 @@ class Pipeline:
     # load模型文件
     def load(self):
         # 加载医院定制的所有doctor等文件
-        for hospital in self.app_config["model_file"]["hospital"]:
+        for hospital in self.app_config["model_file"]["hospital"].values():
             # 加载推荐医生模型
             with open(self.root_path + hospital["doctor_path"], encoding="utf-8") as file:
                 self.doctor_model_dict[hospital["orgId"]] = json.load(file)
@@ -106,6 +106,16 @@ class Pipeline:
             no_continue = result["no_continue"]
             return diseases, icd10, rate, recommendation_symtom, no_continue
 
+    # 医生模型封装
+    def get_doctors_impl(self, codes, probs, age, gender, orgId, clientId, branchId,
+                         query_hospital_url, query_hospital_id, model, appointment, debug=False):
+        doctors, ok = get_doctors(codes=codes, probs=probs, age=age, gender=gender,
+                                  orgId=orgId, clientId=clientId, branchId=branchId,
+                                  query_hospital_url=query_hospital_url,
+                                  query_hospital_id=query_hospital_id,
+                                  model=model, appointment=appointment, debug=debug)
+        return doctors, ok
+
     # 核心模型、主要的逻辑实现
     def process(self, session, seqno, choice_now, age, gender, orgId, clientId, branchId, appointment, debug=False):
 
@@ -125,11 +135,20 @@ class Pipeline:
 
         # 如果 NO_CONTINUE(分类可信度很高，不需要进行继续提问) ,则直接返回诊断结果,不进行下一轮
         if no_continue:
-            recommendation = {
-                "doctors": get_doctors(codes=icd10, probs=rate, age=age, gender=gender,
-                                       orgId=orgId, clientId=clientId, branchId=branchId,
-                                       model=self.doctor_model_dict[orgId], appointment=appointment)
-            }
+            doctors, ok = self.get_doctors_impl(codes=icd10, probs=rate, age=age, gender=gender,
+                                                query_hospital_url=self.app_config["query_hospital_url"],
+                                                query_hospital_id=self.app_config["model_file"]["hospital"][orgId][
+                                                    "query_hospital_id"],
+                                                orgId=orgId, clientId=clientId, branchId=branchId,
+                                                model=self.doctor_model_dict[orgId], appointment=appointment,
+                                                debug=debug)
+            # 如果ok=false，说明调用号源接口发生了异常
+            if ok:
+                recommendation = {
+                    "doctors": doctors
+                }
+            else:
+                return "error", None, None
             if debug:
                 disease_rate_list = []
                 for i, d in enumerate(diseases):
@@ -145,11 +164,19 @@ class Pipeline:
             }
             return "followup", question, None
         else:
-            recommendation = {
-                "doctors": get_doctors(codes=icd10, probs=rate, age=age, gender=gender,
-                                       orgId=orgId, clientId=clientId, branchId=branchId,
-                                       model=self.doctor_model_dict[orgId], appointment=appointment)
-            }
+            doctors, ok = self.get_doctors_impl(codes=icd10, probs=rate, age=age, gender=gender,
+                                                query_hospital_url=self.app_config["query_hospital_url"],
+                                                query_hospital_id=self.app_config["model_file"]["hospital"][orgId][
+                                                    "query_hospital_id"],
+                                                orgId=orgId, clientId=clientId, branchId=branchId,
+                                                model=self.doctor_model_dict[orgId], appointment=appointment,
+                                                debug=debug)
+            if ok:
+                recommendation = {
+                    "doctors": doctors
+                }
+            else:
+                return "error", None, None
             if debug:
                 disease_rate_list = []
                 for i, d in enumerate(diseases):

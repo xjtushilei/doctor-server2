@@ -187,7 +187,15 @@ def find_doctors():
     # 进入主要逻辑函数
     status, question, recommendation = pipline.process(session, seqno, choice, age, sex, orgId, clientId,
                                                        branchId, appointment, debug=debug)
-    if status == "followup":
+    if status == "error":
+        res = error("获取医生号源接口调用异常")
+        time_consuming = round(1000 * (time.time() - start_time), 3)
+        mongo.info({"type": status, "sessionId": sessionId, "url": request.url,
+                    "params": params, "session": session,
+                    "time": datetime.utcnow(), "ip": request.remote_addr,
+                    "time_consuming": time_consuming})
+        return jsonify(res), 502
+    elif status == "followup":
         userRes = {
             'sessionId': sessionId,
             'status': status,
@@ -442,7 +450,7 @@ if __name__ == '__main__':
     ################################获得授权集合#######################
     auth_orgId_set = set()
     auth_clientId_set = set()
-    for hospital in app_config["model_file"]["hospital"]:
+    for hospital in app_config["model_file"]["hospital"].values():
         auth_orgId_set.add(hospital["orgId"])
         auth_clientId_set.add(hospital["clientId"])
     ################################LOG日志文件#######################
