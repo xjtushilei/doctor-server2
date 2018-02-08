@@ -443,7 +443,8 @@ if __name__ == '__main__':
         if "windows" in config_path:
             os.environ['http_proxy'] = 'http://dev-proxy.oa.com:8080'
     else:
-        config_path = src_path() + "/conf/app_config.json"
+        # 必须传入配置文件参数
+        exit(-1)
     # 获取yaml配置文件
     app_config = load_config(config_path)
 

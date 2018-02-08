@@ -108,11 +108,10 @@ class Pipeline:
 
     # 医生模型封装
     def get_doctors_impl(self, codes, probs, age, gender, orgId, clientId, branchId,
-                         query_hospital_url, query_hospital_id, model, appointment, debug=False):
+                         query_hospital_url, model, appointment, debug=False):
         doctors, ok = get_doctors(codes=codes, probs=probs, age=age, gender=gender,
                                   orgId=orgId, clientId=clientId, branchId=branchId,
                                   query_hospital_url=query_hospital_url,
-                                  query_hospital_id=query_hospital_id,
                                   model=model, appointment=appointment, debug=debug)
         return doctors, ok
 
@@ -136,9 +135,8 @@ class Pipeline:
         # 如果 NO_CONTINUE(分类可信度很高，不需要进行继续提问) ,则直接返回诊断结果,不进行下一轮
         if no_continue:
             doctors, ok = self.get_doctors_impl(codes=icd10, probs=rate, age=age, gender=gender,
-                                                query_hospital_url=self.app_config["query_hospital_url"],
-                                                query_hospital_id=self.app_config["model_file"]["hospital"][orgId][
-                                                    "query_hospital_id"],
+                                                query_hospital_url=self.app_config["model_file"]["hospital"][orgId][
+                                                    "query_hospital_url"],
                                                 orgId=orgId, clientId=clientId, branchId=branchId,
                                                 model=self.doctor_model_dict[orgId], appointment=appointment,
                                                 debug=debug)
@@ -165,9 +163,8 @@ class Pipeline:
             return "followup", question, None
         else:
             doctors, ok = self.get_doctors_impl(codes=icd10, probs=rate, age=age, gender=gender,
-                                                query_hospital_url=self.app_config["query_hospital_url"],
-                                                query_hospital_id=self.app_config["model_file"]["hospital"][orgId][
-                                                    "query_hospital_id"],
+                                                query_hospital_url=self.app_config["model_file"]["hospital"][orgId][
+                                                    "query_hospital_url"],
                                                 orgId=orgId, clientId=clientId, branchId=branchId,
                                                 model=self.doctor_model_dict[orgId], appointment=appointment,
                                                 debug=debug)

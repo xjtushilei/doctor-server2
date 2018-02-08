@@ -1,10 +1,17 @@
 # 医生模型的获取医生信息
+import datetime
 import time
+from operator import *
 
 import requests
 
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 
-def get_doctors(codes, probs, age, gender, query_hospital_url, query_hospital_id, model,
+
+def get_doctors(codes, probs, age, gender, query_hospital_url, model,
                 orgId=None, clientId=None, branchId=None, appointment=None, debug=False):
     prob_threshold = 0.5
     gender_threshold = 0.05
@@ -16,7 +23,7 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, query_hospital_id
     elif 18 < age <= 120:
         age_index = 2
     else:
-        return []
+        return [], True
     agename = ["age01", "age0118", "age18"]
 
     if gender in ["M", "男", "male"]:
@@ -24,80 +31,115 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, query_hospital_id
     elif gender in ["F", "女", "female"]:
         gender_index = 1
     else:
-        return []
+        return [], True
 
-    # get the query list of doctors
+    # get the query list of doctors; check all the icd10 until find doctors; return None if no doctors for 5 icd10s.
     doctors_query = {}
-    doctors_query["doctors"] = []
-    for code, prob in zip(codes, probs):
+    for code, prob in zip(codes[:2], probs[:2]):
         if (prob >= prob_threshold) and (code in model[agename[age_index]].keys()) and (
                     model[agename[age_index]][code]["gender"][gender_index] >= gender_threshold):
             for item in model[agename[age_index]][code]["doctors"]:
-                item["registration"] = True
-                doctors_query["doctors"].append({"docId": item["id"], "departmentId": item["departmentId"]})
+                if item["departmentId"] not in doctors_query:
+                    doctors_query[item["departmentId"]] = {}
+                    doctors_query[item["departmentId"]]["num"] = 1
+                    doctors_query[item["departmentId"]]["doctors"] = []
+                    doctors_query[item["departmentId"]]["doctors"].append(
+                        {"docId": item["id"], "departmentId": item["departmentId"]})
+                else:
+                    doctors_query[item["departmentId"]]["num"] += 1
+                    doctors_query[item["departmentId"]]["doctors"].append(
+                        {"docId": item["id"], "departmentId": item["departmentId"]})
+        if len(doctors_query) != 0:
+            break
+    if len(doctors_query) == 0:
+        return [], True
 
+    temp = sorted(doctors_query.items(), key=lambda x: getitem(x[1], 'num'), reverse=True)[:5]
+    doctors_query = {"doctors": []}
+    for i in range(len(temp)):
+        doctors_query["doctors"].extend(temp[i][1]["doctors"])
+
+    # rank doctors according to schedules policy:
     # rank doctors according to schedules
     # import datetime
     # today_date = datetime.date.today() ##2018-01-15
     doctors_recommendation = []
-
-    # 如果是测试环境，直接返回结果
-    if orgId == "testorg":
-        tempdocs = {
-            "doctors": [
-                {
-                    "docId": "410",
-                    "departmentId": "10001"
-                }
-            ]
-        }
-        doctors_schedule, time_consuming, ok = query_doctors(tempdocs, query_hospital_id, query_hospital_url, debug)
-        if ok:
-            for item in doctors_schedule["doctors"]:
-                temp = {}
-                for key, value in item.items():
-                    # 去掉这个字段
-                    if key != "schedule":
-                        temp[key] = value
-                doctors_recommendation.append(temp)
-            return doctors_recommendation, True
-        else:
-            return None, False
-    # 非测试环境，丽娟进行推荐医生
+    # print("doctors_query", doctors_query)
+    doctors_schedule, time_consuming, ok = query_doctors(doctors_query, query_hospital_url, clientId, debug)
+    # print("doctors_schedule", doctors_schedule, ok)
+    today_date = datetime.date.today()
+    if ok:
+        if doctors_schedule["status"] == "ok":
+            doctors_info = doctors_schedule["doctors"]
+            for item1 in doctors_query["doctors"]:
+                flag = False
+                for item2 in doctors_info:
+                    if item2["docId"] == item1["docId"]:
+                        for schedule in item2["schedule"]:
+                            year, month, day = (
+                                int(schedule["date"].split("-")[0]), int(schedule["date"].split("-")[1]),
+                                int(schedule["date"].split("-")[2]))
+                            delta_days = (today_date - datetime.date(year, month, day)).days
+                            if delta_days <= 10 and schedule["available"] >= 0:
+                                flag = True
+                                break
+                        if flag == True:
+                            temp = {}
+                            for key, value in item2.items():
+                                if key != "schedule":
+                                    temp[key] = value
+                                if key == "docId":
+                                    temp["id"] = value
+                            doctors_recommendation.append(temp)
+                        break
     else:
-        doctors_schedule, time_consuming, ok = query_doctors(doctors_query, query_hospital_id,
-                                                             query_hospital_url, debug)
-        if ok:
-            if doctors_schedule["status"] == "ok":
-                doctors_info = doctors_schedule["doctors"]
-                for item1 in doctors_query:
-                    flag = False
-                    for item2 in doctors_info:
-                        if item2["docId"] == item1["id"]:
-                            for schedule in item2["schedule"]:
-                                if schedule["available"] > 0:
-                                    flag = True
-                                    break
-                            if flag == True:
-                                temp = {}
-                                for key, value in item2.items():
-                                    if key != "schedule":
-                                        temp[key] = value
-                                doctors_recommendation.append(temp)
-        else:
-            return None, False
-        return doctors_recommendation, True
+        return None, False
+    return doctors_recommendation[:10], True
 
 
-def query_doctors(doctors, hospital_id, url, debug=False):
-    url = url + hospital_id
-
+# 获取号源接口，如果失败返回false
+def query_doctors(doctors, url, clientId, debug=False):
     start_time = time.time()
+    # 处理金蝶的url校验，主要就是加上token校验
+    if clientId == "jindie":
+        token, ok = getToken_from_jindie()
+        if ok:
+            token = "&token=" + token
+        else:
+            time_consuming = round(1000 * (time.time() - start_time), 3)
+            return None, time_consuming, False
+    else:
+        token = ""
+    url = url + token
     try:
-        temp = requests.post(url, json=doctors, timeout=25)
+        temp = requests.post(url, json=doctors, timeout=30, headers={"Content-Type": "application/json"})
         doctors_schedule = temp.json()
         time_consuming = round(1000 * (time.time() - start_time), 3)
         return doctors_schedule, time_consuming, temp.ok
     except Exception as e:
         time_consuming = round(1000 * (time.time() - start_time), 3)
         return None, time_consuming, False
+
+
+# 从金蝶isv处获得token，如果失败，返回false
+def getToken_from_jindie():
+    tenantId = "00331"
+    channelCode = "1505819123134"
+    service = "base.token"
+    # url = "http://api.mhealth100.com/open-api/openGateway.do?"
+    url = "http://test3.mhealth100.com/open-api/openGateway.do?"
+    url = url + "version=3.0&format=xml&auth=partner&tenantId=" + tenantId + \
+          "&channelCode=" + channelCode + "&service=" + service
+    secert = "761A9F7DC0644073AD28CCA40A1F4CEB"
+    XML = '<?xml version="1.0" encoding="UTF-8"?><req><channelCode>' + channelCode + '</channelCode><secert>' + secert + '</secert></req>'
+    headers = {'Content-type': 'text/xml'}
+    # print(url)
+    # print(XML)
+    res = requests.post(url, data=XML, headers=headers)
+    # print(res)
+    # print(res.text)
+    if res.ok:
+        root = ET.fromstring(res.text)  # 从字符串传递xml
+        return root.find('token').text, res.ok
+    else:
+        return None, False
