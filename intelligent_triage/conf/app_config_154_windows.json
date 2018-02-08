@@ -34,7 +34,7 @@
         "clientName": "金蝶",
         "doctor_path": "/hospital/深圳南山区妇幼.doctor.json.v3",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1",
-        "query_hospital_url": "http://test3.mhealth100.com/open-api/V1/query_appointments?tenantId=00006&hospitalId=100201&channelCode=1505819123134"
+        "query_hospital_url": "http://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00071&hospitalId=100071001&channelCode=1505819123134"
       },
       "gzfezx": {
         "orgId": "gzfezx",
@@ -52,7 +52,7 @@
         "clientName": "金蝶",
         "doctor_path": "/hospital/东莞妇幼.doctor.json.v2",
         "symptoms_distributions_path": "/hospital/妇幼症状推荐.json.v1",
-        "query_hospital_url": "http://test3.mhealth100.com/open-api/V1/query_appointments?tenantId=00006&hospitalId=100201&channelCode=1505819123134"
+        "query_hospital_url": "http://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00022&hospitalId=100201&channelCode=1505819123134"
       }
     }
   },

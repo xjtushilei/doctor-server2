@@ -50,7 +50,7 @@ def t_error():
     return "内部错误测试api随机通过,没有错误！"
 
 
-# @app.errorhandler(Exception)
+@app.errorhandler(Exception)
 def unknow_error(error):
     """"处理所有未处理的异常"""
     req = request.get_json()
@@ -366,7 +366,7 @@ def is_valid_date(strdate):
         return False
 
 
-# 创建随机数
+# 创建随机数（同时又有用户id和微信id作为前缀，保证session不会重复）
 def create_random_num_by_md5():  # 通过MD5的方式创建
     m = hashlib.md5()
     m.update(bytes(str(time.time()), encoding='utf-8'))
