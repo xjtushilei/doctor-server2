@@ -6,12 +6,12 @@
     "threaded": true
   },
   "model_file": {
-    "root_path": "/cfs_chengdu/finddoctor/model/",
+    "root_path": "/cfs/finddoctor/model/",
     "fasttext_model": "model-webqa-hdf-2c.bin.v1",
     "seg_model": "cws.model.v1",
     "pos_model": "pos.model.v1",
-    "dict_var": "dict_var.npy.v4",
-    "recommend": "recommend.model.V1.2018-02-06"
+    "dict_var": "dict_var.npy.v5",
+    "recommend": "recommend.model.V1.2018-02-07"
   },
   "no_symptoms": [
     "以上都没有",
