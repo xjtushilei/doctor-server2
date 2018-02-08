@@ -44,11 +44,13 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, model,
                     doctors_query[item["departmentId"]]["num"] = 1
                     doctors_query[item["departmentId"]]["doctors"] = []
                     doctors_query[item["departmentId"]]["doctors"].append(
-                        {"docId": item["id"], "departmentId": item["departmentId"]})
+                        {"docId": item["id"], "departmentId": item["departmentId"],
+                         "departmentName": item["departmentName"]})
                 else:
                     doctors_query[item["departmentId"]]["num"] += 1
                     doctors_query[item["departmentId"]]["doctors"].append(
-                        {"docId": item["id"], "departmentId": item["departmentId"]})
+                        {"docId": item["id"], "departmentId": item["departmentId"],
+                         "departmentName": item["departmentName"]})
         if len(doctors_query) != 0:
             break
     if len(doctors_query) == 0:
@@ -92,6 +94,12 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, model,
                                 # 历史遗留的的问题，当时定义api时候字段定义的不标准导致的。
                                 if key == "docId":
                                     temp["id"] = value
+                                # 金蝶他们获取不到科室id，增加一下
+                                if key == "departmentId" and value == "":
+                                    temp["departmentId"] = item1["departmentId"]
+                                # 金蝶他们获取不到科室name，增加一下
+                                if key == "deptName" and value == "":
+                                    temp["deptName"] = item1["departmentName"]
                             doctors_recommendation.append(temp)
                         break
     else:
