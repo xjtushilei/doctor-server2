@@ -65,6 +65,7 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, model,
     # today_date = datetime.date.today() ##2018-01-15
     doctors_recommendation = []
     # print("doctors_query", doctors_query)
+    # 查询号源接口，并返回号源结果
     doctors_schedule, time_consuming, ok = query_doctors(doctors_query, query_hospital_url, clientId, debug)
     # print("doctors_schedule", doctors_schedule, ok)
     today_date = datetime.date.today()
@@ -88,6 +89,7 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, model,
                             for key, value in item2.items():
                                 if key != "schedule":
                                     temp[key] = value
+                                # 历史遗留的的问题，当时定义api时候字段定义的不标准导致的。
                                 if key == "docId":
                                     temp["id"] = value
                             doctors_recommendation.append(temp)
@@ -109,6 +111,7 @@ def query_doctors(doctors, url, clientId, debug=False):
             time_consuming = round(1000 * (time.time() - start_time), 3)
             return None, time_consuming, False
     else:
+        # 如果不是金蝶，token为空
         token = ""
     url = url + token
     try:
