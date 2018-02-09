@@ -37,7 +37,7 @@ def index():
 @app.route('/load-balance')
 def load_balance():
     userIp = request.remote_addr
-    return "用户ip:" + str(userIp) + "-后台服务标识码:" + str(server_ip).split(".")[3], 200
+    return "用户ip:" + str(userIp) + "-后台服务标识码:" + str(server_ip), 200
 
 
 # 内部测试错误api
