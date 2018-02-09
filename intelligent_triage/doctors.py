@@ -35,7 +35,7 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, model,
 
     # get the query list of doctors; check all the icd10 until find doctors; return None if no doctors for 5 icd10s.
     doctors_query = {}
-    for code, prob in zip(codes[:2], probs[:2]):
+    for code, prob in zip(codes[:5], probs[:5]):
         if (prob >= prob_threshold) and (code in model[agename[age_index]].keys()) and (
                     model[agename[age_index]][code]["gender"][gender_index] >= gender_threshold):
             for item in model[agename[age_index]][code]["doctors"]:
@@ -154,7 +154,7 @@ def getToken_from_jindie():
     # print(res)
     if res.ok:
         root = ET.fromstring(res.text)  # 从字符串传递xml
-        print(root.find('token').text)
+        # print(root.find('token').text)
         return root.find('token').text, res.ok
     else:
         return None, False

@@ -6,11 +6,11 @@ import os
 import doctors
 
 codes = [
-    "J06",
-    "J06",
-    "J06",
-    "N92",
-    "N92"
+    "M33",
+    "I42",
+    "J98",
+    "J40",
+    "J06"
 ]
 probs = [
     0.7846577039087731,
@@ -19,16 +19,15 @@ probs = [
     0.7403263709483923,
     0.7204414539601419
 ]
-age = 13
+age = 2
 gender = "female"
 orgId = "orgId"
 clientId = "jindie"
 branchId = "branchId"
 # query_hospital_url = "http://127.0.0.1:8087/test/query_doctors"
-# query_hospital_url = "http://test3.mhealth100.com/open-api/V1/query_appointments?tenantId=00006&hospitalId=100201"
-# query_hospital_url = "http://test3.mhealth100.com/open-api/V1/query_appointments?tenantId=00006&hospitalId=100201&channelCode=1505819123134"
-# query_hospital_url = "https://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00005&hospitalId=100201&channelCode=1505819123134"
+# 东莞
 # query_hospital_url = "http://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00022&hospitalId=100201&channelCode=1505819123134"
+# 南山
 query_hospital_url = "http://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00071&hospitalId=100071001&channelCode=1505819123134"
 appointment = ""
 debug = False
