@@ -232,7 +232,8 @@ def find_doctors():
     mongo.info({"type": status, "sessionId": sessionId, "url": request.url,
                 "params": params, "session": session,
                 "time": datetime.utcnow(), "ip": request.remote_addr,
-                "time_consuming": time_consuming})
+                "time_consuming": time_consuming,
+                "recommendation": recommendation})
     dump_session(sessionId, session)
     res = jsonify(userRes)
     return res
