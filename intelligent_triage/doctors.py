@@ -48,6 +48,7 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, model,
                          "departmentName": item["departmentName"]})
                 else:
                     doctors_query[item["departmentId"]]["num"] += 1
+                    # 增加了departmentid和name
                     doctors_query[item["departmentId"]]["doctors"].append(
                         {"docId": item["id"], "departmentId": item["departmentId"],
                          "departmentName": item["departmentName"]})

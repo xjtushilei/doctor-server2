@@ -21,9 +21,9 @@ probs = [
 ]
 age = 2
 gender = "female"
-orgId = "orgId"
+orgId = "无所谓"
 clientId = "jindie"
-branchId = "branchId"
+branchId = "无所谓"
 # query_hospital_url = "http://127.0.0.1:8087/test/query_doctors"
 # 东莞
 # query_hospital_url = "http://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00022&hospitalId=100201&channelCode=1505819123134"
@@ -37,6 +37,7 @@ model_path="C://data/model//hospital/深圳南山区妇幼.doctor.json.v3"
 # model_path = "/mdata/finddoctor/model/hospital/东莞妇幼.doctor.json.v2"
 with open(model_path, encoding="utf-8") as file:
     model = json.load(file)
+# 如果在dev或staff网下，请打开代理。
 os.environ['http_proxy'] = 'http://dev-proxy.oa.com:8080'
 docs = doctors.get_doctors(codes=codes, probs=probs, age=age, gender=gender,
                            orgId=orgId, clientId=clientId, branchId=branchId,
