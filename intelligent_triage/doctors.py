@@ -37,7 +37,7 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, model,
     doctors_query = {}
     for code, prob in zip(codes[:5], probs[:5]):
         if (prob >= prob_threshold) and (code in model[agename[age_index]].keys()) and (
-                    model[agename[age_index]][code]["gender"][gender_index] >= gender_threshold):
+                model[agename[age_index]][code]["gender"][gender_index] >= gender_threshold):
             for item in model[agename[age_index]][code]["doctors"]:
                 if item["departmentId"] not in doctors_query:
                     doctors_query[item["departmentId"]] = {}
@@ -139,23 +139,26 @@ def query_doctors(doctors, url, clientId, debug=False):
 
 # 从金蝶isv处获得token，如果失败，返回false
 def getToken_from_jindie():
-    tenantId = "00331"
-    channelCode = "1505819123134"
-    service = "base.token"
-    url = "http://api.mhealth100.com/open-api/openGateway.do?"
-    # url = "http://test3.mhealth100.com/open-api/openGateway.do?"
-    url = url + "version=3.0&format=xml&auth=partner&tenantId=" + tenantId + \
-          "&channelCode=" + channelCode + "&service=" + service
-    secert = "761A9F7DC0644073AD28CCA40A1F4CEB"
-    XML = '<?xml version="1.0" encoding="UTF-8"?><req><channelCode>' + channelCode + '</channelCode><secert>' + secert + '</secert></req>'
-    headers = {'Content-type': 'text/xml'}
-    # print(url)
-    # print(XML)
-    res = requests.post(url, data=XML, headers=headers)
-    # print(res)
-    if res.ok:
-        root = ET.fromstring(res.text)  # 从字符串传递xml
-        # print(root.find('token').text)
-        return root.find('token').text, res.ok
-    else:
+    try:
+        tenantId = "00331"
+        channelCode = "1505819123134"
+        service = "base.token"
+        url = "http://api.mhealth100.com/open-api/openGateway.do?"
+        # url = "http://test3.mhealth100.com/open-api/openGateway.do?"
+        url = url + "version=3.0&format=xml&auth=partner&tenantId=" + tenantId + \
+              "&channelCode=" + channelCode + "&service=" + service
+        secert = "761A9F7DC0644073AD28CCA40A1F4CEB"
+        XML = '<?xml version="1.0" encoding="UTF-8"?><req><channelCode>' + channelCode + '</channelCode><secert>' + secert + '</secert></req>'
+        headers = {'Content-type': 'text/xml'}
+        # print(url)
+        # print(XML)
+        res = requests.post(url, data=XML, headers=headers)
+        # print(res)
+        if res.ok:
+            root = ET.fromstring(res.text)  # 从字符串传递xml
+            # print(root.find('token').text)
+            return root.find('token').text, res.ok
+        else:
+            return None, False
+    except Exception:
         return None, False
