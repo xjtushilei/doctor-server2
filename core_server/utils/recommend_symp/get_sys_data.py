@@ -12,7 +12,7 @@ def remove_stopwords(line):
 
 
 ############ 文件位置，样例文件.###########################
-symptoms_path = "symptoms_qa_0207.txt"
+symptoms_path = "symptoms_qa_0209.txt"
 update_log = "合并两个文件为一个"
 big_version = "V1"
 time = str(datetime.now().date())
