@@ -28,13 +28,13 @@ branchId = "branchId"
 # query_hospital_url = "http://test3.mhealth100.com/open-api/V1/query_appointments?tenantId=00006&hospitalId=100201"
 # query_hospital_url = "http://test3.mhealth100.com/open-api/V1/query_appointments?tenantId=00006&hospitalId=100201&channelCode=1505819123134"
 # query_hospital_url = "https://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00005&hospitalId=100201&channelCode=1505819123134"
-query_hospital_url = "http://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00022&hospitalId=100201&channelCode=1505819123134"
-# query_hospital_url = "http://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00071&hospitalId=100071001&channelCode=1505819123134"
+# query_hospital_url = "http://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00022&hospitalId=100201&channelCode=1505819123134"
+query_hospital_url = "http://api.mhealth100.com/open-api/V1/query_appointments?tenantId=00071&hospitalId=100071001&channelCode=1505819123134"
 appointment = ""
 debug = False
 model = {}
-model_path="C://data/model//hospital/东莞妇幼.doctor.json.v2"
-# model_path="C://data/model//hospital/深圳南山区妇幼.doctor.json.v3"
+# model_path="C://data/model//hospital/东莞妇幼.doctor.json.v2"
+model_path="C://data/model//hospital/深圳南山区妇幼.doctor.json.v3"
 # model_path = "/mdata/finddoctor/model/hospital/东莞妇幼.doctor.json.v2"
 with open(model_path, encoding="utf-8") as file:
     model = json.load(file)

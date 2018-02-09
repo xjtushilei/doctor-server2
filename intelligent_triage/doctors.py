@@ -102,7 +102,11 @@ def get_doctors(codes, probs, age, gender, query_hospital_url, model,
                                     temp["deptName"] = item1["departmentName"]
                             doctors_recommendation.append(temp)
                         break
+        else:
+            # false表示获取号源错误，应该是获取号源接口失败
+            return None, False
     else:
+        # false表示获取号源错误，应该是通过了获取token
         return None, False
     return doctors_recommendation[:10], True
 
@@ -150,6 +154,7 @@ def getToken_from_jindie():
     # print(res)
     if res.ok:
         root = ET.fromstring(res.text)  # 从字符串传递xml
+        print(root.find('token').text)
         return root.find('token').text, res.ok
     else:
         return None, False
